@@ -1,0 +1,31 @@
+# 민감한 정보
+app/html/data/
+app/html/config.php
+infra/docker-compose.yml
+
+# 업로드 파일
+app/uploads/
+data/
+
+# 캐시
+app/html/data/cache/
+app/html/data/session/
+app/html/data/log/
+
+# DB 백업
+data/db/
+
+# 환경 변수
+.env
+*.env
+
+# 임시 파일
+*.bak
+*.backup
+*.old
+*.tmp
+*~
+
+# OS 파일
+.DS_Store
+Thumbs.db

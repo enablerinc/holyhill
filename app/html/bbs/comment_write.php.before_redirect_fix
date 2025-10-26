@@ -1,0 +1,94 @@
+<?php
+include_once('./_common.php');
+
+// 로그인 체크
+if (!$is_member) {
+    alert('로그인이 필요합니다.', G5_BBS_URL.'/login.php?url='.urlencode($_SERVER['HTTP_REFERER']));
+}
+
+// 토큰 체크
+$comment_token = trim(get_session('ss_comment_token'));
+set_session('ss_comment_token', '');
+if(empty($_POST['token']) || !$comment_token || $comment_token != $_POST['token']) {
+    alert('올바른 방법으로 이용해 주십시오.');
+}
+
+// 파라미터
+$bo_table = isset($_POST['bo_table']) ? preg_replace('/[^a-z0-9_]/i', '', $_POST['bo_table']) : '';
+$wr_id = isset($_POST['wr_id']) ? (int)$_POST['wr_id'] : 0;
+$wr_content = isset($_POST['wr_content']) ? trim($_POST['wr_content']) : '';
+
+if (!$bo_table || !$wr_id) {
+    alert('잘못된 접근입니다.');
+}
+
+if (!$wr_content) {
+    alert('댓글 내용을 입력해주세요.');
+}
+
+if (strlen($wr_content) < 2) {
+    alert('댓글은 최소 2자 이상 입력해주세요.');
+}
+
+// 게시판 정보
+$board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = '{$bo_table}'");
+if (!$board) {
+    alert('존재하지 않는 게시판입니다.');
+}
+
+$write_table = $g5['write_prefix'] . $bo_table;
+
+// 원글 정보
+$write = sql_fetch("SELECT * FROM {$write_table} WHERE wr_id = '{$wr_id}' AND wr_is_comment = 0");
+if (!$write) {
+    alert('존재하지 않는 게시글입니다.');
+}
+
+// 댓글 번호 생성
+$sql = "SELECT MAX(CAST(wr_comment_reply AS UNSIGNED)) as max_reply 
+        FROM {$write_table} 
+        WHERE wr_parent = '{$wr_id}' 
+        AND wr_is_comment = 1";
+$row = sql_fetch($sql);
+$reply_num = $row['max_reply'] ? $row['max_reply'] + 1 : 1;
+$wr_comment_reply = str_pad($reply_num, 10, '0', STR_PAD_LEFT);
+
+// 댓글 삽입
+$sql = "INSERT INTO {$write_table} SET 
+        wr_num = '{$write['wr_num']}',
+        wr_reply = '',
+        wr_comment = 1,
+        wr_comment_reply = '{$wr_comment_reply}',
+        wr_is_comment = 1,
+        wr_parent = '{$wr_id}',
+        wr_content = '" . addslashes($wr_content) . "',
+        wr_name = '{$member['mb_nick']}',
+        wr_password = '',
+        wr_email = '{$member['mb_email']}',
+        wr_homepage = '{$member['mb_homepage']}',
+        mb_id = '{$member['mb_id']}',
+        wr_datetime = '" . G5_TIME_YMDHIS . "',
+        wr_ip = '{$_SERVER['REMOTE_ADDR']}'";
+
+sql_query($sql);
+
+// 댓글 개수 증가
+sql_query("UPDATE {$write_table} SET wr_comment = wr_comment + 1 WHERE wr_id = '{$wr_id}'");
+
+// 포인트 지급
+$point = $board['bo_comment_point'];
+if ($point) {
+    $po_content = "{$board['bo_subject']} {$wr_id} 댓글";
+    insert_point($member['mb_id'], $point, $po_content, $bo_table, $wr_id, '댓글');
+}
+
+// 원글 작성자에게 포인트 지급
+if ($write['mb_id'] && $write['mb_id'] != $member['mb_id']) {
+    $point = 1;
+    $po_content = "{$board['bo_subject']} {$wr_id} 댓글 받음";
+    insert_point($write['mb_id'], $point, $po_content, $bo_table, $wr_id, '댓글받음');
+}
+
+// 리다이렉트 (게시글 상세 페이지로)
+goto_url(G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#comment');
+?>
