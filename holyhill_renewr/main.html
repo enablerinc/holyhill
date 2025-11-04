@@ -1,0 +1,267 @@
+<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .story-gradient { background: linear-gradient(45deg, #E8E2F7, #F5F3EC, #B19CD9); }
+        .shadow-warm { box-shadow: 0 4px 20px rgba(177, 156, 217, 0.15); }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'warm-beige': '#EEF3F8',
+                        'soft-lavender': '#E8E2F7',
+                        'grace-green': '#6B705C',
+                        'lilac': '#B19CD9',
+                        'deep-purple': '#6B46C1'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-warm-beige">
+
+<header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
+    <div class="flex items-center justify-between px-4 py-3">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-lilac to-deep-purple rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-cross text-white text-sm"></i>
+            </div>
+            <h1 class="text-lg font-semibold text-grace-green">성산교회</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <i class="fa-regular fa-bell text-grace-green text-lg"></i>
+            <i class="fa-regular fa-comment-dots text-grace-green text-lg"></i>
+        </div>
+    </div>
+</header>
+
+<main id="main-content" class="pt-16 pb-20">
+    
+    <section id="stories-section" class="px-4 py-3 bg-white">
+    <div class="flex gap-3 overflow-x-auto">
+        <div class="flex flex-col items-center gap-2 min-w-16">
+            <button onclick="openStoryComposer()" class="w-16 h-16 story-gradient rounded-full p-0.5 active:scale-95 transition-transform">
+                <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-plus text-lilac text-lg"></i>
+                </div>
+            </button>
+            <span class="text-xs text-grace-green font-medium">내 이야기</span>
+        </div>
+        
+        <div class="flex flex-col items-center gap-2 min-w-16">
+            <div class="w-16 h-16 story-gradient rounded-full p-0.5 relative">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg" class="w-full h-full rounded-full object-cover">
+                <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <i class="fa-solid fa-check text-white text-xs"></i>
+                </div>
+            </div>
+            <span class="text-xs text-grace-green font-medium">나</span>
+        </div>
+        
+        <div class="flex flex-col items-center gap-2 min-w-16">
+            <div class="w-16 h-16 story-gradient rounded-full p-0.5">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg" class="w-full h-full rounded-full object-cover">
+            </div>
+            <span class="text-xs text-grace-green">김은혜</span>
+        </div>
+        
+        <div class="flex flex-col items-center gap-2 min-w-16">
+            <div class="w-16 h-16 story-gradient rounded-full p-0.5">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" class="w-full h-full rounded-full object-cover">
+            </div>
+            <span class="text-xs text-grace-green">박성민</span>
+        </div>
+        
+        <div class="flex flex-col items-center gap-2 min-w-16">
+            <div class="w-16 h-16 story-gradient rounded-full p-0.5">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" class="w-full h-full rounded-full object-cover">
+            </div>
+            <span class="text-xs text-grace-green">이소망</span>
+        </div>
+        
+        <div class="flex flex-col items-center gap-2 min-w-16">
+            <div class="w-16 h-16 story-gradient rounded-full p-0.5">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" class="w-full h-full rounded-full object-cover">
+            </div>
+            <span class="text-xs text-grace-green">최다윗</span>
+        </div>
+        
+        <div class="flex flex-col items-center gap-2 min-w-16">
+            <div class="w-16 h-16 story-gradient rounded-full p-0.5">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-6.jpg" class="w-full h-full rounded-full object-cover">
+            </div>
+            <span class="text-xs text-grace-green">한사랑</span>
+        </div>
+    </div>
+</section>
+
+    <section id="daily-verse" class="mx-4 my-4 bg-gradient-to-r from-soft-lavender to-warm-beige rounded-2xl p-6 shadow-warm">
+        <div class="text-center">
+            <h3 class="text-sm font-medium text-grace-green mb-2">오늘의 말씀</h3>
+            <p class="text-base font-medium text-deep-brown leading-relaxed mb-2">
+                "너희는 먼저 그의 나라와 그의 의를 구하라<br>그리하면 이 모든 것을 너희에게 더하시리라"
+            </p>
+            <p class="text-xs text-grace-green">마태복음 6:33</p>
+        </div>
+    </section>
+
+    <section id="feed-section" class="space-y-4">
+        
+        <article id="post-1" class="bg-white mx-4 rounded-2xl shadow-warm overflow-hidden">
+            <div class="p-4 flex items-center gap-3">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-6.jpg" class="w-10 h-10 rounded-full object-cover">
+                <div class="flex-1">
+                    <h4 class="font-medium text-grace-green">한사랑</h4>
+                    <p class="text-xs text-gray-500">청년부 · 2시간 전</p>
+                </div>
+                <i class="fa-solid fa-ellipsis text-gray-400"></i>
+            </div>
+            
+            <img class="w-full h-64 object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/165c120fb0-63c598b68af61a75f51b.png" alt="church worship service with young people raising hands in prayer, warm lighting, community atmosphere">
+            
+            <div class="p-4">
+                <div class="flex items-center gap-4 mb-3">
+                    <button class="flex items-center gap-2">
+                        <i class="fa-solid fa-heart text-red-400 text-lg"></i>
+                        <span class="text-sm text-grace-green">아멘 32개</span>
+                    </button>
+                    <button class="flex items-center gap-2">
+                        <i class="fa-regular fa-comment text-grace-green text-lg"></i>
+                        <span class="text-sm text-grace-green">8</span>
+                    </button>
+                    <button class="flex items-center gap-2">
+                        <i class="fa-solid fa-praying-hands text-lilac text-lg"></i>
+                        <span class="text-sm text-grace-green">기도</span>
+                    </button>
+                </div>
+                
+                <p class="text-sm text-grace-green leading-relaxed mb-2">
+                    오늘 청년 예배에서 정말 큰 은혜를 받았어요! 하나님의 사랑을 다시 한번 깊이 느꼈습니다 🙏✨
+                </p>
+                
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#청년예배</span>
+                    <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#은혜</span>
+                    <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#감사</span>
+                </div>
+                
+                <button class="text-xs text-gray-500">댓글 모두 보기</button>
+            </div>
+        </article>
+
+        <article id="post-2" class="bg-white mx-4 rounded-2xl shadow-warm overflow-hidden">
+            <div class="p-4 flex items-center gap-3">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-8.jpg" class="w-10 h-10 rounded-full object-cover">
+                <div class="flex-1">
+                    <h4 class="font-medium text-grace-green">정요한</h4>
+                    <p class="text-xs text-gray-500">장년부 · 4시간 전</p>
+                </div>
+                <i class="fa-solid fa-ellipsis text-gray-400"></i>
+            </div>
+            
+            <img class="w-full h-64 object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/199d58ac42-aee9d4d08ea5afa36d20.png" alt="bible study group reading scripture together, cozy cafe setting, warm natural lighting">
+            
+            <div class="p-4">
+                <div class="flex items-center gap-4 mb-3">
+                    <button class="flex items-center gap-2">
+                        <i class="fa-regular fa-heart text-grace-green text-lg"></i>
+                        <span class="text-sm text-grace-green">아멘 18개</span>
+                    </button>
+                    <button class="flex items-center gap-2">
+                        <i class="fa-regular fa-comment text-grace-green text-lg"></i>
+                        <span class="text-sm text-grace-green">5</span>
+                    </button>
+                    <button class="flex items-center gap-2">
+                        <i class="fa-solid fa-praying-hands text-lilac text-lg"></i>
+                        <span class="text-sm text-grace-green">기도</span>
+                    </button>
+                </div>
+                
+                <p class="text-sm text-grace-green leading-relaxed mb-2">
+                    오늘 셀모임에서 나눈 말씀이 정말 마음에 와닿았습니다. 형제자매들과 함께하는 시간이 너무 소중해요 💝
+                </p>
+                
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#셀모임</span>
+                    <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#말씀나눔</span>
+                    <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#교제</span>
+                </div>
+                
+                <button class="text-xs text-gray-500">댓글 모두 보기</button>
+            </div>
+        </article>
+
+        <article id="prayer-request" class="bg-gradient-to-r from-lilac/10 to-soft-lavender mx-4 rounded-2xl p-4 border border-lilac/20">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-lilac/20 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-praying-hands text-lilac"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-medium text-grace-green">기도 요청</h4>
+                    <p class="text-xs text-gray-500">익명 · 6시간 전</p>
+                </div>
+            </div>
+            
+            <p class="text-sm text-grace-green leading-relaxed mb-3">
+                가족의 건강을 위해 기도 부탁드립니다. 하나님의 치유하심을 믿고 기도하고 있습니다.
+            </p>
+            
+            <div class="flex items-center gap-4">
+                <button class="flex items-center gap-2 bg-lilac/20 px-3 py-2 rounded-full">
+                    <i class="fa-solid fa-praying-hands text-lilac text-sm"></i>
+                    <span class="text-sm text-lilac font-medium">함께 기도해요</span>
+                </button>
+                <span class="text-xs text-grace-green">24명이 기도하고 있어요</span>
+            </div>
+        </article>
+
+    </section>
+
+</main>
+
+<nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-soft-lavender">
+    <div class="flex items-center justify-around py-3">
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-house text-lilac text-lg"></i>
+            <span class="text-xs text-lilac font-medium">홈</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-regular fa-compass text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">둘러보기</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <div class="w-8 h-8 bg-lilac rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-plus text-white text-sm"></i>
+            </div>
+            <span class="text-xs text-grace-green">나눔</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-trophy text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">명예의 전당</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg" class="w-6 h-6 rounded-full object-cover">
+            <span class="text-xs text-grace-green">내 정보</span>
+        </button>
+    </div>
+</nav>
+
+<div id="floating-prayer" class="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full shadow-lg flex items-center justify-center cursor-pointer transform active:scale-95 transition-all duration-200" onclick="checkAttendance()">
+    <i class="fa-solid fa-check text-white text-lg"></i>
+</div>
+
+
+</body></html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .story-gradient { background: linear-gradient(45deg, #E8E2F7, #EEF3F8, #B19CD9); }
+        .shadow-warm { box-shadow: 0 4px 20px rgba(177, 156, 217, 0.15); }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'warm-beige': '#EEF3F8',
+                        'soft-lavender': '#E8E2F7',
+                        'grace-green': '#6B705C',
+                        'lilac': '#B19CD9',
+                        'deep-purple': '#6B46C1'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-warm-beige">
+
+<header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
+    <div class="flex items-center justify-between px-4 py-3">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-lilac to-deep-purple rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-cross text-white text-sm"></i>
+            </div>
+            <h1 class="text-lg font-semibold text-grace-green">둘러보기</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <i class="fa-solid fa-search text-grace-green text-lg"></i>
+            <i class="fa-solid fa-filter text-grace-green text-lg"></i>
+        </div>
+    </div>
+</header>
+
+<main id="main-content" class="pt-16 pb-20">
+    
+    <section id="category-tabs" class="bg-white px-4 py-3 border-b border-soft-lavender hidden">
+    <div class="flex gap-2 overflow-x-auto">
+        <button class="px-4 py-2 bg-lilac text-white rounded-full text-sm font-medium whitespace-nowrap">전체</button>
+        <button class="px-4 py-2 bg-warm-beige text-grace-green rounded-full text-sm font-medium whitespace-nowrap">청년부</button>
+        <button class="px-4 py-2 bg-warm-beige text-grace-green rounded-full text-sm font-medium whitespace-nowrap">장년부</button>
+        <button class="px-4 py-2 bg-warm-beige text-grace-green rounded-full text-sm font-medium whitespace-nowrap">찬양팀</button>
+        <button class="px-4 py-2 bg-warm-beige text-grace-green rounded-full text-sm font-medium whitespace-nowrap">셀모임</button>
+        <button class="px-4 py-2 bg-warm-beige text-grace-green rounded-full text-sm font-medium whitespace-nowrap">봉사팀</button>
+    </div>
+</section>
+
+    <section id="trending-section" class="px-4 py-4">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-grace-green">인기 게시물</h2>
+            <i class="fa-solid fa-fire text-orange-500"></i>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-1">
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3f1726cf1f-895ad5e5c358acae5d76.png" alt="church youth group worship with raised hands, warm lighting, community gathering">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>45
+                </div>
+            </div>
+            
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/199d58ac42-5dd9e69838b5e5224879.png" alt="bible study group reading scripture together, cozy atmosphere">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>38
+                </div>
+            </div>
+            
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/9220ee608c-d109d5b4e9f28c315c7a.png" alt="church choir singing during worship service, beautiful lighting">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>42
+                </div>
+            </div>
+            
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/444935e5d5-490bc8256516cbc0462e.png" alt="church community service volunteers helping others, heartwarming scene">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>31
+                </div>
+            </div>
+            
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c4a77b7067-7ea683aa2362b41ce6ef.png" alt="church fellowship meal, people sharing food and conversation">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>29
+                </div>
+            </div>
+            
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/62006b88d4-ba4ea7d8e2765b445000.png" alt="morning prayer meeting, peaceful and spiritual atmosphere">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>36
+                </div>
+            </div>
+
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/444935e5d5-490bc8256516cbc0462e.png" alt="church community service volunteers helping others, heartwarming scene">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>31
+                </div>
+            </div>
+            
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c4a77b7067-7ea683aa2362b41ce6ef.png" alt="church fellowship meal, people sharing food and conversation">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>29
+                </div>
+            </div>
+            
+            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/62006b88d4-ba4ea7d8e2765b445000.png" alt="morning prayer meeting, peaceful and spiritual atmosphere">
+                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded">
+                    <i class="fa-solid fa-heart text-red-400 text-xs mr-1"></i>36
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="discover-people" class="px-4 py-4">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-grace-green">활발한 성도님들</h2>
+            <button class="text-sm text-lilac font-medium">더보기</button>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 bg-white rounded-xl shadow-warm">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg" class="w-12 h-12 rounded-full object-cover">
+                <div class="flex-1">
+                    <h3 class="font-medium text-grace-green">김은혜</h3>
+                    <p class="text-xs text-gray-500">청년부 · 이번 주 12개 게시물</p>
+                </div>
+                <button class="px-4 py-1.5 bg-lilac text-white rounded-full text-sm font-medium">+1,000 점</button>
+            </div>
+            
+            <div class="flex items-center gap-3 p-3 bg-white rounded-xl shadow-warm">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" class="w-12 h-12 rounded-full object-cover">
+                <div class="flex-1">
+                    <h3 class="font-medium text-grace-green">최다윗</h3>
+                    <p class="text-xs text-gray-500">장년부 · 이번 주 8개 게시물</p>
+                </div>
+                <button class="px-4 py-1.5 bg-lilac text-white rounded-full text-sm font-medium">+900 점</button>
+            </div>
+            
+            <div class="flex items-center gap-3 p-3 bg-white rounded-xl shadow-warm">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" class="w-12 h-12 rounded-full object-cover">
+                <div class="flex-1">
+                    <h3 class="font-medium text-grace-green">이소망</h3>
+                    <p class="text-xs text-gray-500">찬양팀 · 이번 주 6개 게시물</p>
+                </div>
+                <button class="px-4 py-1.5 bg-lilac text-white rounded-full text-sm font-medium">+800 점</button>
+            </div>
+        </div>
+    </section>
+
+    
+
+
+    
+
+    
+
+</main>
+
+<nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-soft-lavender">
+    <div class="flex items-center justify-around py-3">
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-house text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">홈</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-compass text-lilac text-lg"></i>
+            <span class="text-xs text-lilac font-medium">둘러보기</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <div class="w-8 h-8 bg-lilac rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-plus text-white text-sm"></i>
+            </div>
+            <span class="text-xs text-grace-green">나눔</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-trophy text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">명예의 전당</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg" class="w-6 h-6 rounded-full object-cover">
+            <span class="text-xs text-grace-green">내 정보</span>
+        </button>
+    </div>
+</nav>
+
+
+</body></html>

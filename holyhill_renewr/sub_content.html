@@ -1,0 +1,232 @@
+<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        body { font-family: 'Pretendard', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #F8F6FF 0%, #E8E3FF 100%); }
+        .story-ring { background: linear-gradient(45deg, #9B7EDE, #6B5B95); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.8); }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'lavender-mist': '#F8F6FF',
+                        'soft-lilac': '#E8E3FF',
+                        'deep-purple': '#6B5B95',
+                        'amethyst': '#9B7EDE',
+                        'gentle-mauve': '#B19CD9'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-lavender-mist">
+
+<div id="mobile-container" class="max-w-sm mx-auto bg-white min-h-screen">
+
+<header id="detail-header" class="bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-50">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-arrow-left text-gray-700 text-lg cursor-pointer"></i>
+            <h1 class="font-semibold text-base text-gray-800">게시물</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <i class="far fa-bookmark text-gray-600 text-lg"></i>
+            <i class="fas fa-ellipsis-h text-gray-600 text-lg"></i>
+        </div>
+    </div>
+</header>
+
+<main id="post-detail" class="pb-20">
+    
+    <section id="post-header" class="bg-white px-4 py-3 border-b border-gray-50">
+    <div class="flex items-center space-x-3">
+        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" class="w-10 h-10 rounded-full object-cover">
+        <div>
+            <p class="font-semibold text-sm text-gray-900">김은혜</p>
+            <p class="text-xs text-gray-500">청년부 • 2시간 전</p>
+        </div>
+    </div>
+</section>
+
+    <section id="post-image" class="bg-white">
+        <img class="w-full h-96 object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/4e57320624-6d7d8f41df0dc094bd9e.png" alt="beautiful church interior with warm sunlight streaming through stained glass windows">
+    </section>
+
+    <section id="post-actions" class="bg-white px-4 py-3 border-b border-gray-50">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center space-x-5">
+                <i class="far fa-heart text-2xl text-deep-purple hover:text-amethyst cursor-pointer"></i>
+                <i class="far fa-comment text-2xl text-deep-purple"></i>
+                <i class="far fa-paper-plane text-2xl text-deep-purple"></i>
+            </div>
+            <i class="far fa-bookmark text-2xl text-deep-purple"></i>
+        </div>
+        
+        <div class="mb-3">
+            <span class="font-semibold text-sm">아멘 24개</span>
+        </div>
+        
+        <div class="mb-3">
+            <span class="font-semibold text-sm mr-2">김은혜</span>
+            <span class="text-sm text-gray-800">오늘 주일예배에서 받은 은혜가 너무 감사해요 🙏 "너희는 세상의 빛이라" 말씀이 마음에 깊이 새겨집니다. 하나님께서 우리 각자를 통해 이 세상에 빛을 비추시기를 원하신다는 것을 깨달았어요. 매일의 삶 속에서 작은 빛이라도 되고 싶습니다.</span>
+        </div>
+        
+        <div class="flex flex-wrap gap-2 mb-3">
+            <span class="text-xs text-deep-purple bg-soft-lilac px-2 py-1 rounded-full">#주일예배</span>
+            <span class="text-xs text-deep-purple bg-soft-lilac px-2 py-1 rounded-full">#은혜</span>
+            <span class="text-xs text-deep-purple bg-soft-lilac px-2 py-1 rounded-full">#세상의빛</span>
+        </div>
+        
+        <p class="text-xs text-gray-500">2024년 10월 19일</p>
+    </section>
+
+    <section id="liked-by" class="bg-white px-4 py-3 border-b border-gray-50">
+        <div class="flex items-center space-x-2 mb-2">
+            <div class="flex -space-x-2">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" class="w-6 h-6 rounded-full border-2 border-white object-cover">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" class="w-6 h-6 rounded-full border-2 border-white object-cover">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg" class="w-6 h-6 rounded-full border-2 border-white object-cover">
+            </div>
+            <span class="text-xs text-gray-600">박성민, 최믿음님 외 22명이 아멘했습니다</span>
+        </div>
+    </section>
+
+    <section id="comments-section" class="bg-white">
+        <div class="px-4 py-3 border-b border-gray-50">
+            <h3 class="font-semibold text-sm text-gray-800 mb-3">댓글 8개</h3>
+            
+            <div id="comment-1" class="mb-4">
+                <div class="flex items-start space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" class="w-8 h-8 rounded-full object-cover">
+                    <div class="flex-1">
+                        <div class="bg-gray-50 rounded-2xl px-3 py-2">
+                            <p class="font-semibold text-xs text-gray-900 mb-1">최믿음</p>
+                            <p class="text-sm text-gray-800">아멘! 정말 은혜로운 말씀이었어요. 저도 많은 깨달음을 받았습니다 🙏</p>
+                        </div>
+                        <div class="flex items-center space-x-4 mt-2 ml-3">
+                            <span class="text-xs text-gray-500">1시간 전</span>
+                            <button class="text-xs text-deep-purple font-medium">답글</button>
+                            <i class="far fa-heart text-xs text-gray-400"></i>
+                            <span class="text-xs text-gray-400">3</span>
+                        </div>
+                        
+                        <div id="reply-1" class="mt-3 ml-6">
+                            <div class="flex items-start space-x-2">
+                                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" class="w-6 h-6 rounded-full object-cover">
+                                <div class="flex-1">
+                                    <div class="bg-soft-lilac rounded-2xl px-3 py-2">
+                                        <p class="font-semibold text-xs text-gray-900 mb-1">김은혜</p>
+                                        <p class="text-xs text-gray-800">감사해요! 함께 은혜받을 수 있어서 좋아요 ✨</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3 mt-1 ml-3">
+                                        <span class="text-xs text-gray-400">45분 전</span>
+                                        <i class="far fa-heart text-xs text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="comment-2" class="mb-4">
+                <div class="flex items-start space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" class="w-8 h-8 rounded-full object-cover">
+                    <div class="flex-1">
+                        <div class="bg-gray-50 rounded-2xl px-3 py-2">
+                            <p class="font-semibold text-xs text-gray-900 mb-1">박성민</p>
+                            <p class="text-sm text-gray-800">이 말씀이 제 마음에도 깊이 와닿았어요. 우리 모두가 세상의 빛이 되어가길 기도합니다 🕯️</p>
+                        </div>
+                        <div class="flex items-center space-x-4 mt-2 ml-3">
+                            <span class="text-xs text-gray-500">2시간 전</span>
+                            <button class="text-xs text-gray-500 font-medium">답글</button>
+                            <i class="fas fa-heart text-xs text-red-400"></i>
+                            <span class="text-xs text-gray-400">7</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="comment-3" class="mb-4">
+                <div class="flex items-start space-x-3">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg" class="w-8 h-8 rounded-full object-cover">
+                    <div class="flex-1">
+                        <div class="bg-gray-50 rounded-2xl px-3 py-2">
+                            <p class="font-semibold text-xs text-gray-900 mb-1">이소망</p>
+                            <p class="text-sm text-gray-800">할렐루야! 하나님의 말씀이 우리 삶을 변화시키시네요 🌟</p>
+                        </div>
+                        <div class="flex items-center space-x-4 mt-2 ml-3">
+                            <span class="text-xs text-gray-500">3시간 전</span>
+                            <button class="text-xs text-gray-500 font-medium">답글</button>
+                            <i class="far fa-heart text-xs text-gray-400"></i>
+                            <span class="text-xs text-gray-400">2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="text-sm text-gray-500 font-medium w-full text-left">댓글 5개 더 보기...</button>
+        </div>
+    </section>
+
+</main>
+
+<div id="comment-input" class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200 px-4 py-3">
+    <div class="flex items-center space-x-3">
+        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg" class="w-8 h-8 rounded-full object-cover">
+        <div class="flex-1 flex items-center bg-gray-50 rounded-full px-4 py-2">
+            <input type="text" placeholder="댓글을 입력하세요..." class="flex-1 bg-transparent text-sm focus:outline-none">
+            <div class="flex items-center space-x-2 ml-2">
+                <i class="far fa-smile text-gray-400 text-lg cursor-pointer"></i>
+                <i class="fas fa-paper-plane text-amethyst text-lg cursor-pointer"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="floating-prayer-button" class="fixed bottom-20 right-4 w-12 h-12 bg-gradient-to-r from-amethyst to-deep-purple rounded-full shadow-lg flex items-center justify-center">
+    <i class="fas fa-share-alt text-white text-sm"></i>
+</div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const heartIcons = document.querySelectorAll('.fa-heart');
+    
+    heartIcons.forEach(icon => {
+        icon.addEventListener('click', function() {
+            if (this.classList.contains('far')) {
+                this.classList.remove('far');
+                this.classList.add('fas');
+                this.classList.add('text-red-500');
+            } else {
+                this.classList.remove('fas', 'text-red-500');
+                this.classList.add('far');
+            }
+        });
+    });
+
+    const replyButtons = document.querySelectorAll('button:contains("답글")');
+    replyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const input = document.querySelector('#comment-input input');
+            const username = this.closest('.mb-4').querySelector('.font-semibold').textContent;
+            input.placeholder = `@${username}님에게 답글...`;
+            input.focus();
+        });
+    });
+});
+</script>
+
+
+</body></html>
