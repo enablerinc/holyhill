@@ -36,6 +36,24 @@ if ($is_member) {
     $comment_token = get_random_token_string();
     set_session('ss_comment_token', $comment_token);
 }
+
+// 본문에서 [이미지N]을 실제 이미지로 변환
+function replace_image_placeholders($content, $images, $bo_table) {
+    // [이미지1], [이미지2] 등을 찾아서 실제 이미지 태그로 변환
+    $content = preg_replace_callback('/\[이미지(\d+)\]/', function($matches) use ($images, $bo_table) {
+        $index = intval($matches[1]) - 1; // 1부터 시작하므로 -1
+        if (isset($images[$index])) {
+            $image_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$images[$index];
+            return '<div class="my-4"><img src="'.$image_url.'" class="w-full rounded-lg" alt="이미지'.($index+1).'"></div>';
+        }
+        return $matches[0]; // 이미지가 없으면 원본 텍스트 유지
+    }, $content);
+
+    return $content;
+}
+
+// 본문 내용 처리
+$processed_content = replace_image_placeholders(get_text($view['wr_content']), $images, $bo_table);
 ?>
 <!DOCTYPE html>
 <html lang="ko">
@@ -70,10 +88,14 @@ if ($is_member) {
                 </div>
             </div>
 
-            <!-- 이미지 -->
+            <!-- 이미지 갤러리 -->
             <?php if (count($images) > 0) { ?>
-            <div>
-                <img src="<?php echo G5_DATA_URL.'/file/'.$bo_table.'/'.$images[0]; ?>" class="w-full">
+            <div class="space-y-2">
+                <?php foreach ($images as $image) { ?>
+                <div>
+                    <img src="<?php echo G5_DATA_URL.'/file/'.$bo_table.'/'.$image; ?>" class="w-full">
+                </div>
+                <?php } ?>
             </div>
             <?php } ?>
 
@@ -92,7 +114,7 @@ if ($is_member) {
 
             <!-- 내용 -->
             <div class="p-4 border-b">
-                <div><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo get_text($view['wr_content']); ?></div>
+                <div><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?></div>
             </div>
 
             <!-- 댓글 -->
@@ -147,7 +169,10 @@ if ($is_member) {
             <input type="hidden" name="token" value="<?php echo $comment_token; ?>">
             
             <div style="display: flex; gap: 12px; align-items: center;">
-                <img src="<?php echo $member['mb_photo'] ? G5_DATA_URL.'/member/'.$member['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg'; ?>" style="width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;">
+                <?php
+                $comment_profile_photo = (isset($member['mb_photo']) && $member['mb_photo']) ? G5_DATA_URL.'/member/'.$member['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
+                ?>
+                <img src="<?php echo $comment_profile_photo; ?>" style="width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;" alt="프로필">
                 <div style="flex: 1; display: flex; gap: 8px; background: #f3f4f6; border-radius: 9999px; padding: 8px 16px; align-items: center;">
                     <input 
                         type="text" 
