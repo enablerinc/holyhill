@@ -404,6 +404,95 @@ function toggleGood() {
     // capture phase에서 실행하여 wrest.js보다 먼저 처리
     form.addEventListener('submit', handleSubmit, true);
 })();
+
+// 실시간 댓글 polling
+(function() {
+    const commentList = document.getElementById('comment-list');
+    if (!commentList) return;
+
+    // 현재 마지막 댓글 ID 가져오기
+    let lastCommentId = 0;
+    const allComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
+    if (allComments.length > 0) {
+        // 데이터 속성이나 다른 방법으로 ID를 추적하는 것이 좋지만,
+        // 여기서는 서버에서 가져온 모든 댓글을 기준으로 시작
+        // 초기 댓글 개수를 기준으로 polling 시작
+        const commentCountH3 = commentList.previousElementSibling;
+        if (commentCountH3) {
+            const match = commentCountH3.textContent.match(/\d+/);
+            lastCommentId = match ? parseInt(match[0]) : 0;
+        }
+    }
+
+    // 모든 댓글에서 최대 wr_id 찾기
+    <?php
+    $max_comment_id = 0;
+    $comment_sql = "SELECT MAX(wr_id) as max_id FROM {$g5['write_prefix']}{$bo_table}
+                    WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1";
+    $comment_result = sql_fetch($comment_sql);
+    if ($comment_result) {
+        $max_comment_id = $comment_result['max_id'] ? $comment_result['max_id'] : 0;
+    }
+    ?>
+    lastCommentId = <?php echo $max_comment_id; ?>;
+
+    // 3초마다 새 댓글 체크
+    setInterval(function() {
+        fetch('<?php echo G5_BBS_URL; ?>/comment_check.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&last_id=' + lastCommentId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.has_new) {
+                    console.log('새 댓글 발견:', data.count + '개');
+
+                    // 새 댓글들 추가
+                    data.comments.forEach(comment => {
+                        const newCommentHTML = `
+                            <div class="flex gap-3 mb-3" style="animation: slideIn 0.3s ease-out;">
+                                <img src="${comment.photo}" class="w-8 h-8 rounded-full">
+                                <div class="flex-1 bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
+                                    <div class="font-semibold text-xs mb-1">${comment.name}</div>
+                                    <div class="text-sm">${comment.content}</div>
+                                    <div class="text-xs text-gray-400 mt-1">${comment.datetime}</div>
+                                </div>
+                            </div>
+                        `;
+
+                        // 빈 메시지 제거
+                        const emptyMessage = commentList.querySelector('.text-center.text-gray-500');
+                        if (emptyMessage) emptyMessage.remove();
+
+                        commentList.insertAdjacentHTML('beforeend', newCommentHTML);
+
+                        // 마지막 댓글 ID 업데이트
+                        lastCommentId = Math.max(lastCommentId, comment.wr_id);
+
+                        // 하이라이트 효과
+                        const allNewComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
+                        const lastComment = allNewComments[allNewComments.length - 1];
+                        setTimeout(() => {
+                            if (lastComment && lastComment.querySelector('.flex-1')) {
+                                lastComment.querySelector('.flex-1').style.background = '';
+                            }
+                        }, 2000);
+                    });
+
+                    // 댓글 개수 업데이트
+                    const commentCountH3 = commentList.previousElementSibling;
+                    if (commentCountH3) {
+                        const match = commentCountH3.textContent.match(/\d+/);
+                        const currentCount = match ? parseInt(match[0]) : 0;
+                        commentCountH3.textContent = '댓글 ' + (currentCount + data.count) + '개';
+                    }
+
+                    // 새 댓글 알림 표시 (선택사항)
+                    console.log('✨ 새 댓글이 도착했습니다!');
+                }
+            })
+            .catch(error => {
+                console.error('댓글 체크 오류:', error);
+            });
+    }, 3000); // 3초마다 체크
+})();
 </script>
 
 <style>
