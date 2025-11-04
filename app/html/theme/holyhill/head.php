@@ -55,7 +55,7 @@ include_once(G5_PATH.'/head.sub.php');
 <header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-gray-200">
     <div class="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
         <div class="flex items-center gap-3">
-            <a href="<?php echo G5_URL; ?>" class="flex items-center gap-2">
+            <a href="/" class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
                     <i class="fa-solid fa-cross text-white text-sm"></i>
                 </div>

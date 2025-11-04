@@ -7,7 +7,7 @@ if (!defined('_GNUBOARD_')) exit;
 <!-- 하단 네비게이션 -->
 <nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-gray-200 z-50">
     <div class="max-w-2xl mx-auto flex items-center justify-around py-3">
-        <a href="<?php echo G5_URL; ?>" class="flex flex-col items-center gap-1">
+        <a href="/" class="flex flex-col items-center gap-1">
             <i class="fa-solid fa-house text-purple-600 text-lg"></i>
             <span class="text-xs text-purple-600 font-medium">홈</span>
         </a>
