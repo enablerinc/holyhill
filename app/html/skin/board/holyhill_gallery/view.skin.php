@@ -255,21 +255,40 @@ function toggleGood() {
         const formData = new FormData(form);
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalContent = submitBtn.innerHTML;
-        
+
+        // 전송 중 표시
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-        
+
         fetch('<?php echo G5_BBS_URL; ?>/comment_write_ajax.php', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('응답 상태:', response.status);
+            return response.text();
+        })
+        .then(text => {
+            console.log('서버 응답 (원본):', text);
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                console.error('JSON 파싱 오류:', e);
+                console.error('응답 내용:', text);
+                throw new Error('서버 응답을 JSON으로 파싱할 수 없습니다.');
+            }
+        })
         .then(data => {
+            console.log('파싱된 데이터:', data);
+
             if (data.success) {
+                // 토큰 업데이트
                 if (data.new_token && tokenInput) {
                     tokenInput.value = data.new_token;
+                    console.log('새 토큰 설정:', data.new_token);
                 }
-                
+
+                // 새 댓글 HTML 생성
                 const newCommentHTML = `
                     <div class="flex gap-3 mb-3" style="animation: slideIn 0.3s ease-out;">
                         <img src="${data.comment.photo}" class="w-8 h-8 rounded-full">
@@ -279,45 +298,52 @@ function toggleGood() {
                         </div>
                     </div>
                 `;
-                
+
                 if (commentList) {
+                    // 빈 메시지 제거
                     const emptyMessage = commentList.querySelector('.text-center.text-gray-500');
                     if (emptyMessage) emptyMessage.remove();
-                    
+
+                    // 댓글 추가
                     commentList.insertAdjacentHTML('beforeend', newCommentHTML);
-                    
+
+                    // 스크롤 (부드럽게)
                     const allComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
                     const lastComment = allComments[allComments.length - 1];
                     lastComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
+
+                    // 하이라이트 효과 제거
                     setTimeout(() => {
                         lastComment.querySelector('.flex-1').style.background = '';
                     }, 2000);
                 }
-                
+
+                // 댓글 개수 업데이트
                 const commentCountH3 = commentList.previousElementSibling;
                 if (commentCountH3) {
                     const match = commentCountH3.textContent.match(/\d+/);
                     const currentCount = match ? parseInt(match[0]) : 0;
                     commentCountH3.textContent = '댓글 ' + (currentCount + 1) + '개';
                 }
-                
+
+                // 입력창 비우기
                 input.value = '';
-                input.focus();
-                
+
             } else {
+                // 실패 시 메시지 표시 (DB에 저장되었을 수도 있으므로 페이지 새로고침 권장)
+                console.error('댓글 저장 실패:', data.message);
                 alert(data.message || '댓글 작성 중 오류가 발생했습니다.');
-                input.focus();
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('댓글 작성 중 오류가 발생했습니다.');
-            input.focus();
+            console.error('요청 오류:', error);
+            alert('댓글 작성 중 오류가 발생했습니다.\n페이지를 새로고침하면 댓글이 표시될 수 있습니다.');
         })
         .finally(() => {
+            // 항상 버튼 복구 및 포커스
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalContent;
+            input.focus();
         });
     });
 })();
