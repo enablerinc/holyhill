@@ -25,7 +25,7 @@ body {
                 <i class="fa-solid fa-xmark text-xl"></i>
             </a>
             <h2 class="text-base font-semibold text-gray-900">새 게시물</h2>
-            <button type="submit" form="fwrite" class="text-blue-500 font-semibold hover:text-blue-600">공유</button>
+            <button type="submit" form="fwrite" id="btn_submit" class="text-blue-500 font-semibold hover:text-blue-600">공유</button>
         </div>
 
         <form name="fwrite" id="fwrite" action="<?php echo $action_url ?>" onsubmit="return fwrite_submit(this);" method="post" enctype="multipart/form-data" autocomplete="off">
@@ -33,6 +33,7 @@ body {
         <input type="hidden" name="w" value="<?php echo $w ?>">
         <input type="hidden" name="bo_table" value="<?php echo $bo_table ?>">
         <input type="hidden" name="wr_id" value="<?php echo $wr_id ?>">
+        <input type="hidden" name="token" value="" id="token">
         <input type="hidden" name="sca" value="<?php echo $sca ?>">
         <input type="hidden" name="sfl" value="<?php echo $sfl ?>">
         <input type="hidden" name="stx" value="<?php echo $stx ?>">
@@ -154,9 +155,12 @@ body {
         <!-- 캡션/내용 입력 -->
         <div class="px-4 py-4">
             <div class="flex items-start gap-3">
-                <?php if ($is_member) { ?>
-                <img src="<?php echo $member['mb_photo'] ? G5_DATA_URL.'/member/'.$member['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg'; ?>" 
-                     class="w-8 h-8 rounded-full flex-shrink-0 object-cover">
+                <?php if ($is_member) {
+                    $profile_photo = (isset($member['mb_photo']) && $member['mb_photo']) ? G5_DATA_URL.'/member/'.$member['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
+                ?>
+                <img src="<?php echo $profile_photo; ?>"
+                     class="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+                     alt="프로필">
                 <?php } else { ?>
                 <div class="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0"></div>
                 <?php } ?>
@@ -464,6 +468,37 @@ function fwrite_submit(f)
 {
     <?php echo $editor_js; ?>
 
+    // 디버거 시작 - 여기서 실행이 멈춥니다
+    debugger;
+
+    // 토큰 생성 및 설정
+    console.log("=== 토큰 생성 시작 ===");
+    var bo_table = f.bo_table.value;
+    console.log("bo_table:", bo_table);
+    console.log("get_write_token 함수 존재:", typeof get_write_token);
+
+    if (bo_table && typeof get_write_token === 'function') {
+        var token = get_write_token(bo_table);
+        console.log("생성된 토큰:", token);
+
+        // 토큰 생성 후 다시 멈춤
+        debugger;
+
+        if (token) {
+            f.token.value = token;
+            console.log("토큰 설정 완료:", f.token.value);
+        } else {
+            console.error("토큰 생성 실패!");
+            alert("토큰 생성에 실패했습니다.");
+            return false;
+        }
+    } else {
+        console.error("bo_table 없음 또는 get_write_token 함수 없음");
+        alert("오류: get_write_token 함수를 찾을 수 없습니다. Console을 확인하세요.");
+        return false;
+    }
+    console.log("=== 토큰 생성 완료 ===");
+
     var subject = "";
     var content = "";
     $.ajax({
@@ -532,7 +567,28 @@ function fwrite_submit(f)
 
     <?php echo $captcha_js; ?>
 
-    document.getElementById("btn_submit").disabled = "disabled";
+    // 최종 폼 데이터 확인
+    console.log("=== 최종 폼 제출 데이터 ===");
+    console.log("제목:", f.wr_subject.value);
+    console.log("내용:", f.wr_content.value);
+    console.log("토큰:", f.token.value);
+    console.log("bo_table:", f.bo_table.value);
+    console.log("w:", f.w.value);
+
+    // FormData로 전송될 모든 데이터 확인
+    var formData = new FormData(f);
+    console.log("=== FormData 내용 ===");
+    for (var pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+
+    // 제출 직전 최종 확인 - 여기서 멈춤
+    debugger;
+
+    var btn_submit = document.getElementById("btn_submit");
+    if (btn_submit) {
+        btn_submit.disabled = "disabled";
+    }
 
     return true;
 }
