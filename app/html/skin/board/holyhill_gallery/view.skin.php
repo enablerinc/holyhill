@@ -37,6 +37,15 @@ if ($is_member) {
     set_session('ss_comment_token', $comment_token);
 }
 
+// 본문에 사용된 이미지 인덱스 추출
+$used_image_indices = array();
+preg_match_all('/\[이미지(\d+)\]/', $view['wr_content'], $matches);
+if (!empty($matches[1])) {
+    foreach ($matches[1] as $num) {
+        $used_image_indices[] = intval($num) - 1; // 0-based index
+    }
+}
+
 // 본문에서 [이미지N]을 실제 이미지로 변환
 function replace_image_placeholders($content, $images, $bo_table) {
     // [이미지1], [이미지2] 등을 찾아서 실제 이미지 태그로 변환
@@ -54,6 +63,14 @@ function replace_image_placeholders($content, $images, $bo_table) {
 
 // 본문 내용 처리
 $processed_content = replace_image_placeholders(get_text($view['wr_content']), $images, $bo_table);
+
+// 상단 갤러리용 이미지 (본문에 사용되지 않은 이미지만)
+$gallery_images = array();
+foreach ($images as $idx => $image) {
+    if (!in_array($idx, $used_image_indices)) {
+        $gallery_images[] = $image;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ko">
@@ -62,6 +79,16 @@ $processed_content = replace_image_placeholders(get_text($view['wr_content']), $
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* 가로 스크롤 스타일 */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
 </head>
 <body class="bg-gray-50" style="margin: 0; padding: 0;">
 
@@ -88,12 +115,14 @@ $processed_content = replace_image_placeholders(get_text($view['wr_content']), $
                 </div>
             </div>
 
-            <!-- 이미지 갤러리 -->
-            <?php if (count($images) > 0) { ?>
-            <div class="space-y-2">
-                <?php foreach ($images as $image) { ?>
-                <div>
-                    <img src="<?php echo G5_DATA_URL.'/file/'.$bo_table.'/'.$image; ?>" class="w-full">
+            <!-- 이미지 갤러리 (본문에 삽입되지 않은 이미지만 표시) -->
+            <?php if (count($gallery_images) > 0) { ?>
+            <div class="flex overflow-x-auto gap-2 p-2 scrollbar-hide" style="scroll-snap-type: x mandatory;">
+                <?php foreach ($gallery_images as $image) { ?>
+                <div class="flex-shrink-0" style="scroll-snap-align: start;">
+                    <img src="<?php echo G5_DATA_URL.'/file/'.$bo_table.'/'.$image; ?>"
+                         class="h-80 w-auto object-cover rounded-lg"
+                         alt="갤러리 이미지">
                 </div>
                 <?php } ?>
             </div>
