@@ -154,9 +154,12 @@ body {
         <!-- 캡션/내용 입력 -->
         <div class="px-4 py-4">
             <div class="flex items-start gap-3">
-                <?php if ($is_member) { ?>
-                <img src="<?php echo $member['mb_photo'] ? G5_DATA_URL.'/member/'.$member['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg'; ?>" 
-                     class="w-8 h-8 rounded-full flex-shrink-0 object-cover">
+                <?php if ($is_member) {
+                    $profile_photo = (isset($member['mb_photo']) && $member['mb_photo']) ? G5_DATA_URL.'/member/'.$member['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
+                ?>
+                <img src="<?php echo $profile_photo; ?>"
+                     class="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+                     alt="프로필">
                 <?php } else { ?>
                 <div class="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0"></div>
                 <?php } ?>
