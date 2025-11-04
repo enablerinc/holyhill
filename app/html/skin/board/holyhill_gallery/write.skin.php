@@ -33,6 +33,7 @@ body {
         <input type="hidden" name="w" value="<?php echo $w ?>">
         <input type="hidden" name="bo_table" value="<?php echo $bo_table ?>">
         <input type="hidden" name="wr_id" value="<?php echo $wr_id ?>">
+        <input type="hidden" name="token" value="" id="token">
         <input type="hidden" name="sca" value="<?php echo $sca ?>">
         <input type="hidden" name="sfl" value="<?php echo $sfl ?>">
         <input type="hidden" name="stx" value="<?php echo $stx ?>">
@@ -466,6 +467,18 @@ function html_auto_br(obj)
 function fwrite_submit(f)
 {
     <?php echo $editor_js; ?>
+
+    // 토큰 생성 및 설정
+    var bo_table = f.bo_table.value;
+    if (bo_table && typeof get_write_token === 'function') {
+        var token = get_write_token(bo_table);
+        if (token) {
+            f.token.value = token;
+        } else {
+            alert("토큰 생성에 실패했습니다.");
+            return false;
+        }
+    }
 
     var subject = "";
     var content = "";
