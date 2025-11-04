@@ -460,13 +460,16 @@ for ($i=0; $i<$upload_count; $i++) {
         $file_count++;
 }
 
+// gallery 게시판은 10개까지 허용
+$max_upload_count = ($bo_table == 'gallery') ? 10 : $board['bo_upload_count'];
+
 if($w == 'u') {
     $file = get_file($bo_table, $wr_id);
-    if($file_count && (int)$file['count'] > $board['bo_upload_count'])
-        alert('기존 파일을 삭제하신 후 첨부파일을 '.number_format($board['bo_upload_count']).'개 이하로 업로드 해주십시오.');
+    if($file_count && (int)$file['count'] > $max_upload_count)
+        alert('기존 파일을 삭제하신 후 첨부파일을 '.number_format($max_upload_count).'개 이하로 업로드 해주십시오.');
 } else {
-    if($file_count > $board['bo_upload_count'])
-        alert('첨부파일을 '.number_format($board['bo_upload_count']).'개 이하로 업로드 해주십시오.');
+    if($file_count > $max_upload_count)
+        alert('첨부파일을 '.number_format($max_upload_count).'개 이하로 업로드 해주십시오.');
 }
 
 // 디렉토리가 없다면 생성합니다. (퍼미션도 변경하구요.)
