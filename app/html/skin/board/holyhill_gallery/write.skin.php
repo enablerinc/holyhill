@@ -34,6 +34,10 @@ body {
         <input type="hidden" name="bo_table" value="<?php echo $bo_table ?>">
         <input type="hidden" name="wr_id" value="<?php echo $wr_id ?>">
         <input type="hidden" name="token" value="" id="token">
+        <?php
+        // 파일 업로드 개수를 강제로 10개로 설정
+        $file_count = max(10, $file_count);
+        ?>
         <input type="hidden" name="sca" value="<?php echo $sca ?>">
         <input type="hidden" name="sfl" value="<?php echo $sfl ?>">
         <input type="hidden" name="stx" value="<?php echo $stx ?>">
@@ -222,6 +226,31 @@ body {
     height: 100%;
     object-fit: cover;
 }
+.preview-item .insert-content-btn {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background: rgba(139, 92, 246, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+.preview-item:hover .insert-content-btn {
+    opacity: 1;
+}
+.preview-item .insert-content-btn:hover {
+    background: rgba(124, 58, 237, 1);
+    transform: scale(1.1);
+}
 .preview-item .remove-btn {
     position: absolute;
     top: 4px;
@@ -355,45 +384,83 @@ function handleFiles(files) {
 function addPreview(file, index) {
     const previewGrid = document.getElementById('preview-grid');
     const reader = new FileReader();
-    
+
     reader.onload = function(e) {
         const div = document.createElement('div');
         div.className = 'preview-item';
         div.setAttribute('data-index', index);
         div.innerHTML = `
-            <img src="${e.target.result}" alt="preview">
+            <img src="${e.target.result}" alt="preview" data-index="${index}">
             <span class="index-badge">${index + 1}</span>
+            <button type="button" class="insert-content-btn" onclick="insertImageToContent(${index})" title="본문에 삽입">
+                <i class="fa-solid fa-plus"></i>
+            </button>
             <button type="button" class="remove-btn" onclick="removeImage(${index})">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         `;
         previewGrid.appendChild(div);
     };
-    
+
     reader.readAsDataURL(file);
+}
+
+// 이미지를 본문에 삽입
+function insertImageToContent(index) {
+    const contentTextarea = document.getElementById('wr_content');
+    if (!contentTextarea) {
+        alert('본문 입력창을 찾을 수 없습니다.');
+        return;
+    }
+
+    // 이미지 placeholder 생성
+    const imagePlaceholder = `[이미지${index + 1}]\n\n`;
+
+    // 커서 위치에 삽입
+    const startPos = contentTextarea.selectionStart;
+    const endPos = contentTextarea.selectionEnd;
+    const currentValue = contentTextarea.value;
+
+    contentTextarea.value = currentValue.substring(0, startPos) + imagePlaceholder + currentValue.substring(endPos);
+
+    // 커서 위치를 삽입된 텍스트 뒤로 이동
+    contentTextarea.selectionStart = contentTextarea.selectionEnd = startPos + imagePlaceholder.length;
+    contentTextarea.focus();
+
+    // 피드백
+    const insertBtn = event.target.closest('.insert-content-btn');
+    if (insertBtn) {
+        const originalHTML = insertBtn.innerHTML;
+        insertBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        insertBtn.style.backgroundColor = '#10b981';
+        setTimeout(() => {
+            insertBtn.innerHTML = originalHTML;
+            insertBtn.style.backgroundColor = '';
+        }, 1000);
+    }
 }
 
 // 이미지 제거
 function removeImage(index) {
     uploadedFiles.splice(index, 1);
-    
+
     const previewGrid = document.getElementById('preview-grid');
     const currentCount = document.getElementById('current-count');
-    
+
     // 프리뷰 재생성
     previewGrid.innerHTML = '';
     uploadedFiles.forEach((file, idx) => {
         addPreview(file, idx);
     });
-    
+
     // UI 업데이트
     currentCount.textContent = uploadedFiles.length;
-    
+
     if (uploadedFiles.length === 0) {
         previewGrid.classList.add('hidden');
         document.getElementById('image-counter').classList.add('hidden');
     }
-    
+
     updateFileInput();
 }
 
@@ -441,22 +508,15 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // 버튼 클릭 시 폼 제출
 function submitPost() {
-    alert("submitPost 함수가 호출되었습니다!");
-
     var form = document.getElementById("fwrite");
     if (!form) {
         alert("폼을 찾을 수 없습니다!");
         return false;
     }
 
-    alert("폼을 찾았습니다. 이제 fwrite_submit을 호출합니다.");
-
     // fwrite_submit 호출
     if (fwrite_submit(form)) {
-        alert("검증 통과! 폼을 제출합니다.");
         form.submit();
-    } else {
-        alert("검증 실패! 폼을 제출하지 않습니다.");
     }
 }
 
@@ -489,29 +549,18 @@ function fwrite_submit(f)
 {
     <?php echo $editor_js; ?>
 
-    // 1단계: 함수 시작 확인
-    alert("1단계: fwrite_submit 함수가 실행되었습니다!");
-
     // 토큰 생성 및 설정
     var bo_table = f.bo_table.value;
-    alert("2단계: bo_table = " + bo_table);
-
-    var tokenFuncType = typeof get_write_token;
-    alert("3단계: get_write_token 함수 타입 = " + tokenFuncType);
-
     if (bo_table && typeof get_write_token === 'function') {
         var token = get_write_token(bo_table);
-        alert("4단계: 생성된 토큰 = " + token);
-
         if (token) {
             f.token.value = token;
-            alert("5단계: 토큰 설정 완료! f.token.value = " + f.token.value);
         } else {
-            alert("오류: 토큰이 빈 값입니다!");
+            alert("토큰 생성에 실패했습니다.");
             return false;
         }
     } else {
-        alert("오류: bo_table=" + bo_table + ", get_write_token=" + tokenFuncType);
+        alert("오류: 토큰 생성 함수를 찾을 수 없습니다.");
         return false;
     }
 
@@ -583,15 +632,10 @@ function fwrite_submit(f)
 
     <?php echo $captcha_js; ?>
 
-    // 최종 확인
-    alert("6단계: 모든 검증 통과! 최종 토큰 = " + f.token.value);
-
     var btn_submit = document.getElementById("btn_submit");
     if (btn_submit) {
         btn_submit.disabled = "disabled";
     }
-
-    alert("7단계: 이제 폼을 제출합니다. OK를 누르면 제출됩니다.");
 
     return true;
 }
