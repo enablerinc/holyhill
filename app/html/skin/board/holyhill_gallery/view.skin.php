@@ -232,19 +232,26 @@ function toggleGood() {
 (function() {
     const form = document.getElementById('commentForm');
     const input = document.getElementById('commentInput');
-    const tokenInput = document.querySelector('input[name="token"]');
     const commentList = document.getElementById('comment-list');
-    
+
     if (!form || !input) return;
+
+    const tokenInput = form.querySelector('input[name="token"]');
     
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         if (!input.value.trim()) {
             input.focus();
             return;
         }
-        
+
+        // 토큰 확인
+        if (!tokenInput || !tokenInput.value) {
+            alert('토큰 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+            return;
+        }
+
         const formData = new FormData(form);
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalContent = submitBtn.innerHTML;
