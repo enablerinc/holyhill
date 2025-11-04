@@ -130,28 +130,36 @@ tailwind.config = {
                 <?php
                 for ($i=0; $i<count($list); $i++) {
                     $wr_id = $list[$i]['wr_id'];
-                    
+
                     // 첫 번째 이미지 가져오기
                     $first_image = '';
                     $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
                     if ($img_result && $img = sql_fetch_array($img_result)) {
                         $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
                     }
-                    
-                    // 이미지가 없으면 기본 이미지 또는 스킵
-                    if (!$first_image) {
-                        $first_image = G5_THEME_URL.'/img/no-image.png'; // 기본 이미지
-                    }
-                    
+
                     $view_href = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
                     $good_count = isset($list[$i]['wr_good']) ? $list[$i]['wr_good'] : 0;
+
+                    // 텍스트 콘텐츠 추출 (이미지가 없을 때 사용)
+                    $text_content = strip_tags($list[$i]['wr_content']);
+                    $text_content = preg_replace('/\[이미지\d+\]/', '', $text_content);
+                    $text_content = trim($text_content);
                 ?>
-                
+
                 <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
-                    <a href="<?php echo $view_href; ?>">
-                        <img class="w-full h-full object-cover hover:opacity-95 transition-opacity" 
-                             src="<?php echo $first_image; ?>" 
-                             alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
+                    <a href="<?php echo $view_href; ?>" class="block w-full h-full">
+                        <?php if ($first_image) { ?>
+                            <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
+                                 src="<?php echo $first_image; ?>"
+                                 alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
+                        <?php } else { ?>
+                            <div class="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex items-center justify-center hover:opacity-95 transition-opacity">
+                                <p class="text-xs text-gray-700 leading-relaxed line-clamp-6 break-words">
+                                    <?php echo $text_content ? cut_str($text_content, 80) : '내용 없음'; ?>
+                                </p>
+                            </div>
+                        <?php } ?>
                     </a>
                     <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1">
                         <i class="fa-solid fa-heart text-red-400 text-xs"></i>
@@ -245,12 +253,28 @@ tailwind.config = {
                     const grid = document.querySelector('.grid.grid-cols-3');
                     
                     data.items.forEach(item => {
+                        let contentHTML = '';
+                        if (item.has_image) {
+                            contentHTML = `
+                                <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
+                                     src="${item.image}"
+                                     alt="${item.subject}">
+                            `;
+                        } else {
+                            const textContent = item.text_content || '내용 없음';
+                            contentHTML = `
+                                <div class="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex items-center justify-center hover:opacity-95 transition-opacity">
+                                    <p class="text-xs text-gray-700 leading-relaxed line-clamp-6 break-words">
+                                        ${textContent}
+                                    </p>
+                                </div>
+                            `;
+                        }
+
                         const itemHTML = `
                             <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
-                                <a href="${item.view_href}">
-                                    <img class="w-full h-full object-cover hover:opacity-95 transition-opacity" 
-                                         src="${item.image}" 
-                                         alt="${item.subject}">
+                                <a href="${item.view_href}" class="block w-full h-full">
+                                    ${contentHTML}
                                 </a>
                                 <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1">
                                     <i class="fa-solid fa-heart text-red-400 text-xs"></i>
