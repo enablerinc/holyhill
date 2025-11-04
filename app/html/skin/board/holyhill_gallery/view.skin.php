@@ -266,16 +266,31 @@ function toggleGood() {
         })
         .then(response => {
             console.log('응답 상태:', response.status);
+            if (!response.ok) {
+                alert('서버 오류: HTTP ' + response.status);
+                throw new Error('HTTP ' + response.status);
+            }
             return response.text();
         })
         .then(text => {
             console.log('서버 응답 (원본):', text);
+
+            // 응답이 비어있는지 확인
+            if (!text || text.trim() === '') {
+                alert('서버 응답이 비어있습니다.');
+                throw new Error('빈 응답');
+            }
+
             try {
                 return JSON.parse(text);
             } catch(e) {
                 console.error('JSON 파싱 오류:', e);
                 console.error('응답 내용:', text);
-                throw new Error('서버 응답을 JSON으로 파싱할 수 없습니다.');
+
+                // 서버 응답의 일부를 alert로 표시
+                const preview = text.substring(0, 200);
+                alert('JSON 파싱 오류!\n\n서버 응답 미리보기:\n' + preview + '\n\n전체 내용은 Console을 확인하세요.');
+                throw new Error('JSON 파싱 실패');
             }
         })
         .then(data => {
@@ -337,7 +352,7 @@ function toggleGood() {
         })
         .catch(error => {
             console.error('요청 오류:', error);
-            alert('댓글 작성 중 오류가 발생했습니다.\n페이지를 새로고침하면 댓글이 표시될 수 있습니다.');
+            alert('오류 발생!\n\n오류 내용: ' + error.message + '\n\nDB에는 저장되었을 수 있으니 페이지를 새로고침해주세요.');
         })
         .finally(() => {
             // 항상 버튼 복구 및 포커스
