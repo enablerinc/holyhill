@@ -161,7 +161,7 @@ $processed_content = replace_image_placeholders(get_text($view['wr_content']), $
 <div id="commentFormWrapper" style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 2px solid #e5e7eb; z-index: 99999; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);">
     <div style="max-width: 640px; margin: 0 auto;">
         <?php if ($is_member) { ?>
-        <form id="commentForm" method="post" action="<?php echo G5_BBS_URL; ?>/comment_write_ajax.php" style="padding: 16px;">
+        <form id="commentForm" method="post" action="<?php echo G5_BBS_URL; ?>/comment_write_ajax.php" style="padding: 16px;" novalidate>
             <input type="hidden" name="w" value="c">
             <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
             <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
@@ -237,19 +237,27 @@ function toggleGood() {
     if (!form || !input) return;
 
     const tokenInput = form.querySelector('input[name="token"]');
-    
-    form.addEventListener('submit', function(e) {
+
+    // wrest.js의 oldsubmit 메서드 제거
+    if (form.oldsubmit) {
+        delete form.oldsubmit;
+    }
+
+    // submit 이벤트 핸들러 (capture phase에서 실행하여 wrest.js보다 우선)
+    const handleSubmit = function(e) {
         e.preventDefault();
+        e.stopImmediatePropagation(); // 다른 모든 리스너 중단
+        e.stopPropagation();
 
         if (!input.value.trim()) {
             input.focus();
-            return;
+            return false;
         }
 
         // 토큰 확인
         if (!tokenInput || !tokenInput.value) {
             alert('토큰 오류가 발생했습니다. 페이지를 새로고침해주세요.');
-            return;
+            return false;
         }
 
         const formData = new FormData(form);
@@ -360,7 +368,12 @@ function toggleGood() {
             submitBtn.innerHTML = originalContent;
             input.focus();
         });
-    });
+
+        return false; // 폼 기본 동작 완전 차단
+    };
+
+    // capture phase에서 실행하여 wrest.js보다 먼저 처리
+    form.addEventListener('submit', handleSubmit, true);
 })();
 </script>
 
