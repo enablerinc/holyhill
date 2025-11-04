@@ -468,36 +468,31 @@ function fwrite_submit(f)
 {
     <?php echo $editor_js; ?>
 
-    // 디버거 시작 - 여기서 실행이 멈춥니다
-    debugger;
+    // 1단계: 함수 시작 확인
+    alert("1단계: fwrite_submit 함수가 실행되었습니다!");
 
     // 토큰 생성 및 설정
-    console.log("=== 토큰 생성 시작 ===");
     var bo_table = f.bo_table.value;
-    console.log("bo_table:", bo_table);
-    console.log("get_write_token 함수 존재:", typeof get_write_token);
+    alert("2단계: bo_table = " + bo_table);
+
+    var tokenFuncType = typeof get_write_token;
+    alert("3단계: get_write_token 함수 타입 = " + tokenFuncType);
 
     if (bo_table && typeof get_write_token === 'function') {
         var token = get_write_token(bo_table);
-        console.log("생성된 토큰:", token);
-
-        // 토큰 생성 후 다시 멈춤
-        debugger;
+        alert("4단계: 생성된 토큰 = " + token);
 
         if (token) {
             f.token.value = token;
-            console.log("토큰 설정 완료:", f.token.value);
+            alert("5단계: 토큰 설정 완료! f.token.value = " + f.token.value);
         } else {
-            console.error("토큰 생성 실패!");
-            alert("토큰 생성에 실패했습니다.");
+            alert("오류: 토큰이 빈 값입니다!");
             return false;
         }
     } else {
-        console.error("bo_table 없음 또는 get_write_token 함수 없음");
-        alert("오류: get_write_token 함수를 찾을 수 없습니다. Console을 확인하세요.");
+        alert("오류: bo_table=" + bo_table + ", get_write_token=" + tokenFuncType);
         return false;
     }
-    console.log("=== 토큰 생성 완료 ===");
 
     var subject = "";
     var content = "";
@@ -567,28 +562,15 @@ function fwrite_submit(f)
 
     <?php echo $captcha_js; ?>
 
-    // 최종 폼 데이터 확인
-    console.log("=== 최종 폼 제출 데이터 ===");
-    console.log("제목:", f.wr_subject.value);
-    console.log("내용:", f.wr_content.value);
-    console.log("토큰:", f.token.value);
-    console.log("bo_table:", f.bo_table.value);
-    console.log("w:", f.w.value);
-
-    // FormData로 전송될 모든 데이터 확인
-    var formData = new FormData(f);
-    console.log("=== FormData 내용 ===");
-    for (var pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
-    }
-
-    // 제출 직전 최종 확인 - 여기서 멈춤
-    debugger;
+    // 최종 확인
+    alert("6단계: 모든 검증 통과! 최종 토큰 = " + f.token.value);
 
     var btn_submit = document.getElementById("btn_submit");
     if (btn_submit) {
         btn_submit.disabled = "disabled";
     }
+
+    alert("7단계: 이제 폼을 제출합니다. OK를 누르면 제출됩니다.");
 
     return true;
 }
