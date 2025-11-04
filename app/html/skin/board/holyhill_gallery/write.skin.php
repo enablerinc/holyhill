@@ -25,7 +25,7 @@ body {
                 <i class="fa-solid fa-xmark text-xl"></i>
             </a>
             <h2 class="text-base font-semibold text-gray-900">새 게시물</h2>
-            <button type="submit" form="fwrite" class="text-blue-500 font-semibold hover:text-blue-600">공유</button>
+            <button type="submit" form="fwrite" id="btn_submit" class="text-blue-500 font-semibold hover:text-blue-600">공유</button>
         </div>
 
         <form name="fwrite" id="fwrite" action="<?php echo $action_url ?>" onsubmit="return fwrite_submit(this);" method="post" enctype="multipart/form-data" autocomplete="off">
@@ -532,7 +532,10 @@ function fwrite_submit(f)
 
     <?php echo $captcha_js; ?>
 
-    document.getElementById("btn_submit").disabled = "disabled";
+    var btn_submit = document.getElementById("btn_submit");
+    if (btn_submit) {
+        btn_submit.disabled = "disabled";
+    }
 
     return true;
 }
