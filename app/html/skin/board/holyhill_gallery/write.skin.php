@@ -468,6 +468,9 @@ function fwrite_submit(f)
 {
     <?php echo $editor_js; ?>
 
+    // 디버거 시작 - 여기서 실행이 멈춥니다
+    debugger;
+
     // 토큰 생성 및 설정
     console.log("=== 토큰 생성 시작 ===");
     var bo_table = f.bo_table.value;
@@ -477,6 +480,10 @@ function fwrite_submit(f)
     if (bo_table && typeof get_write_token === 'function') {
         var token = get_write_token(bo_table);
         console.log("생성된 토큰:", token);
+
+        // 토큰 생성 후 다시 멈춤
+        debugger;
+
         if (token) {
             f.token.value = token;
             console.log("토큰 설정 완료:", f.token.value);
@@ -487,6 +494,8 @@ function fwrite_submit(f)
         }
     } else {
         console.error("bo_table 없음 또는 get_write_token 함수 없음");
+        alert("오류: get_write_token 함수를 찾을 수 없습니다. Console을 확인하세요.");
+        return false;
     }
     console.log("=== 토큰 생성 완료 ===");
 
@@ -572,6 +581,9 @@ function fwrite_submit(f)
     for (var pair of formData.entries()) {
         console.log(pair[0] + ': ' + pair[1]);
     }
+
+    // 제출 직전 최종 확인 - 여기서 멈춤
+    debugger;
 
     var btn_submit = document.getElementById("btn_submit");
     if (btn_submit) {
