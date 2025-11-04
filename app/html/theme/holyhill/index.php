@@ -157,9 +157,11 @@ include_once(G5_THEME_PATH.'/head.php');
 
                     <?php if ($feed_img) { ?>
                     <div class="w-full">
-                        <img src="<?php echo $feed_img; ?>" 
-                             class="w-full h-auto max-h-[500px] object-cover"
-                             alt="<?php echo $feed['wr_subject']; ?>">
+                        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>">
+                            <img src="<?php echo $feed_img; ?>"
+                                 class="w-full h-auto max-h-[500px] object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                 alt="<?php echo $feed['wr_subject']; ?>">
+                        </a>
                     </div>
                     <?php } ?>
 
