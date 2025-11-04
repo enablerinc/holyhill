@@ -25,7 +25,7 @@ body {
                 <i class="fa-solid fa-xmark text-xl"></i>
             </a>
             <h2 class="text-base font-semibold text-gray-900">새 게시물</h2>
-            <button type="submit" form="fwrite" id="btn_submit" class="text-blue-500 font-semibold hover:text-blue-600">공유</button>
+            <button type="button" id="btn_submit" onclick="submitPost()" class="text-blue-500 font-semibold hover:text-blue-600">공유</button>
         </div>
 
         <form name="fwrite" id="fwrite" action="<?php echo $action_url ?>" onsubmit="return fwrite_submit(this);" method="post" enctype="multipart/form-data" autocomplete="off">
@@ -439,6 +439,27 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
+// 버튼 클릭 시 폼 제출
+function submitPost() {
+    alert("submitPost 함수가 호출되었습니다!");
+
+    var form = document.getElementById("fwrite");
+    if (!form) {
+        alert("폼을 찾을 수 없습니다!");
+        return false;
+    }
+
+    alert("폼을 찾았습니다. 이제 fwrite_submit을 호출합니다.");
+
+    // fwrite_submit 호출
+    if (fwrite_submit(form)) {
+        alert("검증 통과! 폼을 제출합니다.");
+        form.submit();
+    } else {
+        alert("검증 실패! 폼을 제출하지 않습니다.");
+    }
+}
+
 <?php if($write_min || $write_max) { ?>
 var char_min = parseInt(<?php echo $write_min; ?>);
 var char_max = parseInt(<?php echo $write_max; ?>);
