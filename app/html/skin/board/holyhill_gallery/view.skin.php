@@ -117,11 +117,11 @@ foreach ($images as $idx => $image) {
 
             <!-- 이미지 갤러리 (본문에 삽입되지 않은 이미지만 표시) -->
             <?php if (count($gallery_images) > 0) { ?>
-            <div class="flex overflow-x-auto gap-2 p-2 scrollbar-hide" style="scroll-snap-type: x mandatory;">
+            <div class="flex overflow-x-auto gap-3 p-3 scrollbar-hide" style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
                 <?php foreach ($gallery_images as $image) { ?>
-                <div class="flex-shrink-0" style="scroll-snap-align: start;">
+                <div class="flex-shrink-0" style="scroll-snap-align: start; width: 85vw; max-width: 500px;">
                     <img src="<?php echo G5_DATA_URL.'/file/'.$bo_table.'/'.$image; ?>"
-                         class="h-80 w-auto object-cover rounded-lg"
+                         class="w-full h-80 object-cover rounded-lg"
                          alt="갤러리 이미지">
                 </div>
                 <?php } ?>
