@@ -1,31 +1,77 @@
-# 민감한 정보
-app/html/data/
-app/html/config.php
-infra/docker-compose.yml
+# 성산교회 커뮤니티 SNS - .gitignore
+
+# 환경 변수 (중요!)
+.env
+.env.*
+!.env.example
+
+# 데이터베이스 데이터
+data/db/*
+!data/db/.gitkeep
+
+# Redis 데이터
+data/redis/*
+!data/redis/.gitkeep
+
+# 백업 파일
+backups/
+*.sql
+*.sql.gz
 
 # 업로드 파일
-app/uploads/
-data/
+app/uploads/*
+!app/uploads/.gitkeep
 
-# 캐시
-app/html/data/cache/
-app/html/data/session/
-app/html/data/log/
+# 그누보드 캐시 및 데이터
+app/html/data/cache/*
+app/html/data/session/*
+app/html/data/log/*
+app/html/data/dbconfig.php
 
-# DB 백업
-data/db/
+# 로그 파일
+*.log
+logs/
 
-# 환경 변수
-.env
-*.env
-
-# 임시 파일
-*.bak
-*.backup
-*.old
-*.tmp
-*~
-
-# OS 파일
+# OS 생성 파일
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# IDE 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker 볼륨
+volumes/
+
+# 임시 파일
+tmp/
+temp/
+*.tmp
+
+# Windows 특정
+$RECYCLE.BIN/
+*.lnk
+
+# 그누보드 설정 파일 (중요!)
+app/html/config.php
+app/html/data/*
+!app/html/data/.gitkeep
+
+# 인프라 설정 (로컬 환경)
+infra/env
+infra/env.*
+infra/docker-compose.yml
+infra/*.bat
+infra/*.ps1
+
+# 백업 파일
+*.bak
+*.backup
+
+# PHP 백업
+*.php.bak
+*.php.backup
