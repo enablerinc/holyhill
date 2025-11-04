@@ -257,6 +257,18 @@ function toggleGood() {
     });
 }
 
+// 전역 변수: 마지막 댓글 ID (polling과 공유)
+window.lastCommentId = <?php
+    $max_comment_id = 0;
+    $comment_sql = "SELECT MAX(wr_id) as max_id FROM {$g5['write_prefix']}{$bo_table}
+                    WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1";
+    $comment_result = sql_fetch($comment_sql);
+    if ($comment_result) {
+        $max_comment_id = $comment_result['max_id'] ? $comment_result['max_id'] : 0;
+    }
+    echo $max_comment_id;
+?>;
+
 // AJAX 댓글 제출
 (function() {
     const form = document.getElementById('commentForm');
@@ -340,6 +352,12 @@ function toggleGood() {
                     console.log('새 토큰 설정:', data.new_token);
                 }
 
+                // ✅ 작성한 댓글 ID를 전역 변수에 업데이트 (polling 중복 방지)
+                if (data.comment.id) {
+                    window.lastCommentId = Math.max(window.lastCommentId, data.comment.id);
+                    console.log('마지막 댓글 ID 업데이트:', window.lastCommentId);
+                }
+
                 // 새 댓글 HTML 생성
                 const newCommentHTML = `
                     <div class="flex gap-3 mb-3" style="animation: slideIn 0.3s ease-out;">
@@ -410,35 +428,9 @@ function toggleGood() {
     const commentList = document.getElementById('comment-list');
     if (!commentList) return;
 
-    // 현재 마지막 댓글 ID 가져오기
-    let lastCommentId = 0;
-    const allComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
-    if (allComments.length > 0) {
-        // 데이터 속성이나 다른 방법으로 ID를 추적하는 것이 좋지만,
-        // 여기서는 서버에서 가져온 모든 댓글을 기준으로 시작
-        // 초기 댓글 개수를 기준으로 polling 시작
-        const commentCountH3 = commentList.previousElementSibling;
-        if (commentCountH3) {
-            const match = commentCountH3.textContent.match(/\d+/);
-            lastCommentId = match ? parseInt(match[0]) : 0;
-        }
-    }
-
-    // 모든 댓글에서 최대 wr_id 찾기
-    <?php
-    $max_comment_id = 0;
-    $comment_sql = "SELECT MAX(wr_id) as max_id FROM {$g5['write_prefix']}{$bo_table}
-                    WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1";
-    $comment_result = sql_fetch($comment_sql);
-    if ($comment_result) {
-        $max_comment_id = $comment_result['max_id'] ? $comment_result['max_id'] : 0;
-    }
-    ?>
-    lastCommentId = <?php echo $max_comment_id; ?>;
-
-    // 3초마다 새 댓글 체크
+    // 3초마다 새 댓글 체크 (window.lastCommentId 사용)
     setInterval(function() {
-        fetch('<?php echo G5_BBS_URL; ?>/comment_check.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&last_id=' + lastCommentId)
+        fetch('<?php echo G5_BBS_URL; ?>/comment_check.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&last_id=' + window.lastCommentId)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.has_new) {
@@ -463,8 +455,8 @@ function toggleGood() {
 
                         commentList.insertAdjacentHTML('beforeend', newCommentHTML);
 
-                        // 마지막 댓글 ID 업데이트
-                        lastCommentId = Math.max(lastCommentId, comment.wr_id);
+                        // 마지막 댓글 ID 업데이트 (전역 변수)
+                        window.lastCommentId = Math.max(window.lastCommentId, comment.wr_id);
 
                         // 하이라이트 효과
                         const allNewComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
