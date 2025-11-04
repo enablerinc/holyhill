@@ -469,16 +469,26 @@ function fwrite_submit(f)
     <?php echo $editor_js; ?>
 
     // 토큰 생성 및 설정
+    console.log("=== 토큰 생성 시작 ===");
     var bo_table = f.bo_table.value;
+    console.log("bo_table:", bo_table);
+    console.log("get_write_token 함수 존재:", typeof get_write_token);
+
     if (bo_table && typeof get_write_token === 'function') {
         var token = get_write_token(bo_table);
+        console.log("생성된 토큰:", token);
         if (token) {
             f.token.value = token;
+            console.log("토큰 설정 완료:", f.token.value);
         } else {
+            console.error("토큰 생성 실패!");
             alert("토큰 생성에 실패했습니다.");
             return false;
         }
+    } else {
+        console.error("bo_table 없음 또는 get_write_token 함수 없음");
     }
+    console.log("=== 토큰 생성 완료 ===");
 
     var subject = "";
     var content = "";
@@ -547,6 +557,21 @@ function fwrite_submit(f)
     }
 
     <?php echo $captcha_js; ?>
+
+    // 최종 폼 데이터 확인
+    console.log("=== 최종 폼 제출 데이터 ===");
+    console.log("제목:", f.wr_subject.value);
+    console.log("내용:", f.wr_content.value);
+    console.log("토큰:", f.token.value);
+    console.log("bo_table:", f.bo_table.value);
+    console.log("w:", f.w.value);
+
+    // FormData로 전송될 모든 데이터 확인
+    var formData = new FormData(f);
+    console.log("=== FormData 내용 ===");
+    for (var pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
 
     var btn_submit = document.getElementById("btn_submit");
     if (btn_submit) {
