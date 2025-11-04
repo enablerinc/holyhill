@@ -163,6 +163,23 @@ include_once(G5_THEME_PATH.'/head.php');
                                  alt="<?php echo $feed['wr_subject']; ?>">
                         </a>
                     </div>
+                    <?php } else { ?>
+                    <!-- 이미지가 없을 때 텍스트 콘텐츠를 카드로 표시 -->
+                    <div class="w-full">
+                        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
+                           class="block bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-8 min-h-[300px] flex items-center justify-center cursor-pointer hover:opacity-95 transition-opacity">
+                            <div class="text-center">
+                                <p class="text-lg font-medium text-gray-800 leading-relaxed line-clamp-6">
+                                    <?php
+                                    $text_content = strip_tags($feed['wr_content']);
+                                    $text_content = str_replace('&nbsp;', ' ', $text_content);
+                                    $text_content = trim($text_content);
+                                    echo cut_str($text_content, 200);
+                                    ?>
+                                </p>
+                            </div>
+                        </a>
+                    </div>
                     <?php } ?>
 
                     <div class="p-4">
