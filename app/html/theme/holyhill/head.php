@@ -90,4 +90,4 @@ include_once(G5_PATH.'/head.sub.php');
 </header>
 
 <!-- 메인 컨텐츠 -->
-<main id="main-content">
+<main id="main-content" class="max-w-2xl mx-auto">

@@ -4,9 +4,7 @@ if (!defined('_GNUBOARD_')) exit;
 include_once(G5_THEME_PATH.'/head.php');
 ?>
 
-<div id="main-container" class="max-w-2xl mx-auto">
-
-    <!-- 오늘의 말씀 위젯 -->
+<!-- 오늘의 말씀 위젯 -->
     <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
         <?php
         $word_sql = "SELECT wr_id, wr_subject, wr_content, wr_datetime, wr_name
@@ -62,7 +60,7 @@ include_once(G5_THEME_PATH.'/head.php');
     </section>
 
     <!-- 피드 섹션 (중요: wr_is_comment = 0 조건 추가!) -->
-    <section id="feed" class="space-y-4 pb-20">
+    <section id="feed" class="space-y-4">
         <?php
         // ✅ WHERE wr_is_comment = 0 추가 (게시글만 가져오기)
         $feed_sql = "SELECT * FROM {$g5['write_prefix']}gallery 
@@ -197,8 +195,6 @@ include_once(G5_THEME_PATH.'/head.php');
         }
         ?>
     </section>
-
-</div>
 
 <div id="floating-attendance" 
      onclick="alert('출석 체크 기능은 추후 구현됩니다')"
