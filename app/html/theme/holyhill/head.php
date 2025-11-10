@@ -30,9 +30,24 @@ include_once(G5_PATH.'/head.sub.php');
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #F3F4F6;
+            margin: 0;
+            padding: 0;
         }
         .gradient-bg {
             background: linear-gradient(135deg, #E8E2F7 0%, #F8F6FF 100%);
+        }
+        /* 모바일에서 콘텐츠가 header/footer에 가려지지 않도록 */
+        #main-content {
+            padding-top: 64px;  /* header 높이 */
+            padding-bottom: 80px; /* footer 높이 */
+            min-height: 100vh;
+        }
+        /* 모바일 안전 영역 확보 */
+        @supports (padding: max(0px)) {
+            #main-content {
+                padding-top: max(64px, env(safe-area-inset-top));
+                padding-bottom: max(80px, env(safe-area-inset-bottom));
+            }
         }
     </style>
     
@@ -75,4 +90,4 @@ include_once(G5_PATH.'/head.sub.php');
 </header>
 
 <!-- 메인 컨텐츠 -->
-<main id="main-content" class="pt-16 pb-20 min-h-screen">
+<main id="main-content">
