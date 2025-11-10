@@ -20,45 +20,24 @@ include_once(G5_THEME_PATH.'/head.php');
             </div>
 
             <?php
-            // 최근 게시글을 작성한 사용자와 해당 게시글 정보 가져오기
-            $story_sql = "SELECT
-                            m.mb_id,
-                            m.mb_nick,
-                            m.mb_photo,
-                            w.wr_id,
-                            w.wr_datetime,
-                            w.wr_subject
-                        FROM {$g5['member_table']} m
-                        INNER JOIN (
-                            SELECT mb_id, MAX(wr_id) as latest_wr_id
-                            FROM {$g5['write_prefix']}gallery
-                            WHERE wr_is_comment = 0
-                            AND mb_id != ''
-                            GROUP BY mb_id
-                        ) latest ON m.mb_id = latest.mb_id
-                        INNER JOIN {$g5['write_prefix']}gallery w ON w.wr_id = latest.latest_wr_id
-                        ORDER BY w.wr_datetime DESC
-                        LIMIT 10";
+            $story_sql = "SELECT mb_id, mb_nick, mb_photo FROM {$g5['member_table']} 
+                         WHERE mb_level >= 2 
+                         ORDER BY mb_today_login DESC 
+                         LIMIT 10";
             $story_result = sql_query($story_sql);
-
+            
             while ($story = sql_fetch_array($story_result)) {
                 $story_photo = $story['mb_photo'] ? G5_DATA_URL.'/member/'.$story['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
                 $story_nick = $story['mb_nick'] ? $story['mb_nick'] : '회원';
-                $post_url = G5_BBS_URL.'/board.php?bo_table=gallery&wr_id='.$story['wr_id'];
-
-                // 24시간 이내 작성된 글인지 확인
-                $is_new = (strtotime($story['wr_datetime']) > strtotime('-24 hours'));
-                $gradient_class = $is_new ? 'from-purple-400 to-pink-400' : 'from-gray-300 to-gray-400';
                 ?>
-                <a href="<?php echo $post_url; ?>" class="flex flex-col items-center gap-2 min-w-[64px] cursor-pointer group">
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-br <?php echo $gradient_class; ?> p-0.5 group-hover:scale-105 transition-transform">
-                        <img src="<?php echo $story_photo; ?>"
+                <div class="flex flex-col items-center gap-2 min-w-[64px]">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 p-0.5">
+                        <img src="<?php echo $story_photo; ?>" 
                              class="w-full h-full rounded-full object-cover border-2 border-white"
-                             alt="<?php echo $story_nick; ?>"
-                             title="<?php echo $story_nick; ?>의 최신 글: <?php echo cut_str($story['wr_subject'], 20); ?>">
+                             alt="<?php echo $story_nick; ?>">
                     </div>
-                    <span class="text-xs text-gray-700 group-hover:text-purple-600"><?php echo cut_str($story_nick, 6); ?></span>
-                </a>
+                    <span class="text-xs text-gray-700"><?php echo cut_str($story_nick, 6); ?></span>
+                </div>
                 <?php
             }
             ?>
