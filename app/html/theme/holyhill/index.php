@@ -5,44 +5,6 @@ include_once(G5_THEME_PATH.'/head.php');
 ?>
 
 <div id="main-container" class="max-w-2xl mx-auto">
-    
-    <!-- 스토리 섹션 -->
-    <section id="stories" class="bg-white px-4 py-3 mb-2 sticky top-16 z-40">
-        <div class="flex gap-3 overflow-x-auto scrollbar-hide">
-            <div class="flex flex-col items-center gap-2 min-w-[64px]">
-                <button onclick="alert('스토리 기능은 추후 구현됩니다')" 
-                        class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 p-0.5">
-                    <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-plus text-purple-500 text-lg"></i>
-                    </div>
-                </button>
-                <span class="text-xs text-gray-700 font-medium">내 이야기</span>
-            </div>
-
-            <?php
-            $story_sql = "SELECT mb_id, mb_nick, mb_photo FROM {$g5['member_table']} 
-                         WHERE mb_level >= 2 
-                         ORDER BY mb_today_login DESC 
-                         LIMIT 10";
-            $story_result = sql_query($story_sql);
-            
-            while ($story = sql_fetch_array($story_result)) {
-                $story_photo = $story['mb_photo'] ? G5_DATA_URL.'/member/'.$story['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
-                $story_nick = $story['mb_nick'] ? $story['mb_nick'] : '회원';
-                ?>
-                <div class="flex flex-col items-center gap-2 min-w-[64px]">
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 p-0.5">
-                        <img src="<?php echo $story_photo; ?>" 
-                             class="w-full h-full rounded-full object-cover border-2 border-white"
-                             alt="<?php echo $story_nick; ?>">
-                    </div>
-                    <span class="text-xs text-gray-700"><?php echo cut_str($story_nick, 6); ?></span>
-                </div>
-                <?php
-            }
-            ?>
-        </div>
-    </section>
 
     <!-- 오늘의 말씀 위젯 -->
     <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
