@@ -5,6 +5,7 @@ include_once(G5_THEME_PATH.'/head.php');
 ?>
 
 <!-- 오늘의 말씀 위젯 -->
+<div class="max-w-2xl mx-auto">
     <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
         <?php
         $word_sql = "SELECT wr_id, wr_subject, wr_content, wr_datetime, wr_name
@@ -195,6 +196,7 @@ include_once(G5_THEME_PATH.'/head.php');
         }
         ?>
     </section>
+</div>
 
 <div id="floating-attendance" 
      onclick="alert('출석 체크 기능은 추후 구현됩니다')"

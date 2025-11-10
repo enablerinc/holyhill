@@ -32,22 +32,18 @@ include_once(G5_PATH.'/head.sub.php');
             background-color: #F3F4F6;
             margin: 0;
             padding: 0;
+            padding-top: 64px;  /* header 높이 */
+            padding-bottom: 80px; /* footer 높이 */
         }
         .gradient-bg {
             background: linear-gradient(135deg, #E8E2F7 0%, #F8F6FF 100%);
         }
-        /* 모바일에서 콘텐츠가 header/footer에 가려지지 않도록 */
-        #main-content {
-            padding-top: 64px;  /* header 높이 */
-            padding-bottom: 80px; /* footer 높이 */
-            min-height: 100vh;
+        /* header와 footer를 위한 공간 확보 */
+        #header {
+            height: 64px;
         }
-        /* 모바일 안전 영역 확보 */
-        @supports (padding: max(0px)) {
-            #main-content {
-                padding-top: max(64px, env(safe-area-inset-top));
-                padding-bottom: max(80px, env(safe-area-inset-bottom));
-            }
+        #bottom-nav {
+            height: 72px;
         }
     </style>
     
@@ -90,4 +86,4 @@ include_once(G5_PATH.'/head.sub.php');
 </header>
 
 <!-- 메인 컨텐츠 -->
-<main id="main-content" class="max-w-2xl mx-auto">
+<main id="main-content">
