@@ -27,18 +27,23 @@ include_once(G5_PATH.'/head.sub.php');
         ::-webkit-scrollbar {
             display: none;
         }
+        * {
+            margin: 0;
+            padding: 0;
+        }
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #F3F4F6;
-            margin: 0;
-            padding: 0;
-            padding-top: 64px;  /* header 높이 */
-            padding-bottom: 80px; /* footer 높이 */
         }
         .gradient-bg {
             background: linear-gradient(135deg, #E8E2F7 0%, #F8F6FF 100%);
         }
-        /* header와 footer를 위한 공간 확보 */
+        /* header와 footer를 위한 공간 확보 - main에 적용 */
+        #main-content {
+            padding-top: 64px;
+            padding-bottom: 80px;
+            min-height: 100vh;
+        }
         #header {
             height: 64px;
         }
