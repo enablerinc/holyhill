@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .profile-gradient { background: linear-gradient(135deg, #E8E2F7 0%, #B19CD9 50%, #6B46C1 100%); }
+        .shadow-warm { box-shadow: 0 4px 20px rgba(177, 156, 217, 0.15); }
+        .stat-card { background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(232,226,247,0.3) 100%); }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'warm-beige': '#EEF3F8',
+                        'soft-lavender': '#E8E2F7',
+                        'grace-green': '#6B705C',
+                        'lilac': '#B19CD9',
+                        'deep-purple': '#6B46C1'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-warm-beige">
+
+<header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
+    <div class="flex items-center justify-between px-4 py-3">
+        <button onclick="goBack()" class="flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left text-grace-green text-lg"></i>
+        </button>
+        <h1 class="text-lg font-semibold text-grace-green">내 정보</h1>
+        <button class="flex items-center gap-2">
+            <i class="fa-solid fa-gear text-grace-green text-lg"></i>
+        </button>
+    </div>
+</header>
+
+<main id="main-content" class="pt-16 pb-20">
+    
+    <section id="profile-header" class="relative">
+        <div class="profile-gradient h-32"></div>
+        <div class="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+            <div class="w-24 h-24 bg-white rounded-full p-1 shadow-warm">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg" class="w-full h-full rounded-full object-cover">
+            </div>
+        </div>
+    </section>
+
+    <section id="profile-info" class="pt-16 px-4 text-center">
+        <h2 class="text-xl font-semibold text-grace-green mb-1">김은혜</h2>
+        <p class="text-sm text-gray-500 mb-2">청년부 · 찬양팀</p>
+        <p class="text-xs text-grace-green mb-4">성산교회와 함께한 지 3년 2개월</p>
+        
+        <div class="flex justify-center gap-6 mb-6">
+            <div class="text-center">
+                <div class="text-lg font-semibold text-grace-green">127</div>
+                <div class="text-xs text-gray-500">게시물</div>
+            </div>
+            <div class="text-center">
+                <div class="text-lg font-semibold text-grace-green">2.4K</div>
+                <div class="text-xs text-gray-500">아멘</div>
+            </div>
+            <div class="text-center">
+                <div class="text-lg font-semibold text-grace-green">89</div>
+                <div class="text-xs text-gray-500">출석일</div>
+            </div>
+        </div>
+
+        <p class="text-sm text-grace-green leading-relaxed px-4">
+            하나님의 사랑 안에서 매일 성장하는 은혜님입니다 ✨<br>
+            찬양으로 주님을 섬기며 청년부에서 활동하고 있어요 🎵
+        </p>
+    </section>
+
+    
+    <section id="achievements" class="px-4 mt-6">
+        <h3 class="text-lg font-semibold text-grace-green mb-4">획득한 뱃지</h3>
+        
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm">
+                <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-crown text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">출석왕</div>
+                <div class="text-xs text-gray-500">3개월 연속</div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm">
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-music text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">성산지기</div>
+                <div class="text-xs text-gray-500">활발한 참여</div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm">
+                <div class="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-heart text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">사랑나눔</div>
+                <div class="text-xs text-gray-500">아멘 우수자</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="recent-activity" class="px-4 mt-6">
+        <h3 class="text-lg font-semibold text-grace-green mb-4">최근 활동</h3>
+        
+        <div class="space-y-3">
+            <div class="bg-white rounded-2xl p-4 shadow-warm">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fa-solid fa-check text-green-500"></i>
+                    <span class="text-sm text-grace-green">오늘 출석</span>
+                    <span class="text-xs text-gray-500 ml-auto">2시간 전</span>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-4 shadow-warm">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fa-solid fa-camera text-lilac"></i>
+                    <span class="text-sm text-grace-green">OOO 사진 공유</span>
+                    <span class="text-xs text-gray-500 ml-auto">어제</span>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-4 shadow-warm">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fa-solid fa-camera text-lilac"></i>
+                    <span class="text-sm text-grace-green">어제 웃긴 사진 공유</span>
+                    <span class="text-xs text-gray-500 ml-auto">어제</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="my-posts" class="px-4 mt-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-grace-green">사용자 게시물</h3>
+            <button class="text-sm text-lilac">전체보기</button>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-1">
+            <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/165c120fb0-27b8155b6bb93aafdaaa.png" alt="church worship service with young people singing, warm lighting" />
+            </div>
+            <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/e5f03c07cb-bfcfcc1a75be6dfea95a.png" alt="bible study group reading together, cozy atmosphere" />
+            </div>
+            <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/6bb569f164-7778e968c9082c50f100.png" alt="church community meal sharing food together" />
+            </div>
+            <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/3750f721fe-733ebe75c341d9d3f99d.png" alt="praise team practicing with instruments" />
+            </div>
+            <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/08c5016cf0-b28ee6c5d7b66cb1aa25.png" alt="youth group outdoor activity smiling together" />
+            </div>
+            <div class="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/8a416db392-e303f35a5de9650ea380.png" alt="prayer meeting circle holding hands" />
+            </div>
+        </div>
+    </section>
+
+    <section id="settings-menu" class="px-4 mt-6 pb-6">
+        <div class="bg-white rounded-2xl shadow-warm overflow-hidden">
+            <button class="w-full flex items-center justify-between p-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-user-edit text-grace-green"></i>
+                    <span class="text-sm text-grace-green">프로필 편집</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-400 text-sm"></i>
+            </button>
+            
+            <button class="w-full flex items-center justify-between p-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-bell text-grace-green"></i>
+                    <span class="text-sm text-grace-green">알림 설정</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-400 text-sm"></i>
+            </button>
+            
+            <button class="w-full flex items-center justify-between p-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-shield-alt text-grace-green"></i>
+                    <span class="text-sm text-grace-green">개인정보 보호</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-400 text-sm"></i>
+            </button>
+            
+            <button class="w-full flex items-center justify-between p-4">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-question-circle text-grace-green"></i>
+                    <span class="text-sm text-grace-green">도움말</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-400 text-sm"></i>
+            </button>
+        </div>
+    </section>
+
+</main>
+
+<nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-soft-lavender">
+    <div class="flex items-center justify-around py-3">
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-house text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">홈</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-regular fa-compass text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">둘러보기</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <div class="w-8 h-8 bg-lilac rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-plus text-white text-sm"></i>
+            </div>
+            <span class="text-xs text-grace-green">나눔</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-trophy text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">명예의 전당</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg" class="w-6 h-6 rounded-full object-cover border-2 border-lilac">
+            <span class="text-xs text-lilac font-medium">내 정보</span>
+        </button>
+    </div>
+</nav>
+
+<script>
+function goBack() {
+    window.history.back();
+}
+</script>
+
+</body>
+</html>

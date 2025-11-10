@@ -135,19 +135,21 @@ while ($row = sql_fetch_array($result)) {
     if ($img_result && $img = sql_fetch_array($img_result)) {
         $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
     }
-
-    // 이미지가 없으면 텍스트를 이미지로 변환
+    
+    // 이미지가 없으면 기본 이미지
     if (!$first_image) {
-        $first_image = generate_text_image($row['wr_subject'], $row['wr_content']);
+        $first_image = G5_THEME_URL.'/img/no-image.png';
     }
     
     $view_href = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
     $good_count = isset($row['wr_good']) ? (int)$row['wr_good'] : 0;
-    
+
     $items[] = array(
         'wr_id' => $wr_id,
         'subject' => strip_tags($row['wr_subject']),
         'image' => $first_image,
+        'has_image' => !empty($first_image),
+        'text_content' => $text_content,
         'view_href' => $view_href,
         'good_count' => number_format($good_count),
         'datetime' => $row['wr_datetime']

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .golden-gradient { background: linear-gradient(135deg, #C4A6E8, #B19CD9, #9B7AC7); }
+        .silver-gradient { background: linear-gradient(135deg, #E8E2F7, #D1C7E3, #B19CD9); }
+        .bronze-gradient { background: linear-gradient(135deg, #D1C7E3, #B19CD9, #8B5CF6); }
+        .shadow-warm { box-shadow: 0 4px 20px rgba(177, 156, 217, 0.15); }
+        .shadow-divine { box-shadow: 0 8px 32px rgba(196, 166, 232, 0.25); }
+        .crown-shadow { box-shadow: 0 0 30px rgba(196, 166, 232, 0.4); }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'warm-beige': '#EEF3F8',
+                        'soft-lavender': '#E8E2F7',
+                        'grace-green': '#6B705C',
+                        'lilac': '#B19CD9',
+                        'deep-purple': '#6B46C1',
+                        'divine-lilac': '#C4A6E8'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#EEF3F8]">
+
+<header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
+    <div class="flex items-center justify-between px-4 py-3">
+        <div class="flex items-center gap-3">
+            <button onclick="goBack()" class="w-8 h-8 flex items-center justify-center">
+                <i class="fa-solid fa-arrow-left text-grace-green text-lg"></i>
+            </button>
+            <div class="w-8 h-8 bg-gradient-to-br from-lilac to-deep-purple rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-cross text-white text-sm"></i>
+            </div>
+            <h1 class="text-lg font-semibold text-grace-green">명예의 전당</h1>
+        </div>
+        <i class="fa-solid fa-trophy text-divine-lilac text-xl"></i>
+    </div>
+</header>
+
+<main id="main-content" class="pt-16 pb-20">
+    
+    <section id="month-selector" class="px-4 py-4 bg-white border-b border-soft-lavender">
+        <div class="flex items-center justify-between">
+            <button class="w-10 h-10 flex items-center justify-center rounded-full bg-soft-lavender">
+                <i class="fa-solid fa-chevron-left text-lilac"></i>
+            </button>
+            
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-calendar text-lilac"></i>
+                <h2 class="text-lg font-semibold text-grace-green">2025년 10월</h2>
+                <i class="fa-solid fa-chevron-down text-lilac text-sm"></i>
+            </div>
+            
+            <button class="w-10 h-10 flex items-center justify-center rounded-full bg-soft-lavender">
+                <i class="fa-solid fa-chevron-right text-lilac"></i>
+            </button>
+        </div>
+    </section>
+
+    <section id="blessing-quote" class="mx-4 my-4 bg-gradient-to-r from-divine-lilac/20 to-soft-lavender rounded-2xl p-4 border border-divine-lilac/30">
+        <div class="text-center">
+            <i class="fa-solid fa-quote-left text-divine-lilac text-lg mb-2"></i>
+            <p class="text-sm font-medium text-deep-purple leading-relaxed mb-2">
+                "충성된 종아 잘하였도다 네가 적은 일에 충성하였으니<br>많은 것을 네게 맡기리라"
+            </p>
+            <p class="text-xs text-lilac">마태복음 25:21</p>
+        </div>
+    </section>
+
+    <section id="top-three-section" class="px-4 mb-6">
+        <div class="flex items-center gap-2 mb-4">
+            <i class="fa-solid fa-crown text-divine-lilac text-lg"></i>
+            <h3 class="text-lg font-semibold text-grace-green">이달의 베스트 성산인</h3>
+        </div>
+        
+        <div class="flex gap-3 overflow-x-auto pb-2">
+            
+            <div id="first-place" class="min-w-[140px] bg-white rounded-2xl p-4 shadow-divine border-2 border-divine-lilac/30">
+                <div class="text-center">
+                    <div class="relative mb-3">
+                        <div class="w-20 h-20 golden-gradient rounded-full p-1 mx-auto crown-shadow">
+                            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg" class="w-full h-full rounded-full object-cover">
+                        </div>
+                        <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                            <i class="fa-solid fa-crown text-divine-lilac text-xl crown-shadow"></i>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-divine-lilac rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-bold">1</span>
+                        </div>
+                    </div>
+                    <h4 class="font-semibold text-grace-green text-sm mb-1">김은혜</h4>
+                    <p class="text-xs text-gray-500 mb-2">청년부</p>
+                    <div class="flex items-center justify-center gap-1 mb-2">
+                        <i class="fa-solid fa-cross text-divine-lilac text-xs"></i>
+                        <span class="text-sm font-bold text-divine-lilac">347점</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 justify-center">
+                        <span class="text-xs bg-divine-lilac/20 text-deep-purple px-2 py-1 rounded-full">#QT25회</span>
+                        <span class="text-xs bg-divine-lilac/20 text-deep-purple px-2 py-1 rounded-full">#기도30회</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="second-place" class="min-w-[130px] bg-white rounded-2xl p-4 shadow-warm border border-gray-200">
+                <div class="text-center">
+                    <div class="relative mb-3">
+                        <div class="w-18 h-18 silver-gradient rounded-full p-1 mx-auto">
+                            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" class="w-full h-full rounded-full object-cover">
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-bold">2</span>
+                        </div>
+                    </div>
+                    <h4 class="font-semibold text-grace-green text-sm mb-1">박성민</h4>
+                    <p class="text-xs text-gray-500 mb-2">장년부</p>
+                    <div class="flex items-center justify-center gap-1 mb-2">
+                        <i class="fa-solid fa-cross text-lilac text-xs"></i>
+                        <span class="text-sm font-bold text-lilac">298점</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 justify-center">
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#봉사22회</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="third-place" class="min-w-[130px] bg-white rounded-2xl p-4 shadow-warm border border-lilac/20">
+                <div class="text-center">
+                    <div class="relative mb-3">
+                        <div class="w-18 h-18 bronze-gradient rounded-full p-1 mx-auto">
+                            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg" class="w-full h-full rounded-full object-cover">
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-deep-purple rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-bold">3</span>
+                        </div>
+                    </div>
+                    <h4 class="font-semibold text-grace-green text-sm mb-1">이소망</h4>
+                    <p class="text-xs text-gray-500 mb-2">청년부</p>
+                    <div class="flex items-center justify-center gap-1 mb-2">
+                        <i class="fa-solid fa-cross text-deep-purple text-xs"></i>
+                        <span class="text-sm font-bold text-deep-purple">276점</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 justify-center">
+                        <span class="text-xs bg-deep-purple/20 text-deep-purple px-2 py-1 rounded-full">#찬양팀</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="hall-of-faith" class="px-4">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-hands-praying text-lilac text-lg"></i>
+                <h3 class="text-lg font-semibold text-grace-green">우수 성산인</h3>
+                <span class="text-xs bg-lilac/20 text-deep-purple px-2 py-1 rounded-full">200점 이상</span>
+            </div>
+            <span class="text-xs text-gray-500">총 12명</span>
+        </div>
+
+        <div class="space-y-3">
+            
+            <div id="believer-card-1" class="bg-white rounded-xl p-4 shadow-warm flex items-center gap-4">
+                <div class="relative">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" class="w-14 h-14 rounded-full object-cover">
+                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">4</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h4 class="font-semibold text-grace-green">최다윗</h4>
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">청년부</span>
+                    </div>
+                    <div class="flex items-center gap-1 mb-2">
+                        <i class="fa-solid fa-cross text-lilac text-xs"></i>
+                        <span class="text-sm font-semibold text-lilac">254점</span>
+                        <span class="text-xs text-green-600 ml-2">↑12% 증가</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#QT18회</span>
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#셀모임</span>
+                    </div>
+                </div>
+                <button class="w-8 h-8 bg-lilac/20 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-praying-hands text-lilac text-sm"></i>
+                </button>
+            </div>
+
+            <div id="believer-card-2" class="bg-white rounded-xl p-4 shadow-warm flex items-center gap-4">
+                <div class="relative">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-6.jpg" class="w-14 h-14 rounded-full object-cover">
+                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">5</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h4 class="font-semibold text-grace-green">한사랑</h4>
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">청년부</span>
+                        <div class="w-4 h-4 bg-divine-lilac rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-fire text-white text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 mb-2">
+                        <i class="fa-solid fa-cross text-lilac text-xs"></i>
+                        <span class="text-sm font-semibold text-lilac">238점</span>
+                        <span class="text-xs bg-divine-lilac/20 text-divine-lilac px-2 py-1 rounded-full">3개월 연속</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#기도25회</span>
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#나눔글</span>
+                    </div>
+                </div>
+                <button class="w-8 h-8 bg-lilac/20 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-praying-hands text-lilac text-sm"></i>
+                </button>
+            </div>
+
+            <div id="believer-card-3" class="bg-white rounded-xl p-4 shadow-warm flex items-center gap-4">
+                <div class="relative">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-8.jpg" class="w-14 h-14 rounded-full object-cover">
+                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">6</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h4 class="font-semibold text-grace-green">정요한</h4>
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">장년부</span>
+                    </div>
+                    <div class="flex items-center gap-1 mb-2">
+                        <i class="fa-solid fa-cross text-lilac text-xs"></i>
+                        <span class="text-sm font-semibold text-lilac">225점</span>
+                        <span class="text-xs text-green-600 ml-2">↑8% 증가</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#예배참석</span>
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#말씀나눔</span>
+                    </div>
+                </div>
+                <button class="w-8 h-8 bg-lilac/20 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-praying-hands text-lilac text-sm"></i>
+                </button>
+            </div>
+
+            <div id="believer-card-4" class="bg-white rounded-xl p-4 shadow-warm flex items-center gap-4">
+                <div class="relative">
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-9.jpg" class="w-14 h-14 rounded-full object-cover">
+                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">7</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h4 class="font-semibold text-grace-green">강베드로</h4>
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">장년부</span>
+                    </div>
+                    <div class="flex items-center gap-1 mb-2">
+                        <i class="fa-solid fa-cross text-lilac text-xs"></i>
+                        <span class="text-sm font-semibold text-lilac">218점</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#봉사활동</span>
+                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">#교제</span>
+                    </div>
+                </div>
+                <button class="w-8 h-8 bg-lilac/20 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-praying-hands text-lilac text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <button class="w-full mt-4 py-3 bg-lilac/10 text-deep-purple font-medium rounded-xl border border-lilac/20">
+            모든 우수자 보기 (12명)
+        </button>
+    </section>
+
+    <section id="monthly-stats" class="mx-4 mt-6 bg-white rounded-2xl p-4 shadow-warm">
+        <h3 class="text-lg font-semibold text-grace-green mb-4">이달의 활동 통계</h3>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
+                <i class="fa-solid fa-praying-hands text-lilac text-xl mb-2"></i>
+                <p class="text-sm text-grace-green">총 기도 횟수</p>
+                <p class="text-lg font-bold text-lilac">1,247회</p>
+            </div>
+            
+            <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
+                <i class="fa-solid fa-book-open text-lilac text-xl mb-2"></i>
+                <p class="text-sm text-grace-green">QT 참여</p>
+                <p class="text-lg font-bold text-lilac">856회</p>
+            </div>
+            
+            <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
+                <i class="fa-solid fa-heart text-lilac text-xl mb-2"></i>
+                <p class="text-sm text-grace-green">아멘 총합</p>
+                <p class="text-lg font-bold text-lilac">2,134개</p>
+            </div>
+            
+            <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
+                <i class="fa-solid fa-hands-helping text-lilac text-xl mb-2"></i>
+                <p class="text-sm text-grace-green">봉사 활동</p>
+                <p class="text-lg font-bold text-lilac">142회</p>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-soft-lavender">
+    <div class="flex items-center justify-around py-3">
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-house text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">홈</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-regular fa-compass text-grace-green text-lg"></i>
+            <span class="text-xs text-grace-green">둘러보기</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <div class="w-8 h-8 bg-lilac rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-plus text-white text-sm"></i>
+            </div>
+            <span class="text-xs text-grace-green">나눔</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-trophy text-lilac text-lg"></i>
+            <span class="text-xs text-lilac font-medium">명예의 전당</span>
+        </button>
+        
+        <button class="flex flex-col items-center gap-1">
+            <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg" class="w-6 h-6 rounded-full object-cover">
+            <span class="text-xs text-grace-green">내 정보</span>
+        </button>
+    </div>
+</nav>
+
+<script>
+function goBack() {
+    window.history.back();
+}
+</script>
+
+</body>
+</html>

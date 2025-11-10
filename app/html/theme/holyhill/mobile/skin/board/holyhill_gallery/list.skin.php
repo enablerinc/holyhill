@@ -2,83 +2,6 @@
 if (!defined('_GNUBOARD_')) exit;
 add_stylesheet('<link rel="stylesheet" href="'.$board_skin_url.'/style.css">', 0);
 
-// 텍스트를 이미지로 변환하는 함수
-function generate_text_image($subject, $content) {
-    // HTML 태그 제거 및 텍스트 정리
-    $text = strip_tags($content);
-    $text = preg_replace('/\s+/', ' ', $text); // 여러 공백을 하나로
-    $text = trim($text);
-
-    // 제목 사용 (내용이 없으면)
-    if (empty($text)) {
-        $text = strip_tags($subject);
-    }
-
-    // 텍스트 길이 제한 (약 100자)
-    if (mb_strlen($text, 'UTF-8') > 100) {
-        $text = mb_substr($text, 0, 100, 'UTF-8') . '...';
-    }
-
-    // 텍스트를 여러 줄로 분할 (약 20자씩)
-    $lines = [];
-    $words = explode(' ', $text);
-    $current_line = '';
-
-    foreach ($words as $word) {
-        if (mb_strlen($current_line . ' ' . $word, 'UTF-8') > 20) {
-            if (!empty($current_line)) {
-                $lines[] = $current_line;
-                $current_line = $word;
-            } else {
-                $lines[] = $word;
-            }
-        } else {
-            $current_line .= (empty($current_line) ? '' : ' ') . $word;
-        }
-    }
-    if (!empty($current_line)) {
-        $lines[] = $current_line;
-    }
-
-    // 최대 4줄까지만 표시
-    $lines = array_slice($lines, 0, 4);
-
-    // XML 특수문자 이스케이프
-    foreach ($lines as &$line) {
-        $line = htmlspecialchars($line, ENT_XML1, 'UTF-8');
-    }
-
-    // SVG 텍스트 요소 생성
-    $y = 45; // 시작 y 좌표
-    $text_elements = '';
-    foreach ($lines as $line) {
-        $text_elements .= "<text x=\"50%\" y=\"{$y}%\" text-anchor=\"middle\" fill=\"#6B705C\" font-size=\"14\" font-weight=\"500\">{$line}</text>";
-        $y += 12; // 다음 줄 간격
-    }
-
-    // SVG 생성
-    $svg = <<<SVG
-<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#E8E2F7;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#EEF3F8;stop-opacity:1" />
-        </linearGradient>
-    </defs>
-    <rect width="400" height="400" fill="url(#grad)"/>
-    <foreignObject x="10" y="35%" width="380" height="30%">
-        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: 'Pretendard', sans-serif; font-size: 14px; color: #6B705C; text-align: center; padding: 20px; word-break: keep-all; line-height: 1.6;">
-            {$text}
-        </div>
-    </foreignObject>
-</svg>
-SVG;
-
-    // Base64 인코딩 및 Data URI 생성
-    $encoded = base64_encode($svg);
-    return 'data:image/svg+xml;base64,' . $encoded;
-}
-
 // 페이지당 게시물 수 설정
 if (!isset($page_rows) || $page_rows < 1) {
     $page_rows = 30; // 기본값: 30개
@@ -214,12 +137,7 @@ tailwind.config = {
                     if ($img_result && $img = sql_fetch_array($img_result)) {
                         $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
                     }
-                    
-                    // 이미지가 없으면 기본 이미지 또는 스킵
-                    if (!$first_image) {
-                        $first_image = G5_THEME_URL.'/img/no-image.png'; // 기본 이미지
-                    }
-                    
+
                     $view_href = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
                     $good_count = isset($list[$i]['wr_good']) ? $list[$i]['wr_good'] : 0;
 

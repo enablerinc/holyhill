@@ -66,7 +66,7 @@ set_session('ss_comment_token', $new_token);
 
 // 방금 작성한 댓글 정보 반환
 $c_mb = get_member($member['mb_id']);
-$c_photo = $c_mb['mb_photo'] ? G5_DATA_URL.'/member/'.$c_mb['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
+$c_photo = (isset($c_mb['mb_photo']) && $c_mb['mb_photo']) ? G5_DATA_URL.'/member/'.$c_mb['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
 
 echo json_encode([
     'success' => true,

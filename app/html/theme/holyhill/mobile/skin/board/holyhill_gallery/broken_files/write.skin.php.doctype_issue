@@ -1,0 +1,213 @@
+<?php
+if (!defined('_GNUBOARD_')) exit;
+add_stylesheet('<link rel="stylesheet" href="'.$board_skin_url.'/style.css">', 0);
+?>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><?php echo $g5['title'] ?></title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body { 
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+</style>
+</head>
+<body class="bg-gray-50">
+
+<div class="max-w-2xl mx-auto bg-white min-h-screen">
+    
+    <!-- 헤더 -->
+    <header class="fixed top-0 left-0 right-0 bg-white border-b z-50 shadow-sm" style="max-width: 640px; margin: 0 auto;">
+        <div class="flex items-center justify-between px-4 py-3">
+            <button type="button" onclick="history.back()" class="text-gray-700">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+            <h1 class="text-lg font-semibold text-gray-800"><?php echo $g5['title'] ?></h1>
+            <button type="submit" form="fwrite" id="btn_submit" class="px-5 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700">
+                작성완료
+            </button>
+        </div>
+    </header>
+
+    <!-- 본문 -->
+    <main class="pt-20 pb-8">
+        <!-- ✅ 기본 스킨의 폼을 그대로 사용 -->
+        <form name="fwrite" id="fwrite" action="<?php echo $action_url ?>" onsubmit="return fwrite_submit(this);" method="post" enctype="multipart/form-data" autocomplete="off">
+        <input type="hidden" name="uid" value="<?php echo get_uniqid(); ?>">
+        <input type="hidden" name="w" value="<?php echo $w ?>">
+        <input type="hidden" name="bo_table" value="<?php echo $bo_table ?>">
+        <input type="hidden" name="wr_id" value="<?php echo $wr_id ?>">
+        <input type="hidden" name="sca" value="<?php echo $sca ?>">
+        <input type="hidden" name="sfl" value="<?php echo $sfl ?>">
+        <input type="hidden" name="stx" value="<?php echo $stx ?>">
+        <input type="hidden" name="spt" value="<?php echo $spt ?>">
+        <input type="hidden" name="sst" value="<?php echo $sst ?>">
+        <input type="hidden" name="sod" value="<?php echo $sod ?>">
+        <input type="hidden" name="page" value="<?php echo $page ?>">
+        
+        <?php
+        $option = '';
+        $option_hidden = '';
+        if ($is_notice || $is_html || $is_secret || $is_mail) {
+            if ($is_notice) {
+                $option .= PHP_EOL.'<input type="checkbox" id="notice" name="notice" value="1" '.$notice_checked.'><label for="notice" class="ml-2">공지</label>';
+            }
+            if ($is_html) {
+                if ($is_dhtml_editor) {
+                    $option_hidden .= '<input type="hidden" value="html1" name="html">';
+                } else {
+                    $option .= PHP_EOL.'<input type="checkbox" id="html" name="html" value="html1" '.$html_checked.'><label for="html" class="ml-2">HTML</label>';
+                }
+            }
+            if ($is_secret) {
+                if ($is_admin || $is_secret==1) {
+                    $option .= PHP_EOL.'<input type="checkbox" id="secret" name="secret" value="secret" '.$secret_checked.'><label for="secret" class="ml-2">비밀글</label>';
+                } else {
+                    $option_hidden .= '<input type="hidden" name="secret" value="secret">';
+                }
+            }
+        }
+        echo $option_hidden;
+        ?>
+
+        <!-- 제목 -->
+        <div class="p-4 border-b">
+            <label class="block">
+                <span class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-heading text-purple-600"></i>
+                    제목
+                </span>
+                <input type="text" name="wr_subject" value="<?php echo $subject ?>" id="wr_subject" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" maxlength="255" placeholder="제목을 입력하세요">
+            </label>
+        </div>
+
+        <!-- 내용 -->
+        <div class="p-4 border-b">
+            <label class="block mb-2">
+                <span class="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-align-left text-purple-600"></i>
+                    내용
+                </span>
+            </label>
+            <?php echo $editor_html; ?>
+        </div>
+
+        <!-- 파일 업로드 -->
+        <?php for ($i=0; $is_file && $i<$file_count; $i++) { ?>
+        <div class="p-4 border-b">
+            <label for="bf_file_<?php echo $i+1 ?>" class="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2">
+                <i class="fa-solid fa-image text-purple-600"></i>
+                파일 #<?php echo $i+1 ?>
+            </label>
+            <input type="file" name="bf_file[]" id="bf_file_<?php echo $i+1 ?>" title="파일첨부 <?php echo $i+1 ?>" class="w-full px-3 py-2 border rounded-lg text-sm">
+            <?php if ($is_file_content) { ?>
+            <input type="text" name="bf_content[]" value="<?php echo ($w == 'u') ? $file[$i]['bf_content'] : ''; ?>" title="파일 설명" class="w-full px-3 py-2 border rounded-lg mt-2 text-sm" placeholder="파일 설명 (선택)">
+            <?php } ?>
+            <?php if($w == 'u' && $file[$i]['file']) { ?>
+            <div class="mt-2 text-sm text-gray-600 flex items-center gap-2">
+                <span><?php echo $file[$i]['source'].'('.$file[$i]['size'].')'; ?></span>
+                <label class="flex items-center gap-1">
+                    <input type="checkbox" name="bf_file_del[<?php echo $i ?>]" value="1" id="bf_file_del<?php echo $i ?>" class="rounded">
+                    <span>삭제</span>
+                </label>
+            </div>
+            <?php } ?>
+        </div>
+        <?php } ?>
+
+        <!-- 옵션 -->
+        <?php if ($option) { ?>
+        <div class="p-4 border-b bg-gray-50">
+            <div class="text-sm"><?php echo $option; ?></div>
+        </div>
+        <?php } ?>
+
+        <!-- 캡챠 -->
+        <?php echo $captcha_html ?>
+
+        </form>
+    </main>
+
+</div>
+
+</body>
+</html>
+
+<script>
+<?php echo $editor_js; ?>
+
+function fwrite_submit(f)
+{
+    <?php echo $captcha_js; ?>
+
+    var subject = "";
+    var content = "";
+    $.ajax({
+        url: g5_bbs_url+"/ajax.filter.php",
+        type: "POST",
+        data: {
+            "subject": f.wr_subject.value,
+            "content": f.wr_content.value
+        },
+        dataType: "json",
+        async: false,
+        cache: false,
+        success: function(data, textStatus) {
+            subject = data.subject;
+            content = data.content;
+        }
+    });
+
+    if (subject) {
+        alert("제목에 금지단어('"+subject+"')가 포함되어 있습니다");
+        f.wr_subject.focus();
+        return false;
+    }
+
+    if (content) {
+        alert("내용에 금지단어('"+content+"')가 포함되어 있습니다");
+        if (typeof(ed_wr_content) != "undefined")
+            ed_wr_content.returnFalse();
+        else
+            f.wr_content.focus();
+        return false;
+    }
+
+    if (document.getElementById("wr_subject").value == "") {
+        alert("제목을 입력해주세요.");
+        document.getElementById("wr_subject").focus();
+        return false;
+    }
+
+    if (typeof(ed_wr_content) != "undefined") {
+        if (ed_wr_content.outputBodyHTML() == "") {
+            alert("내용을 입력해주세요.");
+            ed_wr_content.returnFalse();
+            return false;
+        }
+    } else {
+        var wr_content = document.getElementById("wr_content");
+        if (wr_content && wr_content.value == "") {
+            alert("내용을 입력해주세요.");
+            wr_content.focus();
+            return false;
+        }
+    }
+
+    <?php echo $editor_js; ?>
+
+    var btn = document.getElementById("btn_submit");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    }
+
+    return true;
+}
+</script>
