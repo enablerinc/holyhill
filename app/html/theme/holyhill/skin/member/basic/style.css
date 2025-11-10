@@ -1,0 +1,38 @@
+@charset "utf-8";
+
+/* holyhill 테마 로그인 스킨 */
+
+/* 추가 스타일이 필요한 경우 여기에 작성 */
+
+/* 소셜 로그인 버튼 커스터마이징 */
+#social-login button {
+    transition: all 0.3s ease;
+}
+
+#social-login button:hover {
+    transform: translateY(-2px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 640px) {
+    #hero-section {
+        height: 350px;
+    }
+
+    #hero-section h1 {
+        font-size: 1.75rem;
+    }
+
+    #login-form-section {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* 접근성 개선 */
+a:focus,
+button:focus,
+input:focus {
+    outline: 2px solid #B19CD9;
+    outline-offset: 2px;
+}
