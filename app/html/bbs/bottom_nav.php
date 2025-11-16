@@ -24,7 +24,7 @@ if ($is_member) {
         </a>
 
         <?php if ($is_member) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=gallery" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/write_post.php" class="flex flex-col items-center gap-1">
             <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
                 <i class="fa-solid fa-plus text-white text-sm"></i>
             </div>

@@ -63,7 +63,7 @@ $total_count = $total_count_result['cnt'];
 // 글쓰기 권한 체크
 $write_href = '';
 if ($member['mb_level'] >= $board['bo_write_level']) {
-    $write_href = G5_BBS_URL.'/write.php?bo_table='.$bo_table;
+    $write_href = G5_BBS_URL.'/write_post.php';
 }
 ?>
 
