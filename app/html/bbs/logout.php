@@ -16,7 +16,7 @@ set_cookie('ck_auto', '', 0);
 // 자동로그인 해제 end --------------------------------
 
 // 로그아웃 시 항상 메인 페이지로 이동
-$link = '/';
+$link = '../';
 
 run_event('member_logout', $link);
 
