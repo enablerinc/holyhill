@@ -177,7 +177,7 @@ function convert_youtube_to_iframe_index($content) {
                         <?php } ?>
                     </h3>
                     <?php if ($has_youtube) { ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
+                    <a href="<?php echo G5_BBS_URL; ?>/word_view.php?wr_id=<?php echo $word['wr_id']; ?>"
                        class="block mb-2">
                         <?php if ($word['wr_subject']) { ?>
                             <h3 class="text-base font-bold mb-2 text-gray-900 text-left"><?php echo get_text($word['wr_subject']); ?></h3>
@@ -185,7 +185,7 @@ function convert_youtube_to_iframe_index($content) {
                         <?php echo $word_content; ?>
                     </a>
                     <?php } else { ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
+                    <a href="<?php echo G5_BBS_URL; ?>/word_view.php?wr_id=<?php echo $word['wr_id']; ?>"
                        class="block mb-2 cursor-pointer hover:opacity-80 transition-opacity">
                         <p class="text-base font-medium text-gray-800 leading-relaxed">
                             "<?php echo $word_content; ?>"

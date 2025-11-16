@@ -158,7 +158,7 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 $img = sql_fetch_array($img_result);
                 $word_img = $img ? G5_DATA_URL.'/file/word/'.$img['bf_file'] : '';
 
-                $view_href = G5_BBS_URL.'/board.php?bo_table=word&wr_id='.$word['wr_id'];
+                $view_href = G5_BBS_URL.'/word_view.php?wr_id='.$word['wr_id'];
             ?>
 
             <article class="bg-white rounded-2xl shadow-md overflow-hidden">
