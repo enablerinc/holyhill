@@ -138,7 +138,7 @@ $processed_content = convert_youtube_to_iframe($processed_content);
                 ?>
                     <h2 class="text-lg font-bold mb-3 text-gray-900"><?php echo get_text($view['wr_subject']); ?></h2>
                 <?php } ?>
-                <div style="white-space: pre-line; word-break: break-word; line-height: 1.6;"><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?></div>
+                <div><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?></div>
             </div>
 
             <!-- 댓글 -->

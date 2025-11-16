@@ -129,9 +129,7 @@ include_once(G5_THEME_PATH.'/head.php');
                     <?php if ($word['wr_subject']) { ?>
                         <h3 class="text-base font-bold mb-2 text-gray-900 text-left"><?php echo get_text($word['wr_subject']); ?></h3>
                     <?php } ?>
-                    <div style="white-space: pre-line; word-break: break-word; line-height: 1.6; text-align: left;">
-                        <?php echo $word_content; ?>
-                    </div>
+                    <?php echo $word_content; ?>
                 </a>
                 <?php } else { ?>
                 <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
@@ -252,12 +250,10 @@ include_once(G5_THEME_PATH.'/head.php');
                             <?php if ($feed['wr_subject']) { ?>
                                 <h3 class="text-base font-bold mb-2 text-gray-900"><?php echo get_text($feed['wr_subject']); ?></h3>
                             <?php } ?>
-                            <div style="white-space: pre-line; word-break: break-word; line-height: 1.6;">
-                                <?php
-                                $feed_content = get_text($feed['wr_content']);
-                                echo convert_youtube_to_iframe_index($feed_content);
-                                ?>
-                            </div>
+                            <?php
+                            $feed_content = get_text($feed['wr_content']);
+                            echo convert_youtube_to_iframe_index($feed_content);
+                            ?>
                         </a>
                     </div>
                     <?php } elseif ($feed_img) { ?>
