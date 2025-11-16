@@ -77,9 +77,7 @@ function convert_youtube_to_iframe_index($content) {
 <header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
     <div class="flex items-center justify-between px-4 py-3">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-gradient-to-br from-lilac to-deep-purple rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-cross text-white text-sm"></i>
-            </div>
+            <img src="../img/logo.png" alt="성산교회 로고" class="w-8 h-8 rounded-lg object-cover">
             <h1 class="text-lg font-semibold text-grace-green">성산교회</h1>
         </div>
         <div class="flex items-center gap-2">

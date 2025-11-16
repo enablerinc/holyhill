@@ -77,9 +77,7 @@ include_once(G5_PATH.'/head.sub.php');
     <div class="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
         <div class="flex items-center gap-3">
             <a href="/" class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <i class="fa-solid fa-cross text-white text-sm"></i>
-                </div>
+                <img src="../../img/logo.png" alt="성산교회 로고" class="w-8 h-8 rounded-lg object-cover">
                 <h1 class="text-lg font-semibold text-gray-800">성산교회</h1>
             </a>
         </div>

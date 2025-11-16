@@ -234,9 +234,7 @@ $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
             <button onclick="goBack()" class="w-8 h-8 flex items-center justify-center">
                 <i class="fa-solid fa-arrow-left text-grace-green text-lg"></i>
             </button>
-            <div class="w-8 h-8 bg-gradient-to-br from-lilac to-deep-purple rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-cross text-white text-sm"></i>
-            </div>
+            <img src="../img/logo.png" alt="성산교회 로고" class="w-8 h-8 rounded-lg object-cover">
             <h1 class="text-lg font-semibold text-grace-green">명예의 전당</h1>
         </div>
         <i class="fa-solid fa-trophy text-divine-lilac text-xl"></i>
