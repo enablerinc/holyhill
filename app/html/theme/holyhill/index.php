@@ -185,9 +185,10 @@ include_once(G5_THEME_PATH.'/head.php');
     <section id="feed" class="space-y-4 pb-20">
         <?php
         // ✅ WHERE wr_is_comment = 0 추가 (게시글만 가져오기)
-        $feed_sql = "SELECT * FROM {$g5['write_prefix']}gallery 
+        // 정렬: 하트(좋아요) 1순위, 등록일시 2순위
+        $feed_sql = "SELECT * FROM {$g5['write_prefix']}gallery
                      WHERE wr_is_comment = 0
-                     ORDER BY wr_id DESC 
+                     ORDER BY wr_good DESC, wr_datetime DESC
                      LIMIT 20";
         $feed_result = sql_query($feed_sql);
         
@@ -209,8 +210,15 @@ include_once(G5_THEME_PATH.'/head.php');
                     }
                 }
                 
-                // YouTube URL이 있는지 확인
-                $has_youtube_feed = preg_match('/(youtube\.com|youtu\.be)/', $feed['wr_content']);
+                // YouTube URL이 있는지 확인하고 비디오 ID 추출
+                $has_youtube_feed = false;
+                $youtube_video_id = '';
+
+                // YouTube URL 패턴 매칭
+                if (preg_match('/(?:youtube\.com\/watch\?v=|youtube\.com\/live\/|youtu\.be\/)([a-zA-Z0-9_-]+)/i', $feed['wr_content'], $youtube_matches)) {
+                    $has_youtube_feed = true;
+                    $youtube_video_id = $youtube_matches[1];
+                }
 
                 // 첨부 이미지
                 $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']}
@@ -243,17 +251,20 @@ include_once(G5_THEME_PATH.'/head.php');
                     </div>
 
                     <?php if ($has_youtube_feed) { ?>
-                    <!-- YouTube 콘텐츠가 있을 때 -->
-                    <div class="w-full p-4">
+                    <!-- YouTube 썸네일 표시 -->
+                    <div class="w-full relative">
                         <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
-                           class="block">
-                            <?php if ($feed['wr_subject']) { ?>
-                                <h3 class="text-base font-bold mb-2 text-gray-900"><?php echo get_text($feed['wr_subject']); ?></h3>
-                            <?php } ?>
-                            <?php
-                            $feed_content = get_text($feed['wr_content']);
-                            echo convert_youtube_to_iframe_index($feed_content);
-                            ?>
+                           class="block relative group">
+                            <img src="https://img.youtube.com/vi/<?php echo $youtube_video_id; ?>/maxresdefault.jpg"
+                                 class="w-full h-auto max-h-[500px] object-cover cursor-pointer"
+                                 onerror="this.src='https://img.youtube.com/vi/<?php echo $youtube_video_id; ?>/hqdefault.jpg'"
+                                 alt="YouTube 썸네일">
+                            <!-- 재생 버튼 오버레이 -->
+                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 group-hover:bg-opacity-40 transition-all">
+                                <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                    <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
+                                </div>
+                            </div>
                         </a>
                     </div>
                     <?php } elseif ($feed_img) { ?>
