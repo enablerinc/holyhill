@@ -267,11 +267,13 @@ $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
         <div class="text-center">
             <i class="fa-solid fa-quote-left text-divine-lilac text-lg mb-2"></i>
             <p class="text-sm font-medium text-deep-purple leading-relaxed mb-2">
-                "충성된 종아 잘하였도다 네가 적은 일에 충성하였으니<br>많은 것을 네게 맡기리라"
+                "잘 하였도다 착하고 충성된 종아 네가 작은 일에 충성하였으매 내가 많은 것으로 네게 맡기리니 네 주인의 즐거움에 참예할찌어다"
             </p>
             <p class="text-xs text-lilac">마태복음 25:21</p>
         </div>
     </section>
+
+
 
     <section id="top-three-section" class="px-4 mb-6">
         <div class="flex items-center gap-2 mb-4">
