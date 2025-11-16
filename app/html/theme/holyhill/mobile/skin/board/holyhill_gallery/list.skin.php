@@ -28,9 +28,10 @@ switch($filter) {
 }
 
 // 좋아요 많은 순으로 게시글 다시 가져오기 (첫 페이지만)
-$sql = "SELECT * FROM {$g5['write_prefix']}{$bo_table} 
+// 정렬: 하트(좋아요) 1순위, 등록일시 2순위
+$sql = "SELECT * FROM {$g5['write_prefix']}{$bo_table}
         WHERE wr_is_comment = 0 {$date_condition}
-        ORDER BY wr_good DESC, wr_num DESC 
+        ORDER BY wr_good DESC, wr_datetime DESC
         LIMIT {$page_rows}";
 
 $result = sql_query($sql);
@@ -131,6 +132,14 @@ tailwind.config = {
                 for ($i=0; $i<count($list); $i++) {
                     $wr_id = $list[$i]['wr_id'];
 
+                    // YouTube URL이 있는지 확인하고 비디오 ID 추출
+                    $has_youtube = false;
+                    $youtube_video_id = '';
+                    if (preg_match('/(?:youtube\.com\/watch\?v=|youtube\.com\/live\/|youtu\.be\/)([a-zA-Z0-9_-]+)/i', $list[$i]['wr_content'], $youtube_matches)) {
+                        $has_youtube = true;
+                        $youtube_video_id = $youtube_matches[1];
+                    }
+
                     // 첫 번째 이미지 가져오기
                     $first_image = '';
                     $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
@@ -149,7 +158,20 @@ tailwind.config = {
 
                 <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
                     <a href="<?php echo $view_href; ?>" class="block w-full h-full">
-                        <?php if ($first_image) { ?>
+                        <?php if ($has_youtube) { ?>
+                            <!-- YouTube 썸네일 -->
+                            <div class="relative w-full h-full">
+                                <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
+                                     src="https://img.youtube.com/vi/<?php echo $youtube_video_id; ?>/hqdefault.jpg"
+                                     alt="YouTube 썸네일">
+                                <!-- 재생 버튼 -->
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                        <i class="fa-solid fa-play text-white text-sm ml-0.5"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php } elseif ($first_image) { ?>
                             <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
                                  src="<?php echo $first_image; ?>"
                                  alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
@@ -254,7 +276,20 @@ tailwind.config = {
                     
                     data.items.forEach(item => {
                         let contentHTML = '';
-                        if (item.has_image) {
+                        if (item.has_youtube) {
+                            contentHTML = `
+                                <div class="relative w-full h-full">
+                                    <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
+                                         src="https://img.youtube.com/vi/${item.youtube_id}/hqdefault.jpg"
+                                         alt="YouTube 썸네일">
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                            <i class="fa-solid fa-play text-white text-sm ml-0.5"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (item.has_image) {
                             contentHTML = `
                                 <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
                                      src="${item.image}"
