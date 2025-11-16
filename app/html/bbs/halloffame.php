@@ -231,9 +231,6 @@ $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
 <header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
     <div class="flex items-center justify-between px-4 py-3">
         <div class="flex items-center gap-3">
-            <button onclick="goBack()" class="w-8 h-8 flex items-center justify-center">
-                <i class="fa-solid fa-arrow-left text-grace-green text-lg"></i>
-            </button>
             <img src="../img/logo.png" alt="성산교회 로고" class="w-8 h-8 rounded-lg object-cover">
             <h1 class="text-lg font-semibold text-grace-green">명예의 전당</h1>
         </div>
@@ -432,9 +429,6 @@ $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
 <?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
 
 <script>
-function goBack() {
-    window.history.back();
-}
 
 function changeMonth(direction) {
     const currentYear = <?php echo $current_year; ?>;
