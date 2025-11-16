@@ -129,7 +129,7 @@ $items = array();
 while ($row = sql_fetch_array($result)) {
     $wr_id = $row['wr_id'];
 
-    // URL에서 YouTube 비디오 ID 추출
+    // 게시글 내용에서 YouTube URL 추출 및 섬네일 생성
     $video_thumbnail = '';
     $video_url = '';
 
@@ -137,10 +137,22 @@ while ($row = sql_fetch_array($result)) {
     if (!empty($row['wr_link1'])) {
         $video_url = $row['wr_link1'];
     }
+
     // wr_link1이 없으면 게시글 내용에서 URL 찾기
-    elseif (!empty($row['wr_content'])) {
-        if (preg_match('/https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<>"]+/i', $row['wr_content'], $url_matches)) {
+    if (empty($video_url) && !empty($row['wr_content'])) {
+        $content = $row['wr_content'];
+
+        // HTML 태그의 href 속성에서 찾기
+        if (preg_match('/href=["\']?(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^"\'\s>]+)["\']?/i', $content, $url_matches)) {
+            $video_url = $url_matches[1];
+        }
+        // 일반 텍스트에서 찾기
+        elseif (preg_match('/https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<>"]+/i', $content, $url_matches)) {
             $video_url = $url_matches[0];
+        }
+        // iframe의 src 속성에서 찾기
+        elseif (preg_match('/src=["\']?(https?:\/\/(?:www\.)?youtube\.com\/embed\/[^"\'\s>]+)["\']?/i', $content, $url_matches)) {
+            $video_url = $url_matches[1];
         }
     }
 
