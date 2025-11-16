@@ -47,23 +47,34 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 오늘의 말씀 위젯 -->
     <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
         <?php
+        // ✅ 오늘 날짜에 등록된 말씀만 가져오기 (DATE(wr_datetime) = CURDATE())
         $word_sql = "SELECT wr_id, wr_subject, wr_content, wr_datetime, wr_name
-                     FROM {$g5['write_prefix']}word 
+                     FROM {$g5['write_prefix']}word
                      WHERE wr_is_comment = 0
-                     ORDER BY wr_id DESC 
+                     AND DATE(wr_datetime) = CURDATE()
+                     ORDER BY wr_id DESC
                      LIMIT 1";
         $word_result = sql_query($word_sql);
-        
+
         if ($word_result && $word = sql_fetch_array($word_result)) {
             $word_content = strip_tags($word['wr_content']);
             $word_content = str_replace('&nbsp;', ' ', $word_content);
             $word_content = trim($word_content);
             $word_content = cut_str($word_content, 120);
+
+            // 오늘 등록된 말씀이 몇 개인지 체크
+            $today_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}word
+                               WHERE wr_is_comment = 0 AND DATE(wr_datetime) = CURDATE()";
+            $today_count = sql_fetch($today_count_sql);
+            $has_multiple = $today_count['cnt'] > 1;
             ?>
             <div class="text-center">
                 <h3 class="text-sm font-medium text-purple-900 mb-2 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-book-bible text-purple-600"></i>
                     오늘의 말씀
+                    <?php if ($has_multiple) { ?>
+                    <span class="text-xs text-orange-600">(오늘 <?php echo $today_count['cnt']; ?>개 등록됨)</span>
+                    <?php } ?>
                 </h3>
                 <p class="text-base font-medium text-gray-800 leading-relaxed mb-2">
                     "<?php echo $word_content; ?>"
@@ -71,10 +82,19 @@ include_once(G5_THEME_PATH.'/head.php');
                 <p class="text-xs text-purple-600 mb-3">
                     <?php echo date('Y년 m월 d일', strtotime($word['wr_datetime'])); ?> · <?php echo $word['wr_name']; ?>
                 </p>
-                <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>" 
-                   class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
-                    전체 보기 →
-                </a>
+                <div class="flex items-center justify-center gap-3">
+                    <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
+                       class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
+                        전체 보기 →
+                    </a>
+                    <?php if ($is_admin) { ?>
+                    <span class="text-gray-300">|</span>
+                    <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=word"
+                       class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
+                        <i class="fa-solid fa-plus text-xs"></i> 새 말씀 등록
+                    </a>
+                    <?php } ?>
+                </div>
             </div>
             <?php
         } else {
@@ -85,13 +105,15 @@ include_once(G5_THEME_PATH.'/head.php');
                     오늘의 말씀
                 </h3>
                 <p class="text-base font-medium text-gray-600 leading-relaxed mb-3">
-                    아직 등록된 말씀이 없습니다
+                    오늘 등록된 말씀이 아직 없습니다
                 </p>
                 <?php if ($is_admin) { ?>
-                <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=word" 
-                   class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
-                    첫 말씀 등록하기 →
+                <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=word"
+                   class="inline-block px-5 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 font-medium transition-colors">
+                    <i class="fa-solid fa-plus mr-1"></i> 오늘의 말씀 등록하기
                 </a>
+                <?php } else { ?>
+                <p class="text-xs text-gray-500">관리자가 곧 말씀을 등록할 예정입니다</p>
                 <?php } ?>
             </div>
             <?php
