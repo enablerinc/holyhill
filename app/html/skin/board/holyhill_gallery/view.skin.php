@@ -62,7 +62,7 @@ function replace_image_placeholders($content, $images, $bo_table) {
 }
 
 // 본문 내용 처리
-$processed_content = replace_image_placeholders(get_text($view['wr_content']), $images, $bo_table);
+$processed_content = nl2br(replace_image_placeholders(get_text($view['wr_content']), $images, $bo_table));
 
 // 상단 갤러리용 이미지 (본문에 사용되지 않은 이미지만)
 $gallery_images = array();
@@ -183,7 +183,7 @@ foreach ($images as $idx => $image) {
                             <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full">
                             <div class="flex-1 bg-gray-50 rounded-2xl px-3 py-2">
                                 <div class="font-semibold text-xs mb-1"><?php echo $c_nick; ?></div>
-                                <div class="text-sm"><?php echo get_text($c['wr_content']); ?></div>
+                                <div class="text-sm"><?php echo nl2br(get_text($c['wr_content'])); ?></div>
                             </div>
                         </div>
                         <?php

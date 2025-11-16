@@ -104,7 +104,7 @@ function convert_youtube_to_iframe($content) {
 }
 
 // 본문 내용 처리
-$processed_content = get_text($view['wr_content']);
+$processed_content = nl2br(get_text($view['wr_content']));
 $processed_content = replace_image_placeholders($processed_content, $images, $bo_table);
 $processed_content = convert_youtube_to_iframe($processed_content);
 
@@ -241,7 +241,7 @@ foreach ($images as $idx => $image) {
                             <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full">
                             <div class="flex-1 bg-gray-50 rounded-2xl px-3 py-2">
                                 <div class="font-semibold text-xs mb-1"><?php echo $c_nick; ?></div>
-                                <div class="text-sm"><?php echo get_text($c['wr_content']); ?></div>
+                                <div class="text-sm"><?php echo nl2br(get_text($c['wr_content'])); ?></div>
                             </div>
                         </div>
                         <?php
