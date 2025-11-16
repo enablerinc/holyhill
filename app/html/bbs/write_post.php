@@ -82,7 +82,12 @@ if ($is_member) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="<?php echo G5_JS_URL; ?>/jquery-1.12.4.min.js"></script>
-    <script src="<?php echo G5_BBS_URL; ?>/write_token.php"></script>
+    <script>
+        var g5_bbs_url = "<?php echo G5_BBS_URL; ?>";
+        var g5_is_member = "<?php echo $is_member ? '1' : ''; ?>";
+        var g5_is_admin = "<?php echo $is_admin ? '1' : ''; ?>";
+    </script>
+    <script src="<?php echo G5_JS_URL; ?>/common.js"></script>
     <style>
         ::-webkit-scrollbar { display: none; }
         body {
@@ -245,6 +250,31 @@ if ($is_member) {
     height: 100%;
     object-fit: cover;
 }
+.preview-item .insert-content-btn {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background: rgba(139, 92, 246, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+.preview-item:hover .insert-content-btn {
+    opacity: 1;
+}
+.preview-item .insert-content-btn:hover {
+    background: rgba(124, 58, 237, 1);
+    transform: scale(1.1);
+}
 .preview-item .remove-btn {
     position: absolute;
     top: 4px;
@@ -372,8 +402,11 @@ function addPreview(file, index) {
         div.className = 'preview-item';
         div.setAttribute('data-index', index);
         div.innerHTML = `
-            <img src="${e.target.result}" alt="preview">
+            <img src="${e.target.result}" alt="preview" data-index="${index}">
             <span class="index-badge">${index + 1}</span>
+            <button type="button" class="insert-content-btn" onclick="insertImageToContent(${index})" title="본문에 삽입">
+                <i class="fa-solid fa-plus"></i>
+            </button>
             <button type="button" class="remove-btn" onclick="removeImage(${index})">
                 <i class="fa-solid fa-xmark"></i>
             </button>
@@ -382,6 +415,41 @@ function addPreview(file, index) {
     };
 
     reader.readAsDataURL(file);
+}
+
+// 이미지를 본문에 삽입
+function insertImageToContent(index) {
+    const contentTextarea = document.getElementById('wr_content');
+    if (!contentTextarea) {
+        alert('본문 입력창을 찾을 수 없습니다.');
+        return;
+    }
+
+    // 이미지 placeholder 생성
+    const imagePlaceholder = `[이미지${index + 1}]\n\n`;
+
+    // 커서 위치에 삽입
+    const startPos = contentTextarea.selectionStart;
+    const endPos = contentTextarea.selectionEnd;
+    const currentValue = contentTextarea.value;
+
+    contentTextarea.value = currentValue.substring(0, startPos) + imagePlaceholder + currentValue.substring(endPos);
+
+    // 커서 위치를 삽입된 텍스트 뒤로 이동
+    contentTextarea.selectionStart = contentTextarea.selectionEnd = startPos + imagePlaceholder.length;
+    contentTextarea.focus();
+
+    // 피드백
+    const insertBtn = event.target.closest('.insert-content-btn');
+    if (insertBtn) {
+        const originalHTML = insertBtn.innerHTML;
+        insertBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        insertBtn.style.backgroundColor = '#10b981';
+        setTimeout(() => {
+            insertBtn.innerHTML = originalHTML;
+            insertBtn.style.backgroundColor = '';
+        }, 1000);
+    }
 }
 
 // 이미지 제거
