@@ -200,7 +200,7 @@ function convert_youtube_to_iframe_index($content) {
                         </a>
                         <?php if ($is_admin) { ?>
                         <span class="text-gray-300">|</span>
-                        <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=word"
+                        <a href="<?php echo G5_BBS_URL; ?>/write_word.php"
                            class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
                             <i class="fa-solid fa-plus text-xs"></i> 새 말씀 등록
                         </a>
@@ -219,7 +219,7 @@ function convert_youtube_to_iframe_index($content) {
                         오늘 등록된 말씀이 아직 없습니다
                     </p>
                     <?php if ($is_admin) { ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=word"
+                    <a href="<?php echo G5_BBS_URL; ?>/write_word.php"
                        class="inline-block px-5 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 font-medium transition-colors">
                         <i class="fa-solid fa-plus mr-1"></i> 오늘의 말씀 등록하기
                     </a>
