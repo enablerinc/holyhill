@@ -32,9 +32,9 @@ if ($is_member) {
         </a>
         <?php } ?>
 
-        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-book-bible text-gray-600 text-lg"></i>
-            <span class="text-xs text-gray-600">말씀</span>
+        <a href="<?php echo G5_BBS_URL; ?>/halloffame.php" class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-trophy text-lilac text-lg"></i>
+            <span class="text-xs text-lilac font-medium">명예의 전당</span>
         </a>
 
         <?php if ($is_member) { ?>
