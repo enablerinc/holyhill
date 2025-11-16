@@ -131,6 +131,13 @@ $processed_content = convert_youtube_to_iframe($processed_content);
 
             <!-- 내용 -->
             <div class="p-4 border-b">
+                <?php
+                // YouTube URL이 있는지 확인
+                $has_youtube_url = preg_match('/(youtube\.com|youtu\.be)/', $view['wr_content']);
+                if ($has_youtube_url && $view['wr_subject']) {
+                ?>
+                    <h2 class="text-lg font-bold mb-3 text-gray-900"><?php echo get_text($view['wr_subject']); ?></h2>
+                <?php } ?>
                 <div style="white-space: pre-line; word-break: break-word; line-height: 1.6;"><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?></div>
             </div>
 
