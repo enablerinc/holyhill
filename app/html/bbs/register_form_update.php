@@ -424,23 +424,35 @@ $mb_icon_img = get_mb_icon_name($mb_id).'.gif';
 
 if (isset($_FILES['mb_icon']) && is_uploaded_file($_FILES['mb_icon']['tmp_name'])) {
     if (preg_match($image_regex, $_FILES['mb_icon']['name'])) {
-        // 아이콘 용량이 설정값보다 이하만 업로드 가능
-        if ($_FILES['mb_icon']['size'] <= $config['cf_member_icon_size']) {
-            @mkdir($mb_dir, G5_DIR_PERMISSION);
-            @chmod($mb_dir, G5_DIR_PERMISSION);
-            $dest_path = $mb_dir.'/'.$mb_icon_img;
-            move_uploaded_file($_FILES['mb_icon']['tmp_name'], $dest_path);
-            chmod($dest_path, G5_FILE_PERMISSION);
-            if (file_exists($dest_path)) {
-                //=================================================================\
-                // 090714
-                // gif 파일에 악성코드를 심어 업로드 하는 경우를 방지
-                // 에러메세지는 출력하지 않는다.
-                //-----------------------------------------------------------------
-                $size = @getimagesize($dest_path);
-                if (!($size[2] === 1 || $size[2] === 2 || $size[2] === 3)) { // jpg, gif, png 파일이 아니면 올라간 이미지를 삭제한다.
-                    @unlink($dest_path);
-                } else if ($size[0] > $config['cf_member_icon_width'] || $size[1] > $config['cf_member_icon_height']) {
+        // 파일 크기 체크를 제거하고 자동 리사이즈 처리
+        @mkdir($mb_dir, G5_DIR_PERMISSION);
+        @chmod($mb_dir, G5_DIR_PERMISSION);
+        $dest_path = $mb_dir.'/'.$mb_icon_img;
+        move_uploaded_file($_FILES['mb_icon']['tmp_name'], $dest_path);
+        chmod($dest_path, G5_FILE_PERMISSION);
+        if (file_exists($dest_path)) {
+            //=================================================================\
+            // 090714
+            // gif 파일에 악성코드를 심어 업로드 하는 경우를 방지
+            // 에러메세지는 출력하지 않는다.
+            //-----------------------------------------------------------------
+            $size = @getimagesize($dest_path);
+            if (!($size[2] === 1 || $size[2] === 2 || $size[2] === 3)) { // jpg, gif, png 파일이 아니면 올라간 이미지를 삭제한다.
+                @unlink($dest_path);
+                $msg .= '지원하지 않는 이미지 형식입니다. (gif, jpg, png만 가능)';
+            } else {
+                // 이미지 크기(픽셀) 또는 파일 크기(바이트) 리사이즈
+                $need_resize = false;
+                if ($size[0] > $config['cf_member_icon_width'] || $size[1] > $config['cf_member_icon_height']) {
+                    $need_resize = true;
+                }
+
+                // 파일 크기(바이트)가 설정값보다 크면 리사이즈
+                if (filesize($dest_path) > $config['cf_member_icon_size']) {
+                    $need_resize = true;
+                }
+
+                if ($need_resize) {
                     $thumb = null;
                     if($size[2] === 2 || $size[2] === 3) {
                         //jpg 또는 png 파일 적용
@@ -448,17 +460,38 @@ if (isset($_FILES['mb_icon']) && is_uploaded_file($_FILES['mb_icon']['tmp_name']
                         if($thumb) {
                             @unlink($dest_path);
                             rename($mb_dir.'/'.$thumb, $dest_path);
+
+                            // 리사이즈 후에도 파일 크기가 크면 품질을 낮춰서 재저장
+                            if (file_exists($dest_path) && filesize($dest_path) > $config['cf_member_icon_size']) {
+                                $quality = 85;
+                                while (filesize($dest_path) > $config['cf_member_icon_size'] && $quality > 30) {
+                                    $img_info = getimagesize($dest_path);
+                                    if ($img_info[2] === 2) { // JPEG
+                                        $image = imagecreatefromjpeg($dest_path);
+                                        imagejpeg($image, $dest_path, $quality);
+                                        imagedestroy($image);
+                                    } else if ($img_info[2] === 3) { // PNG
+                                        $image = imagecreatefrompng($dest_path);
+                                        // PNG 압축 레벨 (0-9, 9가 최대 압축)
+                                        $png_quality = floor((100 - $quality) / 10);
+                                        imagepng($image, $dest_path, $png_quality);
+                                        imagedestroy($image);
+                                    }
+                                    $quality -= 10;
+                                }
+                            }
                         }
                     }
-                    if( !$thumb ){
-                        // 아이콘의 폭 또는 높이가 설정값 보다 크다면 이미 업로드 된 아이콘 삭제
-                        @unlink($dest_path);
+                    if( !$thumb && $size[2] === 1){
+                        // GIF 파일은 썸네일 생성이 안되므로 원본 유지 (단, 크기가 크면 경고)
+                        if (filesize($dest_path) > $config['cf_member_icon_size']) {
+                            $msg .= 'GIF 이미지는 자동 리사이즈가 지원되지 않습니다. JPG 또는 PNG 형식을 사용해주세요.';
+                            @unlink($dest_path);
+                        }
                     }
                 }
-                //=================================================================\
             }
-        } else {
-            $msg .= '회원아이콘을 '.number_format($config['cf_member_icon_size']).'바이트 이하로 업로드 해주십시오.';
+            //=================================================================\
         }
 
     } else {
@@ -487,18 +520,30 @@ if( $config['cf_member_img_size'] && $config['cf_member_img_width'] && $config['
         $msg = $msg ? $msg."\\r\\n" : '';
 
         if (preg_match($image_regex, $_FILES['mb_img']['name'])) {
-            // 아이콘 용량이 설정값보다 이하만 업로드 가능
-            if ($_FILES['mb_img']['size'] <= $config['cf_member_img_size']) {
-                @mkdir($mb_dir, G5_DIR_PERMISSION);
-                @chmod($mb_dir, G5_DIR_PERMISSION);
-                $dest_path = $mb_dir.'/'.$mb_icon_img;
-                move_uploaded_file($_FILES['mb_img']['tmp_name'], $dest_path);
-                chmod($dest_path, G5_FILE_PERMISSION);
-                if (file_exists($dest_path)) {
-                    $size = @getimagesize($dest_path);
-                    if (!($size[2] === 1 || $size[2] === 2 || $size[2] === 3)) { // gif jpg png 파일이 아니면 올라간 이미지를 삭제한다.
-                        @unlink($dest_path);
-                    } else if ($size[0] > $config['cf_member_img_width'] || $size[1] > $config['cf_member_img_height']) {
+            // 파일 크기 체크를 제거하고 자동 리사이즈 처리
+            @mkdir($mb_dir, G5_DIR_PERMISSION);
+            @chmod($mb_dir, G5_DIR_PERMISSION);
+            $dest_path = $mb_dir.'/'.$mb_icon_img;
+            move_uploaded_file($_FILES['mb_img']['tmp_name'], $dest_path);
+            chmod($dest_path, G5_FILE_PERMISSION);
+            if (file_exists($dest_path)) {
+                $size = @getimagesize($dest_path);
+                if (!($size[2] === 1 || $size[2] === 2 || $size[2] === 3)) { // gif jpg png 파일이 아니면 올라간 이미지를 삭제한다.
+                    @unlink($dest_path);
+                    $msg .= '지원하지 않는 이미지 형식입니다. (gif, jpg, png만 가능)';
+                } else {
+                    // 이미지 크기(픽셀) 리사이즈
+                    $need_resize = false;
+                    if ($size[0] > $config['cf_member_img_width'] || $size[1] > $config['cf_member_img_height']) {
+                        $need_resize = true;
+                    }
+
+                    // 파일 크기(바이트)가 설정값보다 크면 리사이즈
+                    if (filesize($dest_path) > $config['cf_member_img_size']) {
+                        $need_resize = true;
+                    }
+
+                    if ($need_resize) {
                         $thumb = null;
                         if($size[2] === 2 || $size[2] === 3) {
                             //jpg 또는 png 파일 적용
@@ -506,21 +551,42 @@ if( $config['cf_member_img_size'] && $config['cf_member_img_width'] && $config['
                             if($thumb) {
                                 @unlink($dest_path);
                                 rename($mb_dir.'/'.$thumb, $dest_path);
+
+                                // 리사이즈 후에도 파일 크기가 크면 품질을 낮춰서 재저장
+                                if (file_exists($dest_path) && filesize($dest_path) > $config['cf_member_img_size']) {
+                                    $quality = 85;
+                                    while (filesize($dest_path) > $config['cf_member_img_size'] && $quality > 30) {
+                                        $img_info = getimagesize($dest_path);
+                                        if ($img_info[2] === 2) { // JPEG
+                                            $image = imagecreatefromjpeg($dest_path);
+                                            imagejpeg($image, $dest_path, $quality);
+                                            imagedestroy($image);
+                                        } else if ($img_info[2] === 3) { // PNG
+                                            $image = imagecreatefrompng($dest_path);
+                                            // PNG 압축 레벨 (0-9, 9가 최대 압축)
+                                            $png_quality = floor((100 - $quality) / 10);
+                                            imagepng($image, $dest_path, $png_quality);
+                                            imagedestroy($image);
+                                        }
+                                        $quality -= 10;
+                                    }
+                                }
                             }
                         }
-                        if( !$thumb ){
-                            // 아이콘의 폭 또는 높이가 설정값 보다 크다면 이미 업로드 된 아이콘 삭제
-                            @unlink($dest_path);
+                        if( !$thumb && $size[2] === 1){
+                            // GIF 파일은 썸네일 생성이 안되므로 원본 유지 (단, 크기가 크면 경고)
+                            if (filesize($dest_path) > $config['cf_member_img_size']) {
+                                $msg .= 'GIF 이미지는 자동 리사이즈가 지원되지 않습니다. JPG 또는 PNG 형식을 사용해주세요.';
+                                @unlink($dest_path);
+                            }
                         }
                     }
-                    //=================================================================\
                 }
-            } else {
-                $msg .= '회원이미지을 '.number_format($config['cf_member_img_size']).'바이트 이하로 업로드 해주십시오.';
+                //=================================================================\
             }
 
         } else {
-            $msg .= $_FILES['mb_img']['name'].'은(는) gif/jpg 파일이 아닙니다.';
+            $msg .= $_FILES['mb_img']['name'].'은(는) 이미지 파일이 아닙니다.';
         }
     }
 }
