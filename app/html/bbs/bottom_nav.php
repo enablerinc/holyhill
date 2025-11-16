@@ -13,7 +13,7 @@ if ($is_member) {
 
 <nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-soft-lavender z-40">
     <div class="flex items-center justify-around py-3">
-        <a href="/" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/index.php" class="flex flex-col items-center gap-1">
             <i class="fa-solid fa-house text-purple-600 text-lg"></i>
             <span class="text-xs text-purple-600 font-medium">홈</span>
         </a>
