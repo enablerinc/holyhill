@@ -98,7 +98,6 @@ foreach ($images as $idx => $image) {
     <header class="fixed top-0 left-0 right-0 bg-white border-b z-50" style="max-width: 640px; margin: 0 auto;">
         <div class="flex items-center justify-between px-4 py-3">
             <button onclick="history.back()"><i class="fa-solid fa-arrow-left text-xl"></i></button>
-            <h1 class="font-semibold">피드</h1>
             <?php if ($update_href || $delete_href) { ?>
             <div class="relative">
                 <button onclick="toggleMenu()" id="menuBtn"><i class="fa-solid fa-ellipsis-vertical text-xl"></i></button>
