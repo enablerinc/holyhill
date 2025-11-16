@@ -162,7 +162,7 @@ foreach ($images as $idx => $image) {
     </header>
 
     <!-- 본문 -->
-    <main style="padding-top: 64px; padding-bottom: 200px;">
+    <main style="padding-bottom: 200px;">
         <article>
             <!-- 작성자 -->
             <div class="p-4 flex items-center gap-3 border-b">
@@ -186,6 +186,20 @@ foreach ($images as $idx => $image) {
             </div>
             <?php } ?>
 
+            <!-- 내용 -->
+            <div class="p-4 border-b">
+                <?php
+                // YouTube URL이 있는지 확인
+                $has_youtube_url = preg_match('/(youtube\.com|youtu\.be)/', $view['wr_content']);
+                if ($has_youtube_url && $view['wr_subject']) {
+                ?>
+                    <h2 class="font-bold mb-3 text-gray-900"><?php echo get_text($view['wr_subject']); ?></h2>
+                <?php } ?>
+                <div style="white-space: pre-wrap; word-wrap: break-word;">
+                    <?php echo $processed_content; ?>
+                </div>
+            </div>
+
             <!-- 액션 -->
             <div class="p-4 border-b">
                 <div class="flex gap-4 mb-2">
@@ -196,21 +210,7 @@ foreach ($images as $idx => $image) {
                         <i class="fa-regular fa-comment text-2xl"></i>
                     </button>
                 </div>
-                <div id="goodCount" class="font-semibold text-sm">아멘 <?php echo $view['wr_good']; ?>개</div>
-            </div>
-
-            <!-- 내용 -->
-            <div class="p-4 border-b">
-                <?php
-                // YouTube URL이 있는지 확인
-                $has_youtube_url = preg_match('/(youtube\.com|youtu\.be)/', $view['wr_content']);
-                if ($has_youtube_url && $view['wr_subject']) {
-                ?>
-                    <h2 class="text-lg font-bold mb-3 text-gray-900"><?php echo get_text($view['wr_subject']); ?></h2>
-                <?php } ?>
-                <div>
-                    <span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?>
-                </div>
+                <div id="goodCount" class="font-semibold">아멘 <?php echo $view['wr_good']; ?>개</div>
             </div>
 
             <!-- 댓글 -->
@@ -285,10 +285,10 @@ foreach ($images as $idx => $image) {
                         name="wr_content"
                         id="commentInput"
                         placeholder="댓글 입력..."
-                        style="flex: 1; background: transparent; border: none; outline: none; font-size: 16px; min-width: 0;"
+                        style="flex: 1; background: transparent; border: none; outline: none; min-width: 0;"
                         required>
                     <button type="submit" style="background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0;">
-                        <i class="fa-solid fa-paper-plane" style="color: #9333ea; font-size: 18px;"></i>
+                        <i class="fa-solid fa-paper-plane" style="color: #9333ea;"></i>
                     </button>
                 </div>
             </div>
