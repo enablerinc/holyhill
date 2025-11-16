@@ -228,21 +228,14 @@ foreach ($images as $idx => $image) {
     <!-- 헤더 -->
     <header class="fixed top-0 left-0 right-0 bg-white border-b z-50" style="max-width: 640px; margin: 0 auto;">
         <div class="flex items-center justify-between px-4 py-3">
-            <button onclick="history.back()"><i class="fa-solid fa-arrow-left text-xl"></i></button>
-            <?php if ($update_href || $delete_href) { ?>
+            <button onclick="location.href='<?php echo G5_BBS_URL; ?>/index.php'"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+            <?php if ($delete_href) { ?>
             <div class="relative">
                 <button onclick="toggleMenu()" id="menuBtn"><i class="fa-solid fa-ellipsis-vertical text-xl"></i></button>
                 <div id="menuDropdown" class="hidden absolute right-0 top-8 bg-white border rounded-lg shadow-lg py-2 w-32 z-50">
-                    <?php if ($update_href) { ?>
-                    <a href="<?php echo $update_href; ?>" class="block px-4 py-2 hover:bg-gray-100 text-sm">
-                        <i class="fa-solid fa-pen-to-square mr-2"></i>수정
-                    </a>
-                    <?php } ?>
-                    <?php if ($delete_href) { ?>
                     <a href="#" onclick="confirmDelete(event)" class="block px-4 py-2 hover:bg-gray-100 text-sm text-red-600">
                         <i class="fa-solid fa-trash mr-2"></i>삭제
                     </a>
-                    <?php } ?>
                 </div>
             </div>
             <?php } else { ?>
