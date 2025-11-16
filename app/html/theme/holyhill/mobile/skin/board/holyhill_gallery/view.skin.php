@@ -190,27 +190,27 @@ foreach ($images as $idx => $image) {
 <div id="commentFormWrapper" style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 2px solid #e5e7eb; z-index: 99999; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);">
     <div style="max-width: 640px; margin: 0 auto;">
         <?php if ($is_member) { ?>
-        <form id="commentForm" method="post" action="<?php echo G5_BBS_URL; ?>/comment_write_ajax.php" style="padding: 16px;" novalidate>
+        <form id="commentForm" method="post" action="<?php echo G5_BBS_URL; ?>/comment_write_ajax.php" style="padding: 12px;" novalidate>
             <input type="hidden" name="w" value="c">
             <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
             <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
             <input type="hidden" name="comment_id" value="">
             <input type="hidden" name="token" value="<?php echo $comment_token; ?>">
-            
-            <div style="display: flex; gap: 12px; align-items: center;">
+
+            <div style="display: flex; gap: 8px; align-items: center;">
                 <?php
                 $comment_profile_photo = (isset($member['mb_photo']) && $member['mb_photo']) ? G5_DATA_URL.'/member/'.$member['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
                 ?>
                 <img src="<?php echo $comment_profile_photo; ?>" style="width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;" alt="프로필">
-                <div style="flex: 1; display: flex; gap: 8px; background: #f3f4f6; border-radius: 9999px; padding: 8px 16px; align-items: center;">
-                    <input 
-                        type="text" 
-                        name="wr_content" 
-                        id="commentInput" 
-                        placeholder="댓글 입력..." 
-                        style="flex: 1; background: transparent; border: none; outline: none; font-size: 14px;"
+                <div style="flex: 1; display: flex; gap: 6px; background: #f3f4f6; border-radius: 9999px; padding: 6px 12px; align-items: center; min-width: 0;">
+                    <input
+                        type="text"
+                        name="wr_content"
+                        id="commentInput"
+                        placeholder="댓글 입력..."
+                        style="flex: 1; background: transparent; border: none; outline: none; font-size: 14px; min-width: 0;"
                         required>
-                    <button type="submit" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                    <button type="submit" style="background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0;">
                         <i class="fa-solid fa-paper-plane" style="color: #9333ea; font-size: 18px;"></i>
                     </button>
                 </div>
