@@ -214,4 +214,4 @@ include_once(G5_THEME_PATH.'/head.php');
 }
 </style>
 
-<?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
+<?php include_once(G5_THEME_PATH.'/tail.php'); ?>
