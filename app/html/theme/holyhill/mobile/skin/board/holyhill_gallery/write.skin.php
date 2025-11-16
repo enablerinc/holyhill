@@ -145,15 +145,30 @@ body {
 
         <!-- 제목 입력 -->
         <div class="px-4 py-3 border-b border-gray-100">
-            <input 
-                type="text" 
-                name="wr_subject" 
-                value="<?php echo $subject ?>" 
-                id="wr_subject" 
-                required 
-                class="w-full text-base border-none focus:outline-none focus:ring-0 px-0 placeholder-gray-400" 
+            <input
+                type="text"
+                name="wr_subject"
+                value="<?php echo $subject ?>"
+                id="wr_subject"
+                required
+                class="w-full text-base border-none focus:outline-none focus:ring-0 px-0 placeholder-gray-400"
                 placeholder="제목을 입력하세요..."
                 maxlength="255">
+        </div>
+
+        <!-- YouTube URL 입력 -->
+        <div class="px-4 py-3 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <i class="fa-brands fa-youtube text-red-500 text-xl flex-shrink-0"></i>
+                <input
+                    type="url"
+                    name="wr_link1"
+                    value="<?php echo isset($write['wr_link1']) ? $write['wr_link1'] : ''; ?>"
+                    id="wr_link1"
+                    class="w-full text-sm border-none focus:outline-none focus:ring-0 px-0 placeholder-gray-400"
+                    placeholder="YouTube URL을 입력하세요 (선택사항)"
+                    maxlength="500">
+            </div>
         </div>
 
         <!-- 캡션/내용 입력 -->
