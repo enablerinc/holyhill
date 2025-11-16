@@ -286,19 +286,15 @@ include_once(G5_THEME_PATH.'/head.php');
 
                     <div class="p-4">
                         <div class="flex items-center gap-4 mb-3">
-                            <button onclick="location.href='<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'" 
+                            <button onclick="location.href='<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'"
                                     class="flex items-center gap-2">
                                 <i class="fa-solid fa-heart text-red-500 text-xl"></i>
                                 <span class="text-sm text-gray-700">아멘 <?php echo number_format($good_cnt); ?>개</span>
                             </button>
-                            <button onclick="location.href='<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'" 
+                            <button onclick="location.href='<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'"
                                     class="flex items-center gap-2">
                                 <i class="fa-regular fa-comment text-gray-700 text-xl"></i>
                                 <span class="text-sm text-gray-700"><?php echo number_format($comment_cnt); ?></span>
-                            </button>
-                            <button class="flex items-center gap-2">
-                                <i class="fa-solid fa-praying-hands text-purple-500 text-xl"></i>
-                                <span class="text-sm text-gray-700">기도</span>
                             </button>
                         </div>
 
