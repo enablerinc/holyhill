@@ -6,7 +6,7 @@ if (!function_exists('ft_nonce_is_valid')) {
 }
 
 if (!function_exists('che_reprocessImage')) {
-    function che_reprocessImage($file_path, $callback)
+    function che_reprocessImage($file_path, $callback, $max_width = 1920, $max_height = 1920, $quality = 90)
     {
         $MIME_TYPES_PROCESSORS = array(
             "image/gif" => array("imagecreatefromgif", "imagegif"),
@@ -42,9 +42,57 @@ if (!function_exists('che_reprocessImage')) {
                 return false;
             }
 
+            // 리사이즈 처리
+            $original_width = imagesx($reprocessed_image);
+            $original_height = imagesy($reprocessed_image);
+
+            // 리사이즈가 필요한지 확인
+            if ($original_width > $max_width || $original_height > $max_height) {
+                // 비율 유지하면서 리사이즈
+                $ratio = min($max_width / $original_width, $max_height / $original_height);
+                $new_width = (int)($original_width * $ratio);
+                $new_height = (int)($original_height * $ratio);
+
+                // 새 이미지 생성
+                $resized_image = imagecreatetruecolor($new_width, $new_height);
+
+                // 투명도 유지 (PNG, GIF)
+                if ($mime_type == 'image/png' || $mime_type == 'image/gif') {
+                    imagealphablending($resized_image, false);
+                    imagesavealpha($resized_image, true);
+                    $transparent = imagecolorallocatealpha($resized_image, 255, 255, 255, 127);
+                    imagefilledrectangle($resized_image, 0, 0, $new_width, $new_height, $transparent);
+                }
+
+                // 리샘플링
+                imagecopyresampled(
+                    $resized_image,
+                    $reprocessed_image,
+                    0, 0, 0, 0,
+                    $new_width, $new_height,
+                    $original_width, $original_height
+                );
+
+                imagedestroy($reprocessed_image);
+                $reprocessed_image = $resized_image;
+            }
+
             // Calling callback(if set) with path of image as a parameter
             if ($callback !== null) {
                 $callback($reprocessed_image);
+            }
+
+            // 파일 저장
+            if ($mime_type == 'image/jpeg' || $mime_type == 'image/jpg') {
+                imagejpeg($reprocessed_image, $file_path, $quality);
+            } elseif ($mime_type == 'image/png') {
+                imagepng($reprocessed_image, $file_path, (int)(9 - ($quality / 10)));
+            } elseif ($mime_type == 'image/webp') {
+                imagewebp($reprocessed_image, $file_path, $quality);
+            } elseif ($mime_type == 'image/gif') {
+                imagegif($reprocessed_image, $file_path);
+            } elseif ($mime_type == 'image/bmp') {
+                imagewbmp($reprocessed_image, $file_path);
             }
 
             // Freeing up memory
