@@ -84,8 +84,10 @@ $comment_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_
 
 // 수정/삭제 권한
 $is_owner = ($is_member && $member['mb_id'] == $write['mb_id']);
-$can_edit = ($is_owner || $is_admin);
 $can_delete = ($is_owner || $is_admin);
+
+// 토큰 생성
+$token = get_write_token('word_delete');
 ?>
 
 <!DOCTYPE html>
@@ -141,7 +143,7 @@ $can_delete = ($is_owner || $is_admin);
             <i class="fa-solid fa-arrow-left text-xl"></i>
         </a>
         <h1 class="text-base font-semibold text-grace-green">오늘의 말씀</h1>
-        <?php if ($can_edit || $can_delete) { ?>
+        <?php if ($can_delete) { ?>
         <button onclick="toggleMenu()" class="text-grace-green hover:text-gray-900">
             <i class="fa-solid fa-ellipsis-vertical text-xl"></i>
         </button>
@@ -152,21 +154,13 @@ $can_delete = ($is_owner || $is_admin);
 </header>
 
 <!-- 메뉴 드롭다운 -->
-<?php if ($can_edit || $can_delete) { ?>
+<?php if ($can_delete) { ?>
 <div id="action-menu" class="hidden fixed top-14 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
-    <?php if ($can_edit) { ?>
-    <a href="<?php echo G5_BBS_URL; ?>/write_word.php?w=u&wr_id=<?php echo $wr_id; ?>"
-       class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">
-        <i class="fa-solid fa-pen mr-2"></i>수정하기
-    </a>
-    <?php } ?>
-    <?php if ($can_delete) { ?>
-    <a href="<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>"
+    <a href="<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&token=<?php echo $token; ?>"
        onclick="return confirm('정말 삭제하시겠습니까?');"
        class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50">
         <i class="fa-solid fa-trash mr-2"></i>삭제하기
     </a>
-    <?php } ?>
 </div>
 <?php } ?>
 
@@ -288,6 +282,7 @@ $can_delete = ($is_owner || $is_admin);
             <?php if ($is_member) { ?>
             <div class="bg-white rounded-2xl shadow-md overflow-hidden p-4 mt-4">
                 <form method="post" action="<?php echo G5_BBS_URL; ?>/write_comment_update.php" onsubmit="return validate_comment(this);">
+                    <?php echo get_token_field(); ?>
                     <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
                     <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
                     <input type="hidden" name="w" value="">
