@@ -208,7 +208,7 @@ foreach ($images as $idx => $image) {
                 ?>
                     <h2 class="text-lg font-bold mb-3 text-gray-900"><?php echo get_text($view['wr_subject']); ?></h2>
                 <?php } ?>
-                <div style="white-space: pre-line; word-break: break-word; line-height: 1.6;">
+                <div>
                     <span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?>
                 </div>
             </div>
