@@ -106,45 +106,58 @@ foreach ($images as $idx => $image) {
     <!-- 본문 -->
     <main style="padding-top: 64px; padding-bottom: 200px;">
         <article>
+            <!-- 제목 -->
+            <div class="p-4">
+                <h2 class="text-xl font-bold"><?php echo get_text($view['wr_subject']); ?></h2>
+            </div>
+
+            <!-- 구분선 -->
+            <hr class="border-gray-200">
+
             <!-- 작성자 -->
-            <div class="p-4 flex items-center gap-3 border-b">
-                <img src="<?php echo $mb_photo; ?>" class="w-10 h-10 rounded-full" alt="">
-                <div>
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="<?php echo $mb_photo; ?>" class="w-10 h-10 rounded-full" alt="">
                     <div class="font-semibold"><?php echo $mb_nick; ?></div>
-                    <div class="text-xs text-gray-500"><?php echo date('Y-m-d', strtotime($view['wr_datetime'])); ?></div>
                 </div>
+                <div class="text-sm text-gray-500"><?php echo date('Y-m-d', strtotime($view['wr_datetime'])); ?></div>
             </div>
 
-            <!-- 이미지 갤러리 (본문에 삽입되지 않은 이미지만 표시) -->
-            <?php if (count($gallery_images) > 0) { ?>
-            <div class="flex overflow-x-auto gap-3 p-3 scrollbar-hide" style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
-                <?php foreach ($gallery_images as $image) { ?>
-                <div class="flex-shrink-0" style="scroll-snap-align: start; width: 85vw; max-width: 500px;">
-                    <img src="<?php echo G5_DATA_URL.'/file/'.$bo_table.'/'.$image; ?>"
-                         class="w-full h-80 object-cover rounded-lg"
-                         alt="갤러리 이미지">
-                </div>
-                <?php } ?>
-            </div>
-            <?php } ?>
-
-            <!-- 액션 -->
-            <div class="p-4 border-b">
-                <div class="flex gap-4 mb-2">
-                    <button onclick="toggleGood()">
-                        <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-red-500 text-2xl" id="heartIcon"></i>
-                    </button>
-                    <button onclick="scrollToComment()">
-                        <i class="fa-regular fa-comment text-2xl"></i>
-                    </button>
-                </div>
-                <div id="goodCount" class="font-semibold text-sm">아멘 <?php echo $view['wr_good']; ?>개</div>
-            </div>
+            <!-- 구분선 -->
+            <hr class="border-gray-200">
 
             <!-- 내용 -->
-            <div class="p-4 border-b">
-                <div><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?></div>
+            <div class="p-4">
+                <!-- 이미지 갤러리 (본문에 삽입되지 않은 이미지만 표시) -->
+                <?php if (count($gallery_images) > 0) { ?>
+                <div class="flex overflow-x-auto gap-3 mb-4 -mx-4 px-4 scrollbar-hide" style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
+                    <?php foreach ($gallery_images as $image) { ?>
+                    <div class="flex-shrink-0" style="scroll-snap-align: start; width: 85vw; max-width: 500px;">
+                        <img src="<?php echo G5_DATA_URL.'/file/'.$bo_table.'/'.$image; ?>"
+                             class="w-full h-80 object-cover rounded-lg"
+                             alt="갤러리 이미지">
+                    </div>
+                    <?php } ?>
+                </div>
+                <?php } ?>
+
+                <!-- 본문 내용 -->
+                <div><?php echo $processed_content; ?></div>
             </div>
+
+            <!-- 구분선 -->
+            <hr class="border-gray-200">
+
+            <!-- 아멘(하트) -->
+            <div class="p-4">
+                <button onclick="toggleGood()" class="flex items-center gap-2">
+                    <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-red-500 text-2xl" id="heartIcon"></i>
+                    <span id="goodCount" class="font-semibold text-sm">아멘 <?php echo $view['wr_good']; ?>개</span>
+                </button>
+            </div>
+
+            <!-- 구분선 -->
+            <hr class="border-gray-200">
 
             <!-- 댓글 -->
             <div class="p-4">
