@@ -83,9 +83,15 @@ foreach ($images as $idx => $image) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+    /* 시스템 폰트 크기 설정 따르기 */
+    html {
+        font-size: 100%; /* 브라우저 기본값(사용자 설정) 사용 */
+    }
+
     /* 폰트 설정 */
     body {
         font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        /* font-size를 지정하지 않아 사용자 시스템 설정을 따름 */
     }
 
     /* 가로 스크롤 스타일 */
