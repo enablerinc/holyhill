@@ -61,10 +61,9 @@ include_once(G5_THEME_PATH.'/head.php');
         $word_result = sql_query($word_sql);
 
         if ($word_result && $word = sql_fetch_array($word_result)) {
-            $word_content = strip_tags($word['wr_content']);
-            $word_content = str_replace('&nbsp;', ' ', $word_content);
-            $word_content = trim($word_content);
-            $word_content = cut_str($word_content, 120);
+            // 유튜브 링크가 있는지 확인하고 처리
+            $word_content = get_word_content_with_youtube($word['wr_content'], 120);
+            $has_youtube = strpos($word_content, 'youtube-embed-wrapper') !== false;
 
             // 오늘 등록된 말씀이 몇 개인지 체크
             $today_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}word
@@ -72,33 +71,44 @@ include_once(G5_THEME_PATH.'/head.php');
             $today_count = sql_fetch($today_count_sql);
             $has_multiple = $today_count['cnt'] > 1;
             ?>
-            <div class="text-center">
-                <h3 class="text-sm font-medium text-purple-900 mb-2 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-book-bible text-purple-600"></i>
-                    오늘의 말씀
-                    <?php if ($has_multiple) { ?>
-                    <span class="text-xs text-orange-600">(오늘 <?php echo $today_count['cnt']; ?>개 등록됨)</span>
+            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
+               class="block cursor-pointer hover:opacity-90 transition-opacity">
+                <div class="text-center">
+                    <h3 class="text-sm font-medium text-purple-900 mb-2 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-book-bible text-purple-600"></i>
+                        오늘의 말씀
+                        <?php if ($has_multiple) { ?>
+                        <span class="text-xs text-orange-600">(오늘 <?php echo $today_count['cnt']; ?>개 등록됨)</span>
+                        <?php } ?>
+                    </h3>
+                    <?php if ($has_youtube) { ?>
+                    <div class="mb-2">
+                        <?php echo $word_content; ?>
+                    </div>
+                    <?php } else { ?>
+                    <p class="text-base font-medium text-gray-800 leading-relaxed mb-2">
+                        <?php echo $word_content; ?>
+                    </p>
                     <?php } ?>
-                </h3>
-                <p class="text-base font-medium text-gray-800 leading-relaxed mb-2">
-                    "<?php echo $word_content; ?>"
-                </p>
-                <p class="text-xs text-purple-600 mb-3">
-                    <?php echo date('Y년 m월 d일', strtotime($word['wr_datetime'])); ?> · <?php echo $word['wr_name']; ?>
-                </p>
-                <div class="flex items-center justify-center gap-3">
-                    <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
-                       class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
-                        전체 보기 →
-                    </a>
-                    <?php if ($is_admin) { ?>
-                    <span class="text-gray-300">|</span>
-                    <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=word"
-                       class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
-                        <i class="fa-solid fa-plus text-xs"></i> 새 말씀 등록
-                    </a>
-                    <?php } ?>
+                    <p class="text-xs text-purple-600 mb-3">
+                        <?php echo date('Y년 m월 d일', strtotime($word['wr_datetime'])); ?> · <?php echo $word['wr_name']; ?>
+                    </p>
                 </div>
+            </a>
+            <div class="flex items-center justify-center gap-3">
+                <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word"
+                   class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium"
+                   onclick="event.stopPropagation();">
+                    전체 보기 →
+                </a>
+                <?php if ($is_admin) { ?>
+                <span class="text-gray-300">|</span>
+                <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=word"
+                   class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium"
+                   onclick="event.stopPropagation();">
+                    <i class="fa-solid fa-plus text-xs"></i> 새 말씀 등록
+                </a>
+                <?php } ?>
             </div>
             <?php
         } else {

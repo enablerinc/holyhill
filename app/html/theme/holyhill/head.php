@@ -3,6 +3,9 @@ if (!defined('_GNUBOARD_')) exit;
 
 // 기본 head 정보
 include_once(G5_PATH.'/head.sub.php');
+
+// 테마 전용 함수
+include_once(G5_THEME_PATH.'/functions.php');
 ?>
 
 <!DOCTYPE html>

@@ -90,7 +90,22 @@ if ($is_member) {
 
             <!-- 내용 -->
             <div class="p-4 border-b">
-                <div><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo get_text($view['wr_content']); ?></div>
+                <div>
+                    <span class="font-semibold mr-2"><?php echo $mb_nick; ?></span>
+                    <?php
+                    // 유튜브 링크 임베드 처리
+                    $content = $view['wr_content'];
+                    $has_youtube = preg_match('/https?:\/\/(?:www\.)?(youtube\.com|youtu\.be)/i', $content);
+
+                    if ($has_youtube) {
+                        // 유튜브가 있으면 임베드로 변환하여 표시
+                        echo convert_youtube_to_embed($content);
+                    } else {
+                        // 일반 텍스트는 get_text()로 처리
+                        echo get_text($content);
+                    }
+                    ?>
+                </div>
             </div>
 
             <!-- 댓글 -->
