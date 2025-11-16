@@ -18,7 +18,7 @@ if ($is_member) {
             <span class="text-xs text-purple-600 font-medium">홈</span>
         </a>
 
-        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/feed.php" class="flex flex-col items-center gap-1">
             <i class="fa-regular fa-images text-gray-600 text-lg"></i>
             <span class="text-xs text-gray-600">피드</span>
         </a>
