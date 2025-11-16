@@ -60,7 +60,7 @@ var reg_mb_email_check = function() {
         type: "POST",
         url: g5_bbs_url+"/ajax.mb_email.php",
         data: {
-            "reg_mb_email": $.trim($("#reg_mb_email").val()),
+            "reg_mb_email": encodeURIComponent($.trim($("#reg_mb_email").val())),
             "reg_mb_id": encodeURIComponent($.trim($("#reg_mb_id").val()))
         },
         cache: false,
@@ -79,7 +79,7 @@ var reg_mb_hp_check = function() {
         type: "POST",
         url: g5_bbs_url+"/ajax.mb_hp.php",
         data: {
-            "reg_mb_hp": $.trim($("#reg_mb_hp").val()),
+            "reg_mb_hp": encodeURIComponent($.trim($("#reg_mb_hp").val())),
             "reg_mb_id": encodeURIComponent($.trim($("#reg_mb_id").val()))
         },
         cache: false,

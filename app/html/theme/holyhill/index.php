@@ -4,8 +4,47 @@ if (!defined('_GNUBOARD_')) exit;
 include_once(G5_THEME_PATH.'/head.php');
 ?>
 
-<!-- 오늘의 말씀 위젯 -->
-<div class="max-w-2xl mx-auto">
+<div id="main-container" class="max-w-2xl mx-auto">
+    
+    <!-- 스토리 섹션 -->
+    <section id="stories" class="bg-white px-4 py-3 mb-2 sticky top-16 z-40">
+        <div class="flex gap-3 overflow-x-auto scrollbar-hide">
+            <div class="flex flex-col items-center gap-2 min-w-[64px]">
+                <button onclick="alert('스토리 기능은 추후 구현됩니다')" 
+                        class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 p-0.5">
+                    <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-plus text-purple-500 text-lg"></i>
+                    </div>
+                </button>
+                <span class="text-xs text-gray-700 font-medium">내 이야기</span>
+            </div>
+
+            <?php
+            $story_sql = "SELECT mb_id, mb_nick, mb_photo FROM {$g5['member_table']} 
+                         WHERE mb_level >= 2 
+                         ORDER BY mb_today_login DESC 
+                         LIMIT 10";
+            $story_result = sql_query($story_sql);
+            
+            while ($story = sql_fetch_array($story_result)) {
+                $story_photo = $story['mb_photo'] ? G5_DATA_URL.'/member/'.$story['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
+                $story_nick = $story['mb_nick'] ? $story['mb_nick'] : '회원';
+                ?>
+                <div class="flex flex-col items-center gap-2 min-w-[64px]">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 p-0.5">
+                        <img src="<?php echo $story_photo; ?>" 
+                             class="w-full h-full rounded-full object-cover border-2 border-white"
+                             alt="<?php echo $story_nick; ?>">
+                    </div>
+                    <span class="text-xs text-gray-700"><?php echo cut_str($story_nick, 6); ?></span>
+                </div>
+                <?php
+            }
+            ?>
+        </div>
+    </section>
+
+    <!-- 오늘의 말씀 위젯 -->
     <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
         <?php
         $word_sql = "SELECT wr_id, wr_subject, wr_content, wr_datetime, wr_name
@@ -61,7 +100,7 @@ include_once(G5_THEME_PATH.'/head.php');
     </section>
 
     <!-- 피드 섹션 (중요: wr_is_comment = 0 조건 추가!) -->
-    <section id="feed" class="space-y-4">
+    <section id="feed" class="space-y-4 pb-20">
         <?php
         // ✅ WHERE wr_is_comment = 0 추가 (게시글만 가져오기)
         $feed_sql = "SELECT * FROM {$g5['write_prefix']}gallery 
@@ -196,6 +235,7 @@ include_once(G5_THEME_PATH.'/head.php');
         }
         ?>
     </section>
+
 </div>
 
 <div id="floating-attendance" 
@@ -214,4 +254,6 @@ include_once(G5_THEME_PATH.'/head.php');
 }
 </style>
 
-<?php include_once(G5_THEME_PATH.'/tail.php'); ?>
+<?php
+include_once(G5_THEME_PATH.'/tail.php');
+?>
