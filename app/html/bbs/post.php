@@ -109,8 +109,13 @@ if (!empty($matches[1])) {
     }
 }
 
-// YouTube URL을 iframe으로 변환
-function convert_youtube_to_iframe($content) {
+// YouTube URL을 플레이스홀더로 변환하고 iframe 저장
+$youtube_iframes = array();
+$youtube_placeholder_index = 0;
+
+function extract_youtube_urls($content) {
+    global $youtube_iframes, $youtube_placeholder_index;
+
     $patterns = array(
         '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
         '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
@@ -118,21 +123,29 @@ function convert_youtube_to_iframe($content) {
     );
 
     foreach ($patterns as $pattern) {
-        $content = preg_replace_callback($pattern, function($matches) {
+        $content = preg_replace_callback($pattern, function($matches) use (&$youtube_placeholder_index) {
+            global $youtube_iframes;
+
             $video_id = $matches[1];
-            $iframe_html = '
-            <div class="youtube-container my-4" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;">
-                <iframe
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;"
-                    src="https://www.youtube.com/embed/' . htmlspecialchars($video_id) . '"
-                    title="YouTube video player"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen>
-                </iframe>
-            </div>';
-            return $iframe_html;
+            $iframe_html = '<div class="youtube-container my-4" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;" src="https://www.youtube.com/embed/' . $video_id . '" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
+
+            $placeholder = '[YOUTUBE_PLACEHOLDER_' . $youtube_placeholder_index . ']';
+            $youtube_iframes[$placeholder] = $iframe_html;
+            $youtube_placeholder_index++;
+
+            return $placeholder;
         }, $content);
+    }
+
+    return $content;
+}
+
+// 플레이스홀더를 실제 iframe으로 복원
+function restore_youtube_iframes($content) {
+    global $youtube_iframes;
+
+    foreach ($youtube_iframes as $placeholder => $iframe) {
+        $content = str_replace($placeholder, $iframe, $content);
     }
 
     return $content;
@@ -152,10 +165,17 @@ function replace_image_placeholders($content, $images, $bo_table) {
 }
 
 // 본문 내용 처리
-$processed_content = get_text($write['wr_content']);
-$processed_content = convert_youtube_to_iframe($processed_content);
+$raw_content = $write['wr_content'];
+// 1. YouTube URL을 플레이스홀더로 변환
+$raw_content = extract_youtube_urls($raw_content);
+// 2. 텍스트 정리
+$processed_content = get_text($raw_content);
+// 3. 이미지 변환
 $processed_content = replace_image_placeholders($processed_content, $images, $bo_table);
+// 4. 줄바꿈 처리
 $processed_content = nl2br($processed_content);
+// 5. 플레이스홀더를 실제 iframe으로 복원
+$processed_content = restore_youtube_iframes($processed_content);
 
 // 상단 갤러리용 이미지 (본문에 사용되지 않은 이미지만)
 $gallery_images = array();
