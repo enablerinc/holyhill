@@ -131,34 +131,27 @@ while ($row = sql_fetch_array($result)) {
 
     // 게시글 내용에서 YouTube URL 추출 및 섬네일 생성
     $video_thumbnail = '';
-    $video_url = '';
+    $video_id = '';
 
-    // 먼저 wr_link1 체크
-    if (!empty($row['wr_link1'])) {
-        $video_url = $row['wr_link1'];
-    }
+    // wr_link1 또는 wr_content에서 YouTube URL 찾기
+    $search_content = $row['wr_link1'] . ' ' . $row['wr_content'];
 
-    // wr_link1이 없으면 게시글 내용에서 URL 찾기
-    if (empty($video_url) && !empty($row['wr_content'])) {
-        $content = $row['wr_content'];
+    // YouTube URL 패턴 (이전 세션과 동일한 패턴 사용)
+    $patterns = array(
+        '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',           // youtu.be
+        '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i', // youtube.com/watch
+        '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'    // youtube.com/live
+    );
 
-        // HTML 태그의 href 속성에서 찾기
-        if (preg_match('/href=["\']?(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^"\'\s>]+)["\']?/i', $content, $url_matches)) {
-            $video_url = $url_matches[1];
-        }
-        // 일반 텍스트에서 찾기
-        elseif (preg_match('/https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<>"]+/i', $content, $url_matches)) {
-            $video_url = $url_matches[0];
-        }
-        // iframe의 src 속성에서 찾기
-        elseif (preg_match('/src=["\']?(https?:\/\/(?:www\.)?youtube\.com\/embed\/[^"\'\s>]+)["\']?/i', $content, $url_matches)) {
-            $video_url = $url_matches[1];
+    foreach ($patterns as $pattern) {
+        if (preg_match($pattern, $search_content, $matches)) {
+            $video_id = $matches[1];
+            break;
         }
     }
 
-    // YouTube URL에서 비디오 ID 추출
-    if ($video_url && preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $video_url, $matches)) {
-        $video_id = $matches[1];
+    // 비디오 ID가 있으면 섬네일 생성
+    if ($video_id) {
         $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
     }
 
