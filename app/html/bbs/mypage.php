@@ -34,7 +34,7 @@ if ($first) {
     $post_count = 0;
 } else {
     $result = sql_fetch($sql);
-    $post_count = $result['cnt'];
+    $post_count = ($result && isset($result['cnt'])) ? $result['cnt'] : 0;
 }
 
 // 포인트
