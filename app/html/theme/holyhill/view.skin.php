@@ -34,6 +34,47 @@ if ($is_member) {
     $good_row = sql_fetch_array($good_result);
     $is_good = $good_row['cnt'] > 0;
 }
+
+// YouTube URL을 iframe으로 변환
+function convert_youtube_to_iframe($content) {
+    // YouTube URL 패턴들을 찾아서 iframe으로 변환
+    // 패턴 1: https://www.youtube.com/watch?v=VIDEO_ID
+    // 패턴 2: https://www.youtube.com/live/VIDEO_ID
+    // 패턴 3: https://youtu.be/VIDEO_ID
+
+    $patterns = array(
+        // youtu.be 형식
+        '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
+        // youtube.com/watch 형식
+        '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
+        // youtube.com/live 형식
+        '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
+    );
+
+    foreach ($patterns as $pattern) {
+        $content = preg_replace_callback($pattern, function($matches) {
+            $video_id = $matches[1];
+            $iframe_html = '
+            <div class="youtube-container my-4" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;">
+                <iframe
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;"
+                    src="https://www.youtube.com/embed/' . htmlspecialchars($video_id) . '"
+                    title="YouTube video player"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+                </iframe>
+            </div>';
+            return $iframe_html;
+        }, $content);
+    }
+
+    return $content;
+}
+
+// 본문 내용 처리
+$processed_content = get_text($view['wr_content']);
+$processed_content = convert_youtube_to_iframe($processed_content);
 ?>
 <!DOCTYPE html>
 <html lang="ko">
@@ -90,7 +131,7 @@ if ($is_member) {
 
             <!-- 내용 -->
             <div class="p-4 border-b">
-                <div><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo get_text($view['wr_content']); ?></div>
+                <div style="white-space: pre-line; word-break: break-word; line-height: 1.6;"><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?></div>
             </div>
 
             <!-- 댓글 -->
