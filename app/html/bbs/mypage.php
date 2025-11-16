@@ -312,36 +312,7 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
 
 </main>
 
-<nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-soft-lavender">
-    <div class="flex items-center justify-around py-3">
-        <a href="<?php echo G5_URL; ?>" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-house text-grace-green text-lg"></i>
-            <span class="text-xs text-grace-green">홈</span>
-        </a>
-
-        <a href="<?php echo G5_BBS_URL; ?>/new.php" class="flex flex-col items-center gap-1">
-            <i class="fa-regular fa-compass text-grace-green text-lg"></i>
-            <span class="text-xs text-grace-green">둘러보기</span>
-        </a>
-
-        <a href="<?php echo G5_BBS_URL; ?>/write.php" class="flex flex-col items-center gap-1">
-            <div class="w-8 h-8 bg-lilac rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-plus text-white text-sm"></i>
-            </div>
-            <span class="text-xs text-grace-green">나눔</span>
-        </a>
-
-        <a href="<?php echo G5_BBS_URL; ?>/current_connect.php" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-trophy text-grace-green text-lg"></i>
-            <span class="text-xs text-grace-green">명예의 전당</span>
-        </a>
-
-        <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="flex flex-col items-center gap-1">
-            <img src="<?php echo $profile_img; ?>" class="w-6 h-6 rounded-full object-cover border-2 border-lilac">
-            <span class="text-xs text-lilac font-medium">내 정보</span>
-        </a>
-    </div>
-</nav>
+<?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
 
 <script>
 function goBack() {

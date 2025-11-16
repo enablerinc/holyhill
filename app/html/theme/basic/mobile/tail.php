@@ -14,8 +14,9 @@ if(G5_COMMUNITY_USE === false) {
 <?php echo poll('theme/basic'); // 설문조사 ?>
 <?php echo visit('theme/basic'); // 방문자수 ?>
 
+<?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
 
-<div id="ft">
+<div id="ft" style="padding-bottom: 80px;">
     <div id="ft_copy">
         <div id="ft_company">
             <a href="<?php echo get_pretty_url('content', 'company'); ?>">회사소개</a>
