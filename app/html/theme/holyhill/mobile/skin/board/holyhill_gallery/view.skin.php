@@ -208,7 +208,7 @@ foreach ($images as $idx => $image) {
                         name="wr_content"
                         id="commentInput"
                         placeholder="댓글 입력..."
-                        style="flex: 1; background: transparent; border: none; outline: none; font-size: 14px; min-width: 0;"
+                        style="flex: 1; background: transparent; border: none; outline: none; font-size: 16px; min-width: 0;"
                         required>
                     <button type="submit" style="background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0;">
                         <i class="fa-solid fa-paper-plane" style="color: #9333ea; font-size: 18px;"></i>
