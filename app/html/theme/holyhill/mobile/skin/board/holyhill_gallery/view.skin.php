@@ -79,7 +79,15 @@ foreach ($images as $idx => $image) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+    /* 폰트 설정 */
+    body {
+        font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
     /* 가로 스크롤 스타일 */
     .scrollbar-hide::-webkit-scrollbar {
         display: none;
@@ -143,7 +151,9 @@ foreach ($images as $idx => $image) {
 
             <!-- 내용 -->
             <div class="p-4 border-b">
-                <div><span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?></div>
+                <div style="white-space: pre-line; word-break: break-word; line-height: 1.6;">
+                    <span class="font-semibold mr-2"><?php echo $mb_nick; ?></span><?php echo $processed_content; ?>
+                </div>
             </div>
 
             <!-- 댓글 -->
