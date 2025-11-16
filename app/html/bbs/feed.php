@@ -207,7 +207,7 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                     $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
                 }
 
-                $view_href = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
+                $view_href = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
                 $good_count = isset($list[$i]['wr_good']) ? $list[$i]['wr_good'] : 0;
 
                 // 텍스트 콘텐츠 추출 (이미지/영상이 없을 때 사용)

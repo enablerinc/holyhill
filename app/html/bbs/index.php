@@ -298,7 +298,7 @@ function convert_youtube_to_iframe_index($content) {
                         <?php if ($has_youtube_feed) { ?>
                         <!-- YouTube 콘텐츠가 있을 때 -->
                         <div class="w-full p-4">
-                            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
+                            <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
                                class="block">
                                 <?php if ($feed['wr_subject']) { ?>
                                     <h3 class="text-base font-bold mb-2 text-gray-900"><?php echo get_text($feed['wr_subject']); ?></h3>
@@ -312,7 +312,7 @@ function convert_youtube_to_iframe_index($content) {
                         <?php } elseif ($feed_img) { ?>
                         <!-- 이미지가 있을 때 -->
                         <div class="w-full">
-                            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>">
+                            <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>">
                                 <img src="<?php echo $feed_img; ?>"
                                      class="w-full h-auto max-h-[500px] object-cover cursor-pointer hover:opacity-95 transition-opacity"
                                      alt="<?php echo $feed['wr_subject']; ?>">
@@ -321,7 +321,7 @@ function convert_youtube_to_iframe_index($content) {
                         <?php } else { ?>
                         <!-- 이미지가 없을 때 텍스트 콘텐츠를 카드로 표시 -->
                         <div class="w-full">
-                            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
+                            <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
                                class="block bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-8 min-h-[300px] flex items-center justify-center cursor-pointer hover:opacity-95 transition-opacity">
                                 <div class="text-center">
                                     <p class="text-lg font-medium text-gray-800 leading-relaxed line-clamp-6">
@@ -339,12 +339,12 @@ function convert_youtube_to_iframe_index($content) {
 
                         <div class="p-4">
                             <div class="flex items-center gap-4 mb-3">
-                                <button onclick="location.href='<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'"
+                                <button onclick="location.href='<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'"
                                         class="flex items-center gap-2">
                                     <i class="fa-solid fa-heart text-red-500 text-xl"></i>
                                     <span class="text-sm text-gray-700">아멘 <?php echo number_format($good_cnt); ?>개</span>
                                 </button>
-                                <button onclick="location.href='<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'"
+                                <button onclick="location.href='<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'"
                                         class="flex items-center gap-2">
                                     <i class="fa-regular fa-comment text-gray-700 text-xl"></i>
                                     <span class="text-sm text-gray-700"><?php echo number_format($comment_cnt); ?></span>
@@ -358,7 +358,7 @@ function convert_youtube_to_iframe_index($content) {
                                 </span>
                             </div>
 
-                            <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
+                            <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
                                class="text-xs text-gray-500 hover:text-gray-700">
                                 댓글 모두 보기 →
                             </a>
