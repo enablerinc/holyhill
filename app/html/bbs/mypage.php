@@ -40,11 +40,12 @@ if ($first) {
 // 포인트
 $point = number_format($mb['mb_point']);
 
-// 최근 로그인 일수 (간단히 처리)
+// 최근 로그인 일수 - 포인트 테이블에서 로그인 기록 조회
 $attendance_days = 0;
-if ($mb['mb_login_point']) {
-    // 로그인 포인트 기록으로부터 대략적인 출석일 계산
-    $attendance_days = floor($mb['mb_login_point'] / abs($config['cf_login_point']));
+$po_sql = "SELECT COUNT(DISTINCT DATE(po_datetime)) as cnt FROM {$g5['point_table']} WHERE mb_id = '{$mb['mb_id']}' AND po_content LIKE '%로그인%'";
+$po_result = sql_fetch($po_sql);
+if ($po_result) {
+    $attendance_days = (int)$po_result['cnt'];
 }
 
 // 프로필 이미지 경로
@@ -203,11 +204,22 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
                 $recent_posts_sql .= "SELECT '{$board['bo_table']}' as bo_table, wr_id, wr_subject, wr_datetime FROM {$g5['write_prefix']}{$board['bo_table']} WHERE mb_id = '{$mb['mb_id']}'";
                 $first = false;
             }
+
+            $recent_result = null;
+            $has_recent_posts = false;
+
             if (!$first) {
                 $recent_posts_sql .= ") as recent ORDER BY wr_datetime DESC LIMIT 3";
                 $recent_result = sql_query($recent_posts_sql);
 
                 while ($recent = sql_fetch_array($recent_result)) {
+                    $has_recent_posts = true;
+
+                    // 배열 키 체크
+                    if (!isset($recent['wr_datetime']) || !isset($recent['wr_subject'])) {
+                        continue;
+                    }
+
                     $time_diff = time() - strtotime($recent['wr_datetime']);
                     if ($time_diff < 3600) {
                         $time_str = floor($time_diff / 60) . '분 전';
@@ -228,7 +240,7 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
                 }
             }
 
-            if ($first || sql_num_rows($recent_result) == 0) {
+            if (!$has_recent_posts) {
                 ?>
                 <div class="bg-white rounded-2xl p-4 shadow-warm text-center">
                     <span class="text-sm text-gray-400">최근 활동이 없습니다.</span>
