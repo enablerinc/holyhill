@@ -32,7 +32,7 @@ if (!defined('_GNUBOARD_')) exit;
         </a>
 
         <?php if ($is_member) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/member_confirm.php?url=<?php echo G5_BBS_URL; ?>/mypage.php" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="flex flex-col items-center gap-1">
             <i class="fa-regular fa-user text-gray-600 text-lg"></i>
             <span class="text-xs text-gray-600">내 정보</span>
         </a>

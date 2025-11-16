@@ -13,32 +13,41 @@ if ($is_member) {
 
 <nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-soft-lavender z-40">
     <div class="flex items-center justify-around py-3">
-        <a href="<?php echo G5_URL; ?>" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-house text-grace-green text-lg"></i>
-            <span class="text-xs text-grace-green">홈</span>
+        <a href="/" class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-house text-purple-600 text-lg"></i>
+            <span class="text-xs text-purple-600 font-medium">홈</span>
         </a>
 
-        <a href="<?php echo G5_BBS_URL; ?>/new.php" class="flex flex-col items-center gap-1">
-            <i class="fa-regular fa-compass text-grace-green text-lg"></i>
-            <span class="text-xs text-grace-green">둘러보기</span>
+        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery" class="flex flex-col items-center gap-1">
+            <i class="fa-regular fa-images text-gray-600 text-lg"></i>
+            <span class="text-xs text-gray-600">피드</span>
         </a>
 
-        <a href="<?php echo G5_BBS_URL; ?>/write.php" class="flex flex-col items-center gap-1">
-            <div class="w-8 h-8 bg-lilac rounded-lg flex items-center justify-center">
+        <?php if ($is_member) { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=gallery" class="flex flex-col items-center gap-1">
+            <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
                 <i class="fa-solid fa-plus text-white text-sm"></i>
             </div>
-            <span class="text-xs text-grace-green">나눔</span>
+            <span class="text-xs text-gray-600">나눔</span>
+        </a>
+        <?php } ?>
+
+        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word" class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-book-bible text-gray-600 text-lg"></i>
+            <span class="text-xs text-gray-600">말씀</span>
         </a>
 
-        <a href="<?php echo G5_BBS_URL; ?>/current_connect.php" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-trophy text-grace-green text-lg"></i>
-            <span class="text-xs text-grace-green">명예의 전당</span>
-        </a>
-
+        <?php if ($is_member) { ?>
         <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="flex flex-col items-center gap-1">
             <img src="<?php echo $nav_profile_img; ?>" class="w-6 h-6 rounded-full object-cover border-2 border-lilac">
             <span class="text-xs text-lilac font-medium">내 정보</span>
         </a>
+        <?php } else { ?>
+        <a href="<?php echo G5_BBS_URL; ?>/login.php" class="flex flex-col items-center gap-1">
+            <i class="fa-regular fa-user text-gray-600 text-lg"></i>
+            <span class="text-xs text-gray-600">로그인</span>
+        </a>
+        <?php } ?>
     </div>
 </nav>
 
