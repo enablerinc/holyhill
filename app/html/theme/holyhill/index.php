@@ -51,6 +51,39 @@ include_once(G5_THEME_PATH.'/head.php');
     <!-- 오늘의 말씀 위젯 -->
     <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
         <?php
+        // YouTube URL을 iframe으로 변환
+        function convert_youtube_to_iframe_index($content) {
+            // YouTube URL 패턴들을 찾아서 iframe으로 변환
+            $patterns = array(
+                // youtu.be 형식
+                '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
+                // youtube.com/watch 형식
+                '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
+                // youtube.com/live 형식
+                '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
+            );
+
+            foreach ($patterns as $pattern) {
+                $content = preg_replace_callback($pattern, function($matches) {
+                    $video_id = $matches[1];
+                    $iframe_html = '
+                    <div class="youtube-container my-4" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;">
+                        <iframe
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;"
+                            src="https://www.youtube.com/embed/' . htmlspecialchars($video_id) . '"
+                            title="YouTube video player"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen>
+                        </iframe>
+                    </div>';
+                    return $iframe_html;
+                }, $content);
+            }
+
+            return $content;
+        }
+
         // ✅ 오늘 날짜에 등록된 말씀만 가져오기 (DATE(wr_datetime) = CURDATE())
         $word_sql = "SELECT wr_id, wr_subject, wr_content, wr_datetime, wr_name
                      FROM {$g5['write_prefix']}word
@@ -61,10 +94,20 @@ include_once(G5_THEME_PATH.'/head.php');
         $word_result = sql_query($word_sql);
 
         if ($word_result && $word = sql_fetch_array($word_result)) {
-            $word_content = strip_tags($word['wr_content']);
-            $word_content = str_replace('&nbsp;', ' ', $word_content);
-            $word_content = trim($word_content);
-            $word_content = cut_str($word_content, 120);
+            // YouTube URL이 있는지 확인
+            $has_youtube = preg_match('/(youtube\.com|youtu\.be)/', $word['wr_content']);
+
+            if ($has_youtube) {
+                // YouTube URL이 있으면 전체 내용을 iframe으로 변환
+                $word_content = get_text($word['wr_content']);
+                $word_content = convert_youtube_to_iframe_index($word_content);
+            } else {
+                // YouTube URL이 없으면 기존처럼 미리보기
+                $word_content = strip_tags($word['wr_content']);
+                $word_content = str_replace('&nbsp;', ' ', $word_content);
+                $word_content = trim($word_content);
+                $word_content = cut_str($word_content, 120);
+            }
 
             // 오늘 등록된 말씀이 몇 개인지 체크
             $today_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}word
@@ -72,7 +115,7 @@ include_once(G5_THEME_PATH.'/head.php');
             $today_count = sql_fetch($today_count_sql);
             $has_multiple = $today_count['cnt'] > 1;
             ?>
-            <div class="text-center">
+            <div class="<?php echo $has_youtube ? '' : 'text-center'; ?>">
                 <h3 class="text-sm font-medium text-purple-900 mb-2 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-book-bible text-purple-600"></i>
                     오늘의 말씀
@@ -80,12 +123,21 @@ include_once(G5_THEME_PATH.'/head.php');
                     <span class="text-xs text-orange-600">(오늘 <?php echo $today_count['cnt']; ?>개 등록됨)</span>
                     <?php } ?>
                 </h3>
+                <?php if ($has_youtube) { ?>
+                <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
+                   class="block mb-2">
+                    <div style="white-space: pre-line; word-break: break-word; line-height: 1.6; text-align: left;">
+                        <?php echo $word_content; ?>
+                    </div>
+                </a>
+                <?php } else { ?>
                 <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
                    class="block mb-2 cursor-pointer hover:opacity-80 transition-opacity">
                     <p class="text-base font-medium text-gray-800 leading-relaxed">
                         "<?php echo $word_content; ?>"
                     </p>
                 </a>
+                <?php } ?>
                 <p class="text-xs text-purple-600 mb-3">
                     <?php echo date('Y년 m월 d일', strtotime($word['wr_datetime'])); ?> · <?php echo $word['wr_name']; ?>
                 </p>
