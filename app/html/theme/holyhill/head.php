@@ -9,7 +9,7 @@ include_once(G5_PATH.'/head.sub.php');
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=1200, user-scalable=yes">
     <meta name="format-detection" content="telephone=no">
     
     <title><?php echo $g5['title']; ?></title>
