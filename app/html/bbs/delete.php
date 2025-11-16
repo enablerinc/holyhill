@@ -142,4 +142,9 @@ delete_cache_latest($bo_table);
 
 run_event('bbs_delete', $write, $board);
 
-goto_url(short_url_clean(G5_HTTP_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;page='.$page.$qstr));
+// 삭제 후 리다이렉트 경로
+if ($bo_table === 'gallery') {
+    goto_url(G5_BBS_URL.'/feed.php');
+} else {
+    goto_url(G5_BBS_URL.'/index.php');
+}
