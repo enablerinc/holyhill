@@ -251,46 +251,88 @@ tailwind.config = {
                 ?>
 
                 <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative group">
-                    <a href="<?php echo $view_href; ?>" class="block w-full h-full">
-                        <?php if ($video_thumbnail) { ?>
-                            <!-- YouTube 섬네일 표시 -->
-                            <div class="relative w-full h-full">
-                                <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
-                                     src="<?php echo $video_thumbnail; ?>"
-                                     alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="bg-black/60 rounded-full w-12 h-12 flex items-center justify-center">
-                                        <i class="fa-brands fa-youtube text-red-500 text-2xl"></i>
-                                    </div>
-                                </div>
+                    <?php if ($video_thumbnail && $video_id) { ?>
+                        <!-- YouTube 영상 자동 재생 (Instagram 스타일) -->
+                        <div class="relative w-full h-full video-container" data-video-id="<?php echo $video_id; ?>">
+                            <!-- 로딩 중 섬네일 -->
+                            <img class="w-full h-full object-cover video-thumbnail"
+                                 src="<?php echo $video_thumbnail; ?>"
+                                 alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
+
+                            <!-- YouTube iframe (화면에 보일 때 로드됨) -->
+                            <div class="absolute inset-0 video-iframe-container" style="display: none;">
+                                <iframe
+                                    class="w-full h-full"
+                                    data-src="https://www.youtube.com/embed/<?php echo $video_id; ?>?autoplay=1&mute=1&loop=1&playlist=<?php echo $video_id; ?>&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&start=0&end=15"
+                                    frameborder="0"
+                                    allow="autoplay; encrypted-media"
+                                    allowfullscreen>
+                                </iframe>
                             </div>
-                        <?php } elseif ($first_image) { ?>
+
+                            <!-- 클릭 시 상세 페이지로 이동 -->
+                            <a href="<?php echo $view_href; ?>" class="absolute inset-0 z-10"></a>
+                        </div>
+                    <?php } elseif ($first_image) { ?>
+                        <a href="<?php echo $view_href; ?>" class="block w-full h-full">
                             <!-- 이미지 표시 -->
                             <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
                                  src="<?php echo $first_image; ?>"
                                  alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
-                        <?php } else { ?>
+
+                            <!-- 제목 오버레이 (호버 시 표시) -->
+                            <?php if (!empty($list[$i]['wr_subject'])) { ?>
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
+                                    <?php echo strip_tags($list[$i]['wr_subject']); ?>
+                                </p>
+                            </div>
+                            <?php } ?>
+                        </a>
+                        <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity z-20">
+                            <i class="fa-solid fa-heart text-red-400 text-xs"></i>
+                            <?php echo number_format($good_count); ?>
+                        </div>
+                    <?php } else { ?>
+                        <a href="<?php echo $view_href; ?>" class="block w-full h-full">
                             <!-- 텍스트 표시 -->
                             <div class="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex items-center justify-center hover:opacity-95 transition-opacity">
                                 <p class="text-xs text-gray-700 leading-relaxed line-clamp-6 break-words">
                                     <?php echo $text_content ? cut_str($text_content, 80) : '내용 없음'; ?>
                                 </p>
                             </div>
-                        <?php } ?>
 
-                        <!-- 제목 오버레이 (호버 시 표시) -->
-                        <?php if (!empty($list[$i]['wr_subject'])) { ?>
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
-                                <?php echo strip_tags($list[$i]['wr_subject']); ?>
-                            </p>
+                            <!-- 제목 오버레이 (호버 시 표시) -->
+                            <?php if (!empty($list[$i]['wr_subject'])) { ?>
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
+                                    <?php echo strip_tags($list[$i]['wr_subject']); ?>
+                                </p>
+                            </div>
+                            <?php } ?>
+                        </a>
+                        <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity z-20">
+                            <i class="fa-solid fa-heart text-red-400 text-xs"></i>
+                            <?php echo number_format($good_count); ?>
                         </div>
-                        <?php } ?>
-                    </a>
-                    <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity">
+                    <?php } ?>
+
+                    <!-- 제목 오버레이 (영상용) -->
+                    <?php if ($video_thumbnail && $video_id && !empty($list[$i]['wr_subject'])) { ?>
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
+                            <?php echo strip_tags($list[$i]['wr_subject']); ?>
+                        </p>
+                    </div>
+                    <?php } ?>
+
+                    <!-- 좋아요 수 (영상용) -->
+                    <?php if ($video_thumbnail && $video_id) { ?>
+                    <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity z-20">
                         <i class="fa-solid fa-heart text-red-400 text-xs"></i>
                         <?php echo number_format($good_count); ?>
                     </div>
+                    <?php } ?>
                 </div>
                 
                 <?php } ?>
@@ -327,8 +369,51 @@ tailwind.config = {
 
 </div>
 
-<!-- 무한 스크롤 JavaScript -->
+<!-- YouTube 영상 자동 재생 스크립트 -->
 <script>
+// Intersection Observer로 화면에 보이는 영상만 로드 및 재생
+(function() {
+    const videoContainers = document.querySelectorAll('.video-container');
+
+    const observerOptions = {
+        root: null,
+        rootMargin: '50px',
+        threshold: 0.5 // 50% 이상 보일 때
+    };
+
+    const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const container = entry.target;
+            const iframeContainer = container.querySelector('.video-iframe-container');
+            const iframe = iframeContainer.querySelector('iframe');
+            const thumbnail = container.querySelector('.video-thumbnail');
+
+            if (entry.isIntersecting) {
+                // 화면에 보이면 iframe 로드 및 재생
+                if (!iframe.src && iframe.dataset.src) {
+                    iframe.src = iframe.dataset.src;
+
+                    // iframe 로드 후 섬네일 숨기기
+                    iframe.onload = function() {
+                        setTimeout(() => {
+                            thumbnail.style.display = 'none';
+                            iframeContainer.style.display = 'block';
+                        }, 500); // 0.5초 딜레이
+                    };
+                }
+            } else {
+                // 화면에서 벗어나면 영상 정지 (리소스 절약)
+                // iframe을 제거하지 않고 src를 유지하여 부드러운 경험 제공
+            }
+        });
+    }, observerOptions);
+
+    videoContainers.forEach(container => {
+        videoObserver.observe(container);
+    });
+})();
+
+// 무한 스크롤 JavaScript
 (function() {
     let currentPage = 1;
     let isLoading = false;
