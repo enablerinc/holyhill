@@ -396,12 +396,28 @@ window.lastCommentId = <?php
                 // 입력창 비우기 (포커스는 유지하여 키보드가 닫히지 않도록)
                 input.value = '';
 
-                // 새 댓글로 부드럽게 스크롤 (최소한의 스크롤만 수행)
+                // 새 댓글이 입력창에 가려지지 않도록 스크롤
                 setTimeout(() => {
                     const allComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
                     const lastComment = allComments[allComments.length - 1];
                     if (lastComment) {
-                        lastComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        // 입력창 높이 + 여백 계산
+                        const commentFormWrapper = document.getElementById('commentFormWrapper');
+                        const formHeight = commentFormWrapper ? commentFormWrapper.offsetHeight : 80;
+                        const extraPadding = 20; // 추가 여백
+
+                        // 댓글의 현재 위치
+                        const commentRect = lastComment.getBoundingClientRect();
+                        const commentBottom = commentRect.bottom;
+                        const viewportHeight = window.innerHeight;
+
+                        // 댓글 하단이 입력창 위에 보이도록 스크롤이 필요한지 확인
+                        const needsScroll = commentBottom > (viewportHeight - formHeight - extraPadding);
+
+                        if (needsScroll) {
+                            const scrollAmount = commentBottom - (viewportHeight - formHeight - extraPadding);
+                            window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+                        }
                     }
                 }, 100);
 
@@ -473,11 +489,27 @@ window.lastCommentId = <?php
                             }
                         }, 2000);
 
-                        // 마지막 댓글인 경우 스크롤 (최소한의 스크롤만 수행)
+                        // 마지막 댓글인 경우 입력창에 가려지지 않도록 스크롤
                         if (index === data.comments.length - 1) {
                             setTimeout(() => {
                                 if (lastComment) {
-                                    lastComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    // 입력창 높이 + 여백 계산
+                                    const commentFormWrapper = document.getElementById('commentFormWrapper');
+                                    const formHeight = commentFormWrapper ? commentFormWrapper.offsetHeight : 80;
+                                    const extraPadding = 20; // 추가 여백
+
+                                    // 댓글의 현재 위치
+                                    const commentRect = lastComment.getBoundingClientRect();
+                                    const commentBottom = commentRect.bottom;
+                                    const viewportHeight = window.innerHeight;
+
+                                    // 댓글 하단이 입력창 위에 보이도록 스크롤이 필요한지 확인
+                                    const needsScroll = commentBottom > (viewportHeight - formHeight - extraPadding);
+
+                                    if (needsScroll) {
+                                        const scrollAmount = commentBottom - (viewportHeight - formHeight - extraPadding);
+                                        window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+                                    }
                                 }
                             }, 100);
                         }
