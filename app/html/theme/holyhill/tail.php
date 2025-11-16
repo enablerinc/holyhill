@@ -47,7 +47,3 @@ if (!defined('_GNUBOARD_')) exit;
 
 <?php
 include_once(G5_PATH.'/tail.sub.php');
-?>
-
-</body>
-</html>
