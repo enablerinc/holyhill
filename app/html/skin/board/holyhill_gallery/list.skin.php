@@ -84,8 +84,8 @@ if (!isset($page_rows) || $page_rows < 1) {
     $page_rows = 30; // 기본값: 30개
 }
 
-// 기간 필터 파라미터
-$filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+// 기간 필터 파라미터 (기본값: 1주)
+$filter = isset($_GET['filter']) ? $_GET['filter'] : '1week';
 $date_condition = '';
 
 switch($filter) {
@@ -250,7 +250,7 @@ tailwind.config = {
                     $text_content = trim($text_content);
                 ?>
 
-                <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
+                <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative group">
                     <a href="<?php echo $view_href; ?>" class="block w-full h-full">
                         <?php if ($video_thumbnail) { ?>
                             <!-- YouTube 섬네일 표시 -->
@@ -277,8 +277,17 @@ tailwind.config = {
                                 </p>
                             </div>
                         <?php } ?>
+
+                        <!-- 제목 오버레이 (호버 시 표시) -->
+                        <?php if (!empty($list[$i]['wr_subject'])) { ?>
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
+                                <?php echo strip_tags($list[$i]['wr_subject']); ?>
+                            </p>
+                        </div>
+                        <?php } ?>
                     </a>
-                    <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1">
+                    <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity">
                         <i class="fa-solid fa-heart text-red-400 text-xs"></i>
                         <?php echo number_format($good_count); ?>
                     </div>
