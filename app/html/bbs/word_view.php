@@ -294,7 +294,7 @@ if ($is_member) {
                     <input type="hidden" name="token" value="<?php echo $comment_token; ?>">
                     <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
                     <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
-                    <input type="hidden" name="w" value="">
+                    <input type="hidden" name="w" value="c">
                     <input type="hidden" name="comment_id" value="">
                     <input type="hidden" name="sca" value="">
                     <input type="hidden" name="sfl" value="">
