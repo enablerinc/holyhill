@@ -23,7 +23,7 @@ add_stylesheet('<link rel="stylesheet" href="'.$member_skin_url.'/style.css">', 
     <?php echo get_paging($config['cf_write_pages'], $page, $total_page, "?$qstr&amp;page="); ?>
 
     <div class="win_btn">
-        <button type="button" onclick="window.close();" class="btn_close">창닫기</button>
+        <button type="button" onclick="location.href='<?php echo G5_BBS_URL; ?>/mypage.php';" class="btn_close">창닫기</button>
     </div>
 </div>
 <!-- } 스크랩 목록 끝 -->
