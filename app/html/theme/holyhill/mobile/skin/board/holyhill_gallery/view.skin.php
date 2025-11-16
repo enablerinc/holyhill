@@ -393,18 +393,17 @@ window.lastCommentId = <?php
                     commentCountH3.textContent = '댓글 ' + (currentCount + 1) + '개';
                 }
 
-                // 입력창 비우기 및 키보드 닫기
+                // 입력창 비우기 (포커스는 유지하여 키보드가 닫히지 않도록)
                 input.value = '';
-                input.blur();
 
-                // 키보드가 닫힌 후 스크롤 (300ms 딜레이)
+                // 새 댓글로 부드럽게 스크롤 (최소한의 스크롤만 수행)
                 setTimeout(() => {
                     const allComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
                     const lastComment = allComments[allComments.length - 1];
                     if (lastComment) {
-                        lastComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        lastComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
-                }, 300);
+                }, 100);
 
             } else {
                 // 실패 시 메시지 표시 (DB에 저장되었을 수도 있으므로 페이지 새로고침 권장)
@@ -474,11 +473,11 @@ window.lastCommentId = <?php
                             }
                         }, 2000);
 
-                        // 마지막 댓글인 경우 스크롤
+                        // 마지막 댓글인 경우 스크롤 (최소한의 스크롤만 수행)
                         if (index === data.comments.length - 1) {
                             setTimeout(() => {
                                 if (lastComment) {
-                                    lastComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    lastComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                                 }
                             }, 100);
                         }
