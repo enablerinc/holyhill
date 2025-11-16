@@ -556,10 +556,10 @@ if (isset($_SESSION['ss_mb_id']) && $_SESSION['ss_mb_id']) { // 로그인중이�
 
         $tmp_mb_id = substr(preg_replace("/[^a-zA-Z0-9_]*/", "", $tmp_mb_id), 0, 20);
         // 최고관리자는 자동로그인 금지
-        if (strtolower($tmp_mb_id) !== strtolower($config['cf_admin'])) {
+        if (strtolower($tmp_mb_id) !== strtolower($config['cf_admin'] ?? '')) {
             $sql = " select mb_password, mb_intercept_date, mb_leave_date, mb_email_certify, mb_datetime from {$g5['member_table']} where mb_id = '{$tmp_mb_id}' ";
             $row = sql_fetch($sql);
-            if($row['mb_password']){
+            if(isset($row['mb_password']) && $row['mb_password']){
                 $key = md5($_SERVER['SERVER_ADDR'] . $_SERVER['SERVER_SOFTWARE'] . $_SERVER['HTTP_USER_AGENT'] . $row['mb_password']);
                 // 쿠키에 저장된 키와 같다면
                 $tmp_key = get_cookie('ck_auto');
@@ -618,7 +618,7 @@ if ($gr_id && !is_array($gr_id)) {
     $group = get_group($gr_id, true);
 }
 
-if ($config['cf_editor']) {
+if (isset($config['cf_editor']) && $config['cf_editor']) {
     define('G5_EDITOR_LIB', G5_EDITOR_PATH."/{$config['cf_editor']}/editor.lib.php");
 } else {
     define('G5_EDITOR_LIB', G5_LIB_PATH."/editor.lib.php");
@@ -640,7 +640,7 @@ if (isset($member['mb_id']) && $member['mb_id']) {
 
 if ($is_admin != 'super') {
     // 접근가능 IP
-    $cf_possible_ip = trim($config['cf_possible_ip']);
+    $cf_possible_ip = trim($config['cf_possible_ip'] ?? '');
     if ($cf_possible_ip) {
         $is_possible_ip = false;
         $pattern = explode("\n", $cf_possible_ip);
@@ -662,7 +662,7 @@ if ($is_admin != 'super') {
 
     // 접근차단 IP
     $is_intercept_ip = false;
-    $pattern = explode("\n", trim($config['cf_intercept_ip']));
+    $pattern = explode("\n", trim($config['cf_intercept_ip'] ?? ''));
     for ($i=0; $i<count($pattern); $i++) {
         $pattern[$i] = trim($pattern[$i]);
         if (empty($pattern[$i]))
@@ -795,16 +795,16 @@ if (G5_IS_MOBILE) {
 } else {
     $board_skin_path    = get_skin_path('board', $board['bo_skin']);
     $board_skin_url     = get_skin_url('board', $board['bo_skin']);
-    $member_skin_path   = get_skin_path('member', $config['cf_member_skin']);
-    $member_skin_url    = get_skin_url('member', $config['cf_member_skin']);
-    $new_skin_path      = get_skin_path('new', $config['cf_new_skin']);
-    $new_skin_url       = get_skin_url('new', $config['cf_new_skin']);
-    $search_skin_path   = get_skin_path('search', $config['cf_search_skin']);
-    $search_skin_url    = get_skin_url('search', $config['cf_search_skin']);
-    $connect_skin_path  = get_skin_path('connect', $config['cf_connect_skin']);
-    $connect_skin_url   = get_skin_url('connect', $config['cf_connect_skin']);
-    $faq_skin_path      = get_skin_path('faq', $config['cf_faq_skin']);
-    $faq_skin_url       = get_skin_url('faq', $config['cf_faq_skin']);
+    $member_skin_path   = get_skin_path('member', $config['cf_member_skin'] ?? 'basic');
+    $member_skin_url    = get_skin_url('member', $config['cf_member_skin'] ?? 'basic');
+    $new_skin_path      = get_skin_path('new', $config['cf_new_skin'] ?? 'basic');
+    $new_skin_url       = get_skin_url('new', $config['cf_new_skin'] ?? 'basic');
+    $search_skin_path   = get_skin_path('search', $config['cf_search_skin'] ?? 'basic');
+    $search_skin_url    = get_skin_url('search', $config['cf_search_skin'] ?? 'basic');
+    $connect_skin_path  = get_skin_path('connect', $config['cf_connect_skin'] ?? 'basic');
+    $connect_skin_url   = get_skin_url('connect', $config['cf_connect_skin'] ?? 'basic');
+    $faq_skin_path      = get_skin_path('faq', $config['cf_faq_skin'] ?? 'basic');
+    $faq_skin_url       = get_skin_url('faq', $config['cf_faq_skin'] ?? 'basic');
 }
 //==============================================================================
 
