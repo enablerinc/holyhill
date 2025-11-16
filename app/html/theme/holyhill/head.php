@@ -48,7 +48,12 @@ include_once(G5_PATH.'/head.sub.php');
             height: 64px;
         }
         #bottom-nav {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
             height: 72px;
+            z-index: 50 !important;
         }
     </style>
     
