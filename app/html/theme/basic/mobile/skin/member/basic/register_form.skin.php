@@ -183,8 +183,6 @@ if ($config['cf_cert_use'] && ($config['cf_cert_simple'] || $config['cf_cert_ipi
 	        </li>
 	        <?php } ?>
 
-	        <?php } ?>
-        
 	        <?php if ($member['mb_level'] >= $config['cf_icon_level'] && $config['cf_member_img_size'] && $config['cf_member_img_width'] && $config['cf_member_img_height']) {  ?>
 	        <li class="reg_mb_img_file filebox">
 	        	<input type="text" class="fileName" readonly="readonly" placeholder="회원이미지">
