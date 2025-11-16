@@ -129,7 +129,7 @@ if ($url) {
     }
 
 } else  {
-    $link = G5_URL;
+    $link = G5_URL.'/index.php';
 }
 
 //소셜 로그인 추가
