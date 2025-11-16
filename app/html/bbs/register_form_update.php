@@ -123,12 +123,31 @@ if ($w == '' || $w == 'u') {
     if ($w=='') {
         if ($msg = exist_mb_id($mb_id))     alert($msg);
 
-        if (get_session('ss_check_mb_id') != $mb_id || get_session('ss_check_mb_nick') != $mb_nick || get_session('ss_check_mb_email') != $mb_email) {
+        // 세션 값이 설정되어 있는 경우에만 체크 (AJAX 중복 체크가 실행된 경우)
+        $session_id = get_session('ss_check_mb_id');
+        $session_nick = get_session('ss_check_mb_nick');
+        $session_email = get_session('ss_check_mb_email');
+
+        // 세션에 값이 있는데 POST 값과 다른 경우에만 오류 처리
+        if ($session_id && $session_id != $mb_id) {
             set_session('ss_check_mb_id', '');
             set_session('ss_check_mb_nick', '');
             set_session('ss_check_mb_email', '');
+            alert('아이디가 변경되었습니다. 올바른 방법으로 이용해 주십시오.');
+        }
 
-            alert('올바른 방법으로 이용해 주십시오.');
+        if ($session_nick && $session_nick != $mb_nick) {
+            set_session('ss_check_mb_id', '');
+            set_session('ss_check_mb_nick', '');
+            set_session('ss_check_mb_email', '');
+            alert('닉네임이 변경되었습니다. 올바른 방법으로 이용해 주십시오.');
+        }
+
+        if ($session_email && $session_email != $mb_email) {
+            set_session('ss_check_mb_id', '');
+            set_session('ss_check_mb_nick', '');
+            set_session('ss_check_mb_email', '');
+            alert('이메일이 변경되었습니다. 올바른 방법으로 이용해 주십시오.');
         }
 
         // 본인확인 체크
