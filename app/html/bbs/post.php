@@ -109,6 +109,35 @@ if (!empty($matches[1])) {
     }
 }
 
+// YouTube URL을 iframe으로 변환
+function convert_youtube_to_iframe($content) {
+    $patterns = array(
+        '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
+        '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
+        '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
+    );
+
+    foreach ($patterns as $pattern) {
+        $content = preg_replace_callback($pattern, function($matches) {
+            $video_id = $matches[1];
+            $iframe_html = '
+            <div class="youtube-container my-4" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;">
+                <iframe
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;"
+                    src="https://www.youtube.com/embed/' . htmlspecialchars($video_id) . '"
+                    title="YouTube video player"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+                </iframe>
+            </div>';
+            return $iframe_html;
+        }, $content);
+    }
+
+    return $content;
+}
+
 // 본문에서 [이미지N]을 실제 이미지로 변환
 function replace_image_placeholders($content, $images, $bo_table) {
     $content = preg_replace_callback('/\[이미지(\d+)\]/', function($matches) use ($images, $bo_table) {
@@ -123,7 +152,10 @@ function replace_image_placeholders($content, $images, $bo_table) {
 }
 
 // 본문 내용 처리
-$processed_content = nl2br(replace_image_placeholders(get_text($write['wr_content']), $images, $bo_table));
+$processed_content = get_text($write['wr_content']);
+$processed_content = convert_youtube_to_iframe($processed_content);
+$processed_content = replace_image_placeholders($processed_content, $images, $bo_table);
+$processed_content = nl2br($processed_content);
 
 // 상단 갤러리용 이미지 (본문에 사용되지 않은 이미지만)
 $gallery_images = array();
