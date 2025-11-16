@@ -195,8 +195,8 @@ if ($config['cf_cert_use'] && ($config['cf_cert_simple'] || $config['cf_cert_ipi
 	                <label for="reg_mb_icon" class="frm_label">
 	                	회원아이콘
 	                	<button type="button" class="tooltip_icon"><i class="fa fa-question-circle-o" aria-hidden="true"></i><span class="sound_only">설명보기</span></button>
-	                	<span class="tooltip">이미지 크기는 가로 <?php echo $config['cf_member_icon_width'] ?>픽셀, 세로 <?php echo $config['cf_member_icon_height'] ?>픽셀 이하로 해주세요.<br>
-gif, jpg, png파일만 가능하며 용량 <?php echo number_format($config['cf_member_icon_size']) ?>바이트 이하만 등록됩니다.</span>
+	                	<span class="tooltip">업로드된 이미지는 가로 <?php echo $config['cf_member_icon_width'] ?>픽셀, 세로 <?php echo $config['cf_member_icon_height'] ?>픽셀로 자동 리사이즈됩니다.<br>
+gif, jpg, png 파일만 가능합니다.</span>
 	                </label>
 	                <input type="file" name="mb_icon" id="reg_mb_icon">
 	
@@ -214,8 +214,8 @@ gif, jpg, png파일만 가능하며 용량 <?php echo number_format($config['cf_
 	                <label for="reg_mb_img" class="frm_label">
 	                	회원이미지
 	                	<button type="button" class="tooltip_icon"><i class="fa fa-question-circle-o" aria-hidden="true"></i><span class="sound_only">설명보기</span></button>
-	                	<span class="tooltip">이미지 크기는 가로 <?php echo $config['cf_member_img_width'] ?>픽셀, 세로 <?php echo $config['cf_member_img_height'] ?>픽셀 이하로 해주세요.<br>
-	                    gif, jpg, png파일만 가능하며 용량 <?php echo number_format($config['cf_member_img_size']) ?>바이트 이하만 등록됩니다.</span>
+	                	<span class="tooltip">업로드된 이미지는 가로 <?php echo $config['cf_member_img_width'] ?>픽셀, 세로 <?php echo $config['cf_member_img_height'] ?>픽셀로 자동 리사이즈됩니다.<br>
+	                    gif, jpg, png 파일만 가능합니다.</span>
 	                </label>
 	                <input type="file" name="mb_img" id="reg_mb_img">
 	
