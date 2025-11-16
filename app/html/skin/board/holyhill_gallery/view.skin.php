@@ -99,7 +99,25 @@ foreach ($images as $idx => $image) {
         <div class="flex items-center justify-between px-4 py-3">
             <button onclick="history.back()"><i class="fa-solid fa-arrow-left text-xl"></i></button>
             <h1 class="font-semibold">피드</h1>
+            <?php if ($update_href || $delete_href) { ?>
+            <div class="relative">
+                <button onclick="toggleMenu()" id="menuBtn"><i class="fa-solid fa-ellipsis-vertical text-xl"></i></button>
+                <div id="menuDropdown" class="hidden absolute right-0 top-8 bg-white border rounded-lg shadow-lg py-2 w-32 z-50">
+                    <?php if ($update_href) { ?>
+                    <a href="<?php echo $update_href; ?>" class="block px-4 py-2 hover:bg-gray-100 text-sm">
+                        <i class="fa-solid fa-pen-to-square mr-2"></i>수정
+                    </a>
+                    <?php } ?>
+                    <?php if ($delete_href) { ?>
+                    <a href="#" onclick="confirmDelete(event)" class="block px-4 py-2 hover:bg-gray-100 text-sm text-red-600">
+                        <i class="fa-solid fa-trash mr-2"></i>삭제
+                    </a>
+                    <?php } ?>
+                </div>
+            </div>
+            <?php } else { ?>
             <div class="w-6"></div>
+            <?php } ?>
         </div>
     </header>
 
@@ -240,6 +258,29 @@ foreach ($images as $idx => $image) {
 </div>
 
 <script>
+// 메뉴 토글
+function toggleMenu() {
+    const dropdown = document.getElementById('menuDropdown');
+    dropdown.classList.toggle('hidden');
+}
+
+// 메뉴 외부 클릭시 닫기
+document.addEventListener('click', function(e) {
+    const menuBtn = document.getElementById('menuBtn');
+    const dropdown = document.getElementById('menuDropdown');
+    if (menuBtn && dropdown && !menuBtn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+// 삭제 확인
+function confirmDelete(e) {
+    e.preventDefault();
+    if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+        location.href = '<?php echo $delete_href; ?>';
+    }
+}
+
 function scrollToComment() {
     const input = document.getElementById('commentInput');
     if (input) {
