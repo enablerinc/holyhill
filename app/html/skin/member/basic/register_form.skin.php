@@ -190,32 +190,14 @@ if ($config['cf_cert_use'] && ($config['cf_cert_simple'] || $config['cf_cert_ipi
 	            </li>
 	            <?php }  ?>
 	
-	            <?php if ($config['cf_use_member_icon'] && $member['mb_level'] >= $config['cf_icon_level']) {  ?>
-	            <li>
-	                <label for="reg_mb_icon" class="frm_label">
-	                	회원아이콘
-	                	<button type="button" class="tooltip_icon"><i class="fa fa-question-circle-o" aria-hidden="true"></i><span class="sound_only">설명보기</span></button>
-	                	<span class="tooltip">이미지 크기는 가로 <?php echo $config['cf_member_icon_width'] ?>픽셀, 세로 <?php echo $config['cf_member_icon_height'] ?>픽셀 이하로 해주세요.<br>
-gif, jpg, png파일만 가능하며 용량 <?php echo number_format($config['cf_member_icon_size']) ?>바이트 이하만 등록됩니다.</span>
-	                </label>
-	                <input type="file" name="mb_icon" id="reg_mb_icon">
-	
-	                <?php if ($w == 'u' && file_exists($mb_icon_path)) {  ?>
-	                <img src="<?php echo $mb_icon_url ?>" alt="회원아이콘">
-	                <input type="checkbox" name="del_mb_icon" value="1" id="del_mb_icon">
-	                <label for="del_mb_icon" class="inline">삭제</label>
-	                <?php }  ?>
-	            
-	            </li>
-	            <?php }  ?>
 	
 	            <?php if ($member['mb_level'] >= $config['cf_icon_level'] && $config['cf_member_img_size'] && $config['cf_member_img_width'] && $config['cf_member_img_height']) {  ?>
 	            <li class="reg_mb_img_file">
 	                <label for="reg_mb_img" class="frm_label">
 	                	회원이미지
 	                	<button type="button" class="tooltip_icon"><i class="fa fa-question-circle-o" aria-hidden="true"></i><span class="sound_only">설명보기</span></button>
-	                	<span class="tooltip">이미지 크기는 가로 <?php echo $config['cf_member_img_width'] ?>픽셀, 세로 <?php echo $config['cf_member_img_height'] ?>픽셀 이하로 해주세요.<br>
-	                    gif, jpg, png파일만 가능하며 용량 <?php echo number_format($config['cf_member_img_size']) ?>바이트 이하만 등록됩니다.</span>
+	                	<span class="tooltip">업로드된 이미지는 가로 <?php echo $config['cf_member_img_width'] ?>픽셀, 세로 <?php echo $config['cf_member_img_height'] ?>픽셀로 자동 리사이즈됩니다.<br>
+	                    gif, jpg, png 파일만 가능합니다.</span>
 	                </label>
 	                <input type="file" name="mb_img" id="reg_mb_img">
 	
@@ -458,15 +440,6 @@ function fregisterform_submit(f)
     }
     <?php } ?>
 
-    if (typeof f.mb_icon != "undefined") {
-        if (f.mb_icon.value) {
-            if (!f.mb_icon.value.toLowerCase().match(/.(gif|jpe?g|png)$/i)) {
-                alert("회원아이콘이 이미지 파일이 아닙니다.");
-                f.mb_icon.focus();
-                return false;
-            }
-        }
-    }
 
     if (typeof f.mb_img != "undefined") {
         if (f.mb_img.value) {

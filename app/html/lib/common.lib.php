@@ -4003,19 +4003,33 @@ function get_member_profile_img($mb_id='', $width='', $height='', $alt='profile_
 
     static $no_profile_cache = '';
     static $member_cache = array();
-    
+
     $src = '';
 
     if( $mb_id ){
         if( isset($member_cache[$mb_id]) ){
             $src = $member_cache[$mb_id];
         } else {
-            $member_img = G5_DATA_PATH.'/member_image/'.substr($mb_id,0,2).'/'.get_mb_icon_name($mb_id).'.gif';
-            if (is_file($member_img)) {
-                if(defined('G5_USE_MEMBER_IMAGE_FILETIME') && G5_USE_MEMBER_IMAGE_FILETIME) {
-                    $member_img .= '?'.filemtime($member_img);
+            // 회원 이미지 파일 찾기 (여러 확장자 지원)
+            $member_img_dir = G5_DATA_PATH.'/member_image/'.substr($mb_id,0,2);
+            $member_img_name = get_mb_icon_name($mb_id);
+            $extensions = array('gif', 'jpg', 'jpeg', 'png');
+            $member_img = '';
+
+            foreach ($extensions as $ext) {
+                $test_path = $member_img_dir.'/'.$member_img_name.'.'.$ext;
+                if (is_file($test_path)) {
+                    $member_img = $test_path;
+                    break;
                 }
-                $member_cache[$mb_id] = $src = str_replace(G5_DATA_PATH, G5_DATA_URL, $member_img);
+            }
+
+            if ($member_img && is_file($member_img)) {
+                $img_url = str_replace(G5_DATA_PATH, G5_DATA_URL, $member_img);
+                if(defined('G5_USE_MEMBER_IMAGE_FILETIME') && G5_USE_MEMBER_IMAGE_FILETIME) {
+                    $img_url .= '?'.filemtime($member_img);
+                }
+                $member_cache[$mb_id] = $src = $img_url;
             }
         }
     }
