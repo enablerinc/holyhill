@@ -116,7 +116,7 @@ if ($is_member) {
 <!-- 헤더 -->
 <header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
     <div class="flex items-center justify-between px-4 py-3">
-        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=<?php echo $bo_table; ?>" class="text-grace-green hover:text-gray-900">
+        <a href="<?php echo G5_BBS_URL; ?>/index.php" class="text-grace-green hover:text-gray-900">
             <i class="fa-solid fa-xmark text-xl"></i>
         </a>
         <h2 class="text-base font-semibold text-grace-green"><?php echo $w == 'u' ? '게시물 수정' : '새 게시물'; ?></h2>
