@@ -34,6 +34,10 @@ if (!$write) {
 // 조회수 증가
 sql_query("UPDATE {$write_table} SET wr_hit = wr_hit + 1 WHERE wr_id = '{$wr_id}'");
 
+// 추천/비추천 기능을 위한 세션 설정
+$ss_name = 'ss_view_'.$bo_table.'_'.$wr_id;
+set_session($ss_name, true);
+
 $g5['title'] = get_text($write['wr_subject']);
 
 // YouTube URL을 iframe으로 변환
@@ -354,7 +358,9 @@ function toggleGood() {
     $.ajax({
         url: '<?php echo G5_BBS_URL; ?>/good.php',
         type: 'POST',
+        dataType: 'json',
         data: {
+            js: 'on',
             bo_table: '<?php echo $bo_table; ?>',
             wr_id: '<?php echo $wr_id; ?>',
             good: 'good'
