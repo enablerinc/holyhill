@@ -194,7 +194,7 @@ function convert_youtube_to_iframe_index($content) {
                         <?php echo date('Y년 m월 d일', strtotime($word['wr_datetime'])); ?> · <?php echo $word['wr_name']; ?>
                     </p>
                     <div class="flex items-center justify-center gap-3">
-                        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word"
+                        <a href="<?php echo G5_BBS_URL; ?>/word_list.php"
                            class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
                             전체 보기 →
                         </a>
