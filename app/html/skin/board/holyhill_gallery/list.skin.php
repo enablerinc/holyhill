@@ -208,22 +208,38 @@ tailwind.config = {
                 for ($i=0; $i<count($list); $i++) {
                     $wr_id = $list[$i]['wr_id'];
 
+                    // URL에서 YouTube 비디오 ID 추출
+                    $video_thumbnail = '';
+                    $video_url = '';
+
+                    // 먼저 wr_link1 체크
+                    if (!empty($list[$i]['wr_link1'])) {
+                        $video_url = $list[$i]['wr_link1'];
+                    }
+                    // wr_link1이 없으면 게시글 내용에서 URL 찾기
+                    elseif (!empty($list[$i]['wr_content'])) {
+                        if (preg_match('/https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<>"]+/i', $list[$i]['wr_content'], $url_matches)) {
+                            $video_url = $url_matches[0];
+                        }
+                    }
+
+                    // YouTube URL에서 비디오 ID 추출
+                    if ($video_url && preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $video_url, $matches)) {
+                        $video_id = $matches[1];
+                        $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
+                    }
+
                     // 첫 번째 이미지 가져오기
                     $first_image = '';
                     $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
                     if ($img_result && $img = sql_fetch_array($img_result)) {
                         $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
                     }
-                    
-                    // 이미지가 없으면 기본 이미지 또는 스킵
-                    if (!$first_image) {
-                        $first_image = G5_THEME_URL.'/img/no-image.png'; // 기본 이미지
-                    }
-                    
+
                     $view_href = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
                     $good_count = isset($list[$i]['wr_good']) ? $list[$i]['wr_good'] : 0;
 
-                    // 텍스트 콘텐츠 추출 (이미지가 없을 때 사용)
+                    // 텍스트 콘텐츠 추출 (이미지/영상이 없을 때 사용)
                     $text_content = strip_tags($list[$i]['wr_content']);
                     $text_content = preg_replace('/\[이미지\d+\]/', '', $text_content);
                     $text_content = trim($text_content);
@@ -231,11 +247,25 @@ tailwind.config = {
 
                 <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
                     <a href="<?php echo $view_href; ?>" class="block w-full h-full">
-                        <?php if ($first_image) { ?>
+                        <?php if ($video_thumbnail) { ?>
+                            <!-- YouTube 섬네일 표시 -->
+                            <div class="relative w-full h-full">
+                                <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
+                                     src="<?php echo $video_thumbnail; ?>"
+                                     alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="bg-black/60 rounded-full w-12 h-12 flex items-center justify-center">
+                                        <i class="fa-brands fa-youtube text-red-500 text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php } elseif ($first_image) { ?>
+                            <!-- 이미지 표시 -->
                             <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
                                  src="<?php echo $first_image; ?>"
                                  alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
                         <?php } else { ?>
+                            <!-- 텍스트 표시 -->
                             <div class="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex items-center justify-center hover:opacity-95 transition-opacity">
                                 <p class="text-xs text-gray-700 leading-relaxed line-clamp-6 break-words">
                                     <?php echo $text_content ? cut_str($text_content, 80) : '내용 없음'; ?>

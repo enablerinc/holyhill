@@ -133,13 +133,23 @@ tailwind.config = {
 
                     // URL에서 YouTube 비디오 ID 추출
                     $video_thumbnail = '';
+                    $video_url = '';
+
+                    // 먼저 wr_link1 체크
                     if (!empty($list[$i]['wr_link1'])) {
                         $video_url = $list[$i]['wr_link1'];
-                        // YouTube URL 패턴 매칭
-                        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $video_url, $matches)) {
-                            $video_id = $matches[1];
-                            $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
+                    }
+                    // wr_link1이 없으면 게시글 내용에서 URL 찾기
+                    elseif (!empty($list[$i]['wr_content'])) {
+                        if (preg_match('/https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s<>"]+/i', $list[$i]['wr_content'], $url_matches)) {
+                            $video_url = $url_matches[0];
                         }
+                    }
+
+                    // YouTube URL에서 비디오 ID 추출
+                    if ($video_url && preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $video_url, $matches)) {
+                        $video_id = $matches[1];
+                        $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
                     }
 
                     // 첫 번째 이미지 가져오기
