@@ -34,9 +34,9 @@ while ($row = sql_fetch_array($result)) {
     // 작성자 프로필 사진 가져오기
     $c_photo = G5_THEME_URL.'/img/no-profile.svg';
     if ($row['mb_id']) {
-        $c_mb = sql_fetch("SELECT mb_photo FROM {$g5['member_table']} WHERE mb_id = '{$row['mb_id']}'");
-        if ($c_mb && isset($c_mb['mb_photo']) && $c_mb['mb_photo']) {
-            $c_photo = G5_DATA_URL.'/member/'.$c_mb['mb_photo'];
+        $c_photo_html = get_member_profile_img($row['mb_id']);
+        if ($c_photo_html && preg_match('/src="([^"]+)"/', $c_photo_html, $matches)) {
+            $c_photo = $matches[1];
         }
     }
 

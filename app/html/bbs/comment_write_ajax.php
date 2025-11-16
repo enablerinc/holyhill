@@ -65,8 +65,11 @@ $new_token = get_random_token_string();
 set_session('ss_comment_token', $new_token);
 
 // 방금 작성한 댓글 정보 반환
-$c_mb = get_member($member['mb_id']);
-$c_photo = (isset($c_mb['mb_photo']) && $c_mb['mb_photo']) ? G5_DATA_URL.'/member/'.$c_mb['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
+$c_photo_html = get_member_profile_img($member['mb_id']);
+$c_photo = G5_THEME_URL.'/img/no-profile.svg';
+if ($c_photo_html && preg_match('/src="([^"]+)"/', $c_photo_html, $matches)) {
+    $c_photo = $matches[1];
+}
 
 echo json_encode([
     'success' => true,

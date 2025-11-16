@@ -20,14 +20,18 @@ include_once(G5_THEME_PATH.'/head.php');
             </div>
 
             <?php
-            $story_sql = "SELECT mb_id, mb_nick, mb_photo FROM {$g5['member_table']} 
-                         WHERE mb_level >= 2 
-                         ORDER BY mb_today_login DESC 
+            $story_sql = "SELECT mb_id, mb_nick FROM {$g5['member_table']}
+                         WHERE mb_level >= 2
+                         ORDER BY mb_today_login DESC
                          LIMIT 10";
             $story_result = sql_query($story_sql);
             
             while ($story = sql_fetch_array($story_result)) {
-                $story_photo = $story['mb_photo'] ? G5_DATA_URL.'/member/'.$story['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
+                $story_photo_html = get_member_profile_img($story['mb_id']);
+                $story_photo = G5_THEME_URL.'/img/no-profile.svg';
+                if ($story_photo_html && preg_match('/src="([^"]+)"/', $story_photo_html, $matches)) {
+                    $story_photo = $matches[1];
+                }
                 $story_nick = $story['mb_nick'] ? $story['mb_nick'] : '회원';
                 ?>
                 <div class="flex flex-col items-center gap-2 min-w-[64px]">
@@ -136,14 +140,16 @@ include_once(G5_THEME_PATH.'/head.php');
                 // 작성자 정보
                 $feed_nick = $feed['wr_name'] ? $feed['wr_name'] : '알 수 없음';
                 $feed_photo = G5_THEME_URL.'/img/no-profile.svg';
-                
+
                 if ($feed['mb_id']) {
-                    $mb_result = sql_query("SELECT mb_nick, mb_photo FROM {$g5['member_table']} WHERE mb_id = '{$feed['mb_id']}'");
+                    $mb_result = sql_query("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$feed['mb_id']}'");
                     if ($mb_result && $mb = sql_fetch_array($mb_result)) {
                         $feed_nick = $mb['mb_nick'];
-                        if ($mb['mb_photo']) {
-                            $feed_photo = G5_DATA_URL.'/member/'.$mb['mb_photo'];
-                        }
+                    }
+                    // 표준 회원 이미지 함수 사용
+                    $feed_photo_html = get_member_profile_img($feed['mb_id']);
+                    if ($feed_photo_html && preg_match('/src="([^"]+)"/', $feed_photo_html, $matches)) {
+                        $feed_photo = $matches[1];
                     }
                 }
                 
