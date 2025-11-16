@@ -86,8 +86,17 @@ $comment_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_
 $is_owner = ($is_member && $member['mb_id'] == $write['mb_id']);
 $can_delete = ($is_owner || $is_admin);
 
-// 토큰 생성
-$token = get_write_token('word_delete');
+// 삭제 토큰 생성 (Gnuboard 표준 방식)
+$delete_token = '';
+if ($can_delete) {
+    set_session('ss_delete_token', $delete_token = uniqid(time()));
+}
+
+// 댓글 토큰 생성
+$comment_token = '';
+if ($is_member) {
+    set_session('ss_comment_token', $comment_token = uniqid(time()));
+}
 ?>
 
 <!DOCTYPE html>
@@ -156,7 +165,7 @@ $token = get_write_token('word_delete');
 <!-- 메뉴 드롭다운 -->
 <?php if ($can_delete) { ?>
 <div id="action-menu" class="hidden fixed top-14 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
-    <a href="<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&token=<?php echo $token; ?>"
+    <a href="<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&token=<?php echo $delete_token; ?>"
        onclick="return confirm('정말 삭제하시겠습니까?');"
        class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50">
         <i class="fa-solid fa-trash mr-2"></i>삭제하기
@@ -282,7 +291,7 @@ $token = get_write_token('word_delete');
             <?php if ($is_member) { ?>
             <div class="bg-white rounded-2xl shadow-md overflow-hidden p-4 mt-4">
                 <form method="post" action="<?php echo G5_BBS_URL; ?>/write_comment_update.php" onsubmit="return validate_comment(this);">
-                    <?php echo get_token_field(); ?>
+                    <input type="hidden" name="token" value="<?php echo $comment_token; ?>">
                     <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
                     <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
                     <input type="hidden" name="w" value="">
