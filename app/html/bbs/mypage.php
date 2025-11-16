@@ -195,31 +195,56 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
 
         <div class="space-y-3">
             <?php
-            // 최근 게시물 조회
-            $recent_posts_sql = "SELECT bo_table, wr_id, wr_subject, wr_datetime FROM (";
+            // 최근 게시물 조회 - 각 게시판에서 개별적으로 조회
+            $recent_posts = array();
             $board_list = sql_query("SELECT bo_table FROM {$g5['board_table']} LIMIT 10");
-            $first = true;
+
             while ($board = sql_fetch_array($board_list)) {
-                if (!$first) $recent_posts_sql .= " UNION ALL ";
-                $recent_posts_sql .= "SELECT '{$board['bo_table']}' as bo_table, wr_id, wr_subject, wr_datetime FROM {$g5['write_prefix']}{$board['bo_table']} WHERE mb_id = '{$mb['mb_id']}'";
-                $first = false;
+                $bo_table = $board['bo_table'];
+                $write_table = $g5['write_prefix'] . $bo_table;
+
+                // 테이블 존재 여부 확인
+                $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
+                if (!sql_num_rows($table_check)) {
+                    continue;
+                }
+
+                // 컬럼 존재 여부 확인
+                $column_check = sql_query("SHOW COLUMNS FROM {$write_table} WHERE Field IN ('wr_subject', 'wr_datetime')", false);
+                if (sql_num_rows($column_check) < 2) {
+                    continue;
+                }
+
+                $sql = "SELECT wr_id, wr_subject, wr_datetime FROM {$write_table}
+                        WHERE mb_id = '{$mb['mb_id']}'
+                        ORDER BY wr_datetime DESC
+                        LIMIT 3";
+                $result = sql_query($sql, false);
+
+                if ($result) {
+                    while ($row = sql_fetch_array($result)) {
+                        if (isset($row['wr_datetime']) && isset($row['wr_subject']) && $row['wr_datetime'] && $row['wr_subject']) {
+                            $recent_posts[] = array(
+                                'bo_table' => $bo_table,
+                                'wr_id' => $row['wr_id'],
+                                'wr_subject' => $row['wr_subject'],
+                                'wr_datetime' => $row['wr_datetime']
+                            );
+                        }
+                    }
+                }
             }
 
-            $recent_result = null;
-            $has_recent_posts = false;
+            // 날짜순으로 정렬
+            usort($recent_posts, function($a, $b) {
+                return strtotime($b['wr_datetime']) - strtotime($a['wr_datetime']);
+            });
 
-            if (!$first) {
-                $recent_posts_sql .= ") as recent ORDER BY wr_datetime DESC LIMIT 3";
-                $recent_result = sql_query($recent_posts_sql);
+            // 최대 3개만 표시
+            $recent_posts = array_slice($recent_posts, 0, 3);
 
-                while ($recent = sql_fetch_array($recent_result)) {
-                    $has_recent_posts = true;
-
-                    // 배열 키 체크
-                    if (!isset($recent['wr_datetime']) || !isset($recent['wr_subject'])) {
-                        continue;
-                    }
-
+            if (count($recent_posts) > 0) {
+                foreach ($recent_posts as $recent) {
                     $time_diff = time() - strtotime($recent['wr_datetime']);
                     if ($time_diff < 3600) {
                         $time_str = floor($time_diff / 60) . '분 전';
@@ -238,9 +263,7 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
                     </div>
                     <?php
                 }
-            }
-
-            if (!$has_recent_posts) {
+            } else {
                 ?>
                 <div class="bg-white rounded-2xl p-4 shadow-warm text-center">
                     <span class="text-sm text-gray-400">최근 활동이 없습니다.</span>
