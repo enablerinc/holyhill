@@ -211,24 +211,27 @@ include_once(G5_THEME_PATH.'/head.php');
                     }
                 }
                 
+                // YouTube URL이 있는지 확인
+                $has_youtube_feed = preg_match('/(youtube\.com|youtu\.be)/', $feed['wr_content']);
+
                 // 첨부 이미지
-                $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} 
-                                        WHERE bo_table = 'gallery' 
-                                        AND wr_id = '{$feed['wr_id']}' 
+                $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']}
+                                        WHERE bo_table = 'gallery'
+                                        AND wr_id = '{$feed['wr_id']}'
                                         AND bf_type BETWEEN 1 AND 3
-                                        ORDER BY bf_no 
+                                        ORDER BY bf_no
                                         LIMIT 1");
                 $img = sql_fetch_array($img_result);
                 $feed_img = $img ? G5_DATA_URL.'/file/gallery/'.$img['bf_file'] : '';
-                
+
                 $comment_cnt = $feed['wr_comment'];
                 $good_cnt = $feed['wr_good'];
                 ?>
-                
+
                 <article class="bg-white rounded-2xl shadow-md overflow-hidden mx-4">
                     <div class="p-4 flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <img src="<?php echo $feed_photo; ?>" 
+                            <img src="<?php echo $feed_photo; ?>"
                                  class="w-10 h-10 rounded-full object-cover"
                                  alt="<?php echo $feed_nick; ?>">
                             <div>
@@ -241,7 +244,24 @@ include_once(G5_THEME_PATH.'/head.php');
                         </button>
                     </div>
 
-                    <?php if ($feed_img) { ?>
+                    <?php if ($has_youtube_feed) { ?>
+                    <!-- YouTube 콘텐츠가 있을 때 -->
+                    <div class="w-full p-4">
+                        <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
+                           class="block">
+                            <?php if ($feed['wr_subject']) { ?>
+                                <h3 class="text-base font-bold mb-2 text-gray-900"><?php echo get_text($feed['wr_subject']); ?></h3>
+                            <?php } ?>
+                            <div style="white-space: pre-line; word-break: break-word; line-height: 1.6;">
+                                <?php
+                                $feed_content = get_text($feed['wr_content']);
+                                echo convert_youtube_to_iframe_index($feed_content);
+                                ?>
+                            </div>
+                        </a>
+                    </div>
+                    <?php } elseif ($feed_img) { ?>
+                    <!-- 이미지가 있을 때 -->
                     <div class="w-full">
                         <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>">
                             <img src="<?php echo $feed_img; ?>"
