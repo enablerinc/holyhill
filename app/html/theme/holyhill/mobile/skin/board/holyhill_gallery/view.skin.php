@@ -377,12 +377,9 @@ window.lastCommentId = <?php
                     // 댓글 추가
                     commentList.insertAdjacentHTML('beforeend', newCommentHTML);
 
-                    // 스크롤 (부드럽게)
+                    // 하이라이트 효과 제거
                     const allComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
                     const lastComment = allComments[allComments.length - 1];
-                    lastComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                    // 하이라이트 효과 제거
                     setTimeout(() => {
                         lastComment.querySelector('.flex-1').style.background = '';
                     }, 2000);
@@ -396,8 +393,18 @@ window.lastCommentId = <?php
                     commentCountH3.textContent = '댓글 ' + (currentCount + 1) + '개';
                 }
 
-                // 입력창 비우기
+                // 입력창 비우기 및 키보드 닫기
                 input.value = '';
+                input.blur();
+
+                // 키보드가 닫힌 후 스크롤 (300ms 딜레이)
+                setTimeout(() => {
+                    const allComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
+                    const lastComment = allComments[allComments.length - 1];
+                    if (lastComment) {
+                        lastComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
 
             } else {
                 // 실패 시 메시지 표시 (DB에 저장되었을 수도 있으므로 페이지 새로고침 권장)
@@ -437,7 +444,7 @@ window.lastCommentId = <?php
                     console.log('새 댓글 발견:', data.count + '개');
 
                     // 새 댓글들 추가
-                    data.comments.forEach(comment => {
+                    data.comments.forEach((comment, index) => {
                         const newCommentHTML = `
                             <div class="flex gap-3 mb-3" style="animation: slideIn 0.3s ease-out;">
                                 <img src="${comment.photo}" class="w-8 h-8 rounded-full">
@@ -466,6 +473,15 @@ window.lastCommentId = <?php
                                 lastComment.querySelector('.flex-1').style.background = '';
                             }
                         }, 2000);
+
+                        // 마지막 댓글인 경우 스크롤
+                        if (index === data.comments.length - 1) {
+                            setTimeout(() => {
+                                if (lastComment) {
+                                    lastComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            }, 100);
+                        }
                     });
 
                     // 댓글 개수 업데이트
