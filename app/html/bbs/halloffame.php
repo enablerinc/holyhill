@@ -3,78 +3,189 @@ include_once('./_common.php');
 
 $g5['title'] = '명예의 전당';
 
+// 우수 성산인 기준 점수 (여기서 변경 가능)
+define('EXCELLENT_MEMBER_POINT', 10000);
+
 // 현재 년도와 월 설정
 $current_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 $current_month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 
-// 샘플 데이터 (나중에 실제 데이터베이스 쿼리로 대체 예정)
-$top_members = array(
-    array(
-        'rank' => 1,
-        'name' => '김은혜',
-        'department' => '청년부',
-        'points' => 347,
-        'avatar' => 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
-        'tags' => array('#QT25회', '#기도30회')
-    ),
-    array(
-        'rank' => 2,
-        'name' => '박성민',
-        'department' => '장년부',
-        'points' => 298,
-        'avatar' => 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
-        'tags' => array('#봉사22회')
-    ),
-    array(
-        'rank' => 3,
-        'name' => '이소망',
-        'department' => '청년부',
-        'points' => 276,
-        'avatar' => 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg',
-        'tags' => array('#찬양팀')
-    )
-);
+// 해당 월의 시작일과 종료일 계산
+$start_date = sprintf('%04d-%02d-01 00:00:00', $current_year, $current_month);
+$end_date = date('Y-m-t 23:59:59', strtotime($start_date));
 
-$excellent_members = array(
-    array(
-        'rank' => 4,
-        'name' => '최다윗',
-        'department' => '청년부',
-        'points' => 254,
-        'avatar' => 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg',
-        'tags' => array('#QT18회', '#셀모임'),
-        'growth' => '+12%'
-    ),
-    array(
-        'rank' => 5,
-        'name' => '한사랑',
-        'department' => '청년부',
-        'points' => 238,
-        'avatar' => 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-6.jpg',
-        'tags' => array('#기도25회', '#나눔글'),
-        'streak' => '3개월 연속',
-        'hot' => true
-    ),
-    array(
-        'rank' => 6,
-        'name' => '정요한',
-        'department' => '장년부',
-        'points' => 225,
-        'avatar' => 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-8.jpg',
-        'tags' => array('#예배참석', '#말씀나눔'),
-        'growth' => '+8%'
-    ),
-    array(
-        'rank' => 7,
-        'name' => '강베드로',
-        'department' => '장년부',
-        'points' => 218,
-        'avatar' => 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-9.jpg',
-        'tags' => array('#봉사활동', '#교제')
-    )
-);
+// ===========================
+// 1. 회원별 월간 포인트 집계 및 게시글/댓글 수 계산
+// ===========================
 
-$total_excellent = 12; // 총 우수자 수
+// 회원별 월간 포인트 합계
+$member_points_sql = "
+    SELECT
+        m.mb_id,
+        m.mb_name,
+        m.mb_nick,
+        COALESCE(SUM(p.po_point), 0) as monthly_points
+    FROM {$g5['member_table']} m
+    LEFT JOIN {$g5['point_table']} p ON m.mb_id = p.mb_id
+        AND p.po_datetime >= '{$start_date}'
+        AND p.po_datetime <= '{$end_date}'
+    WHERE m.mb_level > 1
+    GROUP BY m.mb_id
+    HAVING monthly_points > 0
+    ORDER BY monthly_points DESC
+";
+
+$member_points_result = sql_query($member_points_sql);
+$all_members = array();
+
+while ($row = sql_fetch_array($member_points_result)) {
+    $mb_id = $row['mb_id'];
+
+    // 프로필 이미지 경로
+    $profile_img = G5_DATA_URL.'/member_image/'.substr($mb_id, 0, 2).'/'.$mb_id.'.gif';
+    if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb_id, 0, 2).'/'.$mb_id.'.gif')) {
+        $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
+    }
+
+    // 모든 게시판에서 회원의 게시글 수 및 댓글 수 조회
+    $post_count = 0;
+    $comment_count = 0;
+
+    $board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
+    while ($board = sql_fetch_array($board_list)) {
+        $bo_table = $board['bo_table'];
+        $write_table = $g5['write_prefix'] . $bo_table;
+
+        // 테이블 존재 여부 확인
+        $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
+        if (!sql_num_rows($table_check)) continue;
+
+        // 게시글 수 (댓글 제외)
+        $post_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
+                     WHERE mb_id = '{$mb_id}' AND wr_is_comment = 0";
+        $post_result = sql_fetch($post_sql);
+        if ($post_result) {
+            $post_count += (int)$post_result['cnt'];
+        }
+
+        // 댓글 수
+        $comment_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
+                        WHERE mb_id = '{$mb_id}' AND wr_is_comment = 1";
+        $comment_result = sql_fetch($comment_sql);
+        if ($comment_result) {
+            $comment_count += (int)$comment_result['cnt'];
+        }
+    }
+
+    $all_members[] = array(
+        'mb_id' => $mb_id,
+        'name' => get_text($row['mb_name']),
+        'nick' => get_text($row['mb_nick']),
+        'points' => (int)$row['monthly_points'],
+        'avatar' => $profile_img,
+        'post_count' => $post_count,
+        'comment_count' => $comment_count
+    );
+}
+
+// ===========================
+// 2. Top 3 회원 선정
+// ===========================
+$top_members = array();
+for ($i = 0; $i < min(3, count($all_members)); $i++) {
+    $top_members[] = array_merge($all_members[$i], array('rank' => $i + 1));
+}
+
+// ===========================
+// 3. 우수 성산인 (Top 3 제외, 기준 점수 이상)
+// ===========================
+$excellent_members = array();
+$rank = 4;
+for ($i = 3; $i < count($all_members); $i++) {
+    if ($all_members[$i]['points'] >= EXCELLENT_MEMBER_POINT) {
+        $excellent_members[] = array_merge($all_members[$i], array('rank' => $rank));
+        $rank++;
+    }
+}
+$total_excellent = count($excellent_members);
+
+// ===========================
+// 4. 이달의 활동 통계
+// ===========================
+
+// 총 게시물 수 (해당 월)
+$total_posts = 0;
+$board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
+while ($board = sql_fetch_array($board_list)) {
+    $bo_table = $board['bo_table'];
+    $write_table = $g5['write_prefix'] . $bo_table;
+
+    $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
+    if (!sql_num_rows($table_check)) continue;
+
+    $posts_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
+                  WHERE wr_is_comment = 0
+                  AND wr_datetime >= '{$start_date}'
+                  AND wr_datetime <= '{$end_date}'";
+    $posts_result = sql_fetch($posts_sql);
+    if ($posts_result) {
+        $total_posts += (int)$posts_result['cnt'];
+    }
+}
+
+// 총 댓글 수 (해당 월)
+$total_comments = 0;
+$board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
+while ($board = sql_fetch_array($board_list)) {
+    $bo_table = $board['bo_table'];
+    $write_table = $g5['write_prefix'] . $bo_table;
+
+    $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
+    if (!sql_num_rows($table_check)) continue;
+
+    $comments_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
+                     WHERE wr_is_comment = 1
+                     AND wr_datetime >= '{$start_date}'
+                     AND wr_datetime <= '{$end_date}'";
+    $comments_result = sql_fetch($comments_sql);
+    if ($comments_result) {
+        $total_comments += (int)$comments_result['cnt'];
+    }
+}
+
+// 아멘 총합 (해당 월) - wr_good 컬럼 합계
+$total_amens = 0;
+$board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
+while ($board = sql_fetch_array($board_list)) {
+    $bo_table = $board['bo_table'];
+    $write_table = $g5['write_prefix'] . $bo_table;
+
+    $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
+    if (!sql_num_rows($table_check)) continue;
+
+    // wr_good 컬럼이 있는지 확인
+    $column_check = sql_query("SHOW COLUMNS FROM {$write_table} WHERE Field = 'wr_good'", false);
+    if (!sql_num_rows($column_check)) continue;
+
+    $amens_sql = "SELECT COALESCE(SUM(wr_good), 0) as total FROM {$write_table}
+                  WHERE wr_datetime >= '{$start_date}'
+                  AND wr_datetime <= '{$end_date}'";
+    $amens_result = sql_fetch($amens_sql);
+    if ($amens_result) {
+        $total_amens += (int)$amens_result['total'];
+    }
+}
+
+// 회원 출석 수 (해당 월) - 로그인 포인트 기록 기준
+$attendance_sql = "
+    SELECT COUNT(DISTINCT DATE(po_datetime), mb_id) as cnt
+    FROM {$g5['point_table']}
+    WHERE po_content LIKE '%로그인%'
+    AND po_datetime >= '{$start_date}'
+    AND po_datetime <= '{$end_date}'
+";
+$attendance_result = sql_fetch($attendance_sql);
+$total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
 
 ?>
 
@@ -168,6 +279,7 @@ $total_excellent = 12; // 총 우수자 수
             <h3 class="text-lg font-semibold text-grace-green">이달의 베스트 성산인</h3>
         </div>
 
+        <?php if (count($top_members) > 0): ?>
         <div class="flex gap-3 overflow-x-auto pb-2">
             <?php foreach ($top_members as $idx => $member): ?>
             <?php
@@ -215,20 +327,25 @@ $total_excellent = 12; // 총 우수자 수
                         </div>
                     </div>
                     <h4 class="font-semibold text-grace-green text-sm mb-1"><?php echo $member['name']; ?></h4>
-                    <p class="text-xs text-gray-500 mb-2"><?php echo $member['department']; ?></p>
+                    <p class="text-xs text-gray-500 mb-2"><?php echo $member['nick']; ?></p>
                     <div class="flex items-center justify-center gap-1 mb-2">
                         <i class="fa-solid fa-cross text-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?> text-xs"></i>
-                        <span class="text-sm font-bold text-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?>"><?php echo $member['points']; ?>점</span>
+                        <span class="text-sm font-bold text-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?>"><?php echo number_format($member['points']); ?>점</span>
                     </div>
                     <div class="flex flex-wrap gap-1 justify-center">
-                        <?php foreach ($member['tags'] as $tag): ?>
-                        <span class="text-xs bg-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full"><?php echo $tag; ?></span>
-                        <?php endforeach; ?>
+                        <span class="text-xs bg-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full">글 <?php echo $member['post_count']; ?>개</span>
+                        <span class="text-xs bg-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full">댓글 <?php echo $member['comment_count']; ?>개</span>
                     </div>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
+        <?php else: ?>
+        <div class="bg-white rounded-2xl p-8 shadow-warm text-center">
+            <i class="fa-solid fa-crown text-gray-300 text-5xl mb-3"></i>
+            <p class="text-sm text-gray-400">이번 달 활동 내역이 없습니다.</p>
+        </div>
+        <?php endif; ?>
     </section>
 
     <section id="hall-of-faith" class="px-4">
@@ -236,51 +353,43 @@ $total_excellent = 12; // 총 우수자 수
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-hands-praying text-lilac text-lg"></i>
                 <h3 class="text-lg font-semibold text-grace-green">우수 성산인</h3>
-                <span class="text-xs bg-lilac/20 text-deep-purple px-2 py-1 rounded-full">200점 이상</span>
+                <span class="text-xs bg-lilac/20 text-deep-purple px-2 py-1 rounded-full"><?php echo number_format(EXCELLENT_MEMBER_POINT); ?>점 이상</span>
             </div>
             <span class="text-xs text-gray-500">총 <?php echo $total_excellent; ?>명</span>
         </div>
 
         <div class="space-y-3">
-            <?php foreach ($excellent_members as $member): ?>
-            <div class="bg-white rounded-xl p-4 shadow-warm flex items-center gap-4">
-                <div class="relative">
-                    <img src="<?php echo $member['avatar']; ?>" class="w-14 h-14 rounded-full object-cover">
-                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
-                        <span class="text-white text-xs font-bold"><?php echo $member['rank']; ?></span>
-                    </div>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <h4 class="font-semibold text-grace-green"><?php echo $member['name']; ?></h4>
-                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full"><?php echo $member['department']; ?></span>
-                        <?php if (isset($member['hot']) && $member['hot']): ?>
-                        <div class="w-4 h-4 bg-divine-lilac rounded-full flex items-center justify-center">
-                            <i class="fa-solid fa-fire text-white text-xs"></i>
+            <?php if (count($excellent_members) > 0): ?>
+                <?php foreach ($excellent_members as $member): ?>
+                <div class="bg-white rounded-xl p-4 shadow-warm flex items-center gap-4">
+                    <div class="relative">
+                        <img src="<?php echo $member['avatar']; ?>" class="w-14 h-14 rounded-full object-cover">
+                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-bold"><?php echo $member['rank']; ?></span>
                         </div>
-                        <?php endif; ?>
                     </div>
-                    <div class="flex items-center gap-1 mb-2">
-                        <i class="fa-solid fa-cross text-lilac text-xs"></i>
-                        <span class="text-sm font-semibold text-lilac"><?php echo $member['points']; ?>점</span>
-                        <?php if (isset($member['growth'])): ?>
-                        <span class="text-xs text-green-600 ml-2">↑<?php echo $member['growth']; ?> 증가</span>
-                        <?php endif; ?>
-                        <?php if (isset($member['streak'])): ?>
-                        <span class="text-xs bg-divine-lilac/20 text-divine-lilac px-2 py-1 rounded-full"><?php echo $member['streak']; ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="flex gap-1">
-                        <?php foreach ($member['tags'] as $tag): ?>
-                        <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full"><?php echo $tag; ?></span>
-                        <?php endforeach; ?>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h4 class="font-semibold text-grace-green"><?php echo $member['name']; ?></h4>
+                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full"><?php echo $member['nick']; ?></span>
+                        </div>
+                        <div class="flex items-center gap-1 mb-2">
+                            <i class="fa-solid fa-cross text-lilac text-xs"></i>
+                            <span class="text-sm font-semibold text-lilac"><?php echo number_format($member['points']); ?>점</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">글 <?php echo $member['post_count']; ?>개</span>
+                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">댓글 <?php echo $member['comment_count']; ?>개</span>
+                        </div>
                     </div>
                 </div>
-                <button class="w-8 h-8 bg-lilac/20 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-praying-hands text-lilac text-sm"></i>
-                </button>
-            </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="bg-white rounded-xl p-8 shadow-warm text-center">
+                    <i class="fa-solid fa-trophy text-gray-300 text-4xl mb-3"></i>
+                    <p class="text-sm text-gray-400">이번 달 <?php echo number_format(EXCELLENT_MEMBER_POINT); ?>점 이상 획득한 회원이 없습니다.</p>
+                </div>
+            <?php endif; ?>
         </div>
 
         <button class="w-full mt-4 py-3 bg-lilac/10 text-deep-purple font-medium rounded-xl border border-lilac/20">
@@ -293,27 +402,27 @@ $total_excellent = 12; // 총 우수자 수
 
         <div class="grid grid-cols-2 gap-4">
             <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
-                <i class="fa-solid fa-praying-hands text-lilac text-xl mb-2"></i>
+                <i class="fa-solid fa-file-lines text-lilac text-xl mb-2"></i>
                 <p class="text-sm text-grace-green">총 게시물 수</p>
-                <p class="text-lg font-bold text-lilac">1,247회</p>
+                <p class="text-lg font-bold text-lilac"><?php echo number_format($total_posts); ?>개</p>
             </div>
 
             <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
-                <i class="fa-solid fa-book-open text-lilac text-xl mb-2"></i>
+                <i class="fa-solid fa-comments text-lilac text-xl mb-2"></i>
                 <p class="text-sm text-grace-green">총 댓글 수</p>
-                <p class="text-lg font-bold text-lilac">856회</p>
+                <p class="text-lg font-bold text-lilac"><?php echo number_format($total_comments); ?>개</p>
             </div>
 
             <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
                 <i class="fa-solid fa-heart text-lilac text-xl mb-2"></i>
                 <p class="text-sm text-grace-green">아멘 총합</p>
-                <p class="text-lg font-bold text-lilac">2,134개</p>
+                <p class="text-lg font-bold text-lilac"><?php echo number_format($total_amens); ?>개</p>
             </div>
 
             <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
-                <i class="fa-solid fa-hands-helping text-lilac text-xl mb-2"></i>
+                <i class="fa-solid fa-calendar-check text-lilac text-xl mb-2"></i>
                 <p class="text-sm text-grace-green">회원 출석 수</p>
-                <p class="text-lg font-bold text-lilac">142회</p>
+                <p class="text-lg font-bold text-lilac"><?php echo number_format($total_attendance); ?>회</p>
             </div>
         </div>
     </section>
