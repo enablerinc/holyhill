@@ -3,16 +3,21 @@ if (!defined('_GNUBOARD_')) exit;
 
 // 작성자 정보
 $mb_nick = $view['wr_name'] ? $view['wr_name'] : '알 수 없음';
-$mb_photo = G5_THEME_URL.'/img/no-profile.svg';
+$mb_photo_html = '';
 
 if ($view['mb_id']) {
-    $mb_result = sql_query("SELECT mb_nick, mb_photo FROM {$g5['member_table']} WHERE mb_id = '{$view['mb_id']}'");
+    $mb_result = sql_query("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$view['mb_id']}'");
     if ($mb_result && $row = sql_fetch_array($mb_result)) {
         $mb_nick = $row['mb_nick'];
-        if ($row['mb_photo']) {
-            $mb_photo = G5_DATA_URL.'/member/'.$row['mb_photo'];
-        }
     }
+    // 표준 회원 이미지 함수 사용
+    $mb_photo_html = get_member_profile_img($view['mb_id']);
+}
+
+// 이미지 태그에서 src 속성 추출
+$mb_photo = G5_THEME_URL.'/img/no-profile.svg';
+if ($mb_photo_html && preg_match('/src="([^"]+)"/', $mb_photo_html, $matches)) {
+    $mb_photo = $matches[1];
 }
 
 // 이미지
@@ -173,12 +178,16 @@ foreach ($images as $idx => $image) {
                     while ($c = sql_fetch_array($comment_result)) {
                         $c_nick = $c['wr_name'] ? $c['wr_name'] : '알 수 없음';
                         $c_photo = G5_THEME_URL.'/img/no-profile.svg';
-                        
+
                         if ($c['mb_id']) {
-                            $c_mb = sql_fetch("SELECT mb_nick, mb_photo FROM {$g5['member_table']} WHERE mb_id = '{$c['mb_id']}'");
+                            $c_mb = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$c['mb_id']}'");
                             if ($c_mb) {
                                 $c_nick = $c_mb['mb_nick'];
-                                if ($c_mb['mb_photo']) $c_photo = G5_DATA_URL.'/member/'.$c_mb['mb_photo'];
+                            }
+                            // 표준 회원 이미지 함수 사용
+                            $c_photo_html = get_member_profile_img($c['mb_id']);
+                            if ($c_photo_html && preg_match('/src="([^"]+)"/', $c_photo_html, $matches)) {
+                                $c_photo = $matches[1];
                             }
                         }
                         ?>
@@ -215,7 +224,13 @@ foreach ($images as $idx => $image) {
 
             <div style="display: flex; gap: 8px; align-items: center;">
                 <?php
-                $comment_profile_photo = (isset($member['mb_photo']) && $member['mb_photo']) ? G5_DATA_URL.'/member/'.$member['mb_photo'] : G5_THEME_URL.'/img/no-profile.svg';
+                $comment_profile_photo = G5_THEME_URL.'/img/no-profile.svg';
+                if ($is_member && $member['mb_id']) {
+                    $user_photo_html = get_member_profile_img($member['mb_id']);
+                    if ($user_photo_html && preg_match('/src="([^"]+)"/', $user_photo_html, $matches)) {
+                        $comment_profile_photo = $matches[1];
+                    }
+                }
                 ?>
                 <img src="<?php echo $comment_profile_photo; ?>" style="width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;" alt="프로필">
                 <div style="flex: 1; display: flex; gap: 6px; background: #f3f4f6; border-radius: 9999px; padding: 6px 12px; align-items: center; min-width: 0;">

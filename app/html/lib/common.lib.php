@@ -4003,14 +4003,21 @@ function get_member_profile_img($mb_id='', $width='', $height='', $alt='profile_
 
     static $no_profile_cache = '';
     static $member_cache = array();
-    
+
     $src = '';
 
     if( $mb_id ){
         if( isset($member_cache[$mb_id]) ){
             $src = $member_cache[$mb_id];
         } else {
+            // 먼저 member_image 디렉토리에서 회원 프로필 이미지 확인
             $member_img = G5_DATA_PATH.'/member_image/'.substr($mb_id,0,2).'/'.get_mb_icon_name($mb_id).'.gif';
+
+            // member_image에 없으면 member 디렉토리(회원 아이콘)에서 확인
+            if (!is_file($member_img)) {
+                $member_img = G5_DATA_PATH.'/member/'.substr($mb_id,0,2).'/'.get_mb_icon_name($mb_id).'.gif';
+            }
+
             if (is_file($member_img)) {
                 if(defined('G5_USE_MEMBER_IMAGE_FILETIME') && G5_USE_MEMBER_IMAGE_FILETIME) {
                     $member_img .= '?'.filemtime($member_img);
