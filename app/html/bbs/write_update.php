@@ -141,6 +141,21 @@ for ($i=1; $i<=10; $i++) {
 
 run_event('write_update_before', $board, $wr_id, $w, $qstr);
 
+// ✅ 오늘의 말씀 게시판 체크 - 하루 1개 제한 경고
+if ($bo_table == 'word' && $w == '') {
+    $today_word_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
+                       WHERE wr_is_comment = 0
+                       AND DATE(wr_datetime) = CURDATE()";
+    $today_word = sql_fetch($today_word_sql);
+
+    if ($today_word['cnt'] > 0) {
+        $msg = "⚠️ 오늘 이미 {$today_word['cnt']}개의 말씀이 등록되어 있습니다.\\n\\n";
+        $msg .= "그래도 등록하시겠습니까?\\n\\n";
+        $msg .= "※ 참고: 메인 화면에는 오늘 등록된 말씀 중 가장 최근 것만 표시됩니다.";
+        echo "<script>if(!confirm('{$msg}')) { history.back(); }</script>";
+    }
+}
+
 if ($w == '' || $w == 'u') {
 
     // 외부에서 글을 등록할 수 있는 버그가 존재하므로 공지는 관리자만 등록이 가능해야 함
