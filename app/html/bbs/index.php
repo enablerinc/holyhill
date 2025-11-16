@@ -373,7 +373,7 @@ function convert_youtube_to_iframe_index($content) {
                     <i class="fa-regular fa-images text-gray-300 text-5xl mb-4"></i>
                     <p class="text-gray-600 mb-4">아직 등록된 피드가 없습니다</p>
                     <?php if ($is_member) { ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=gallery"
+                    <a href="<?php echo G5_BBS_URL; ?>/write_post.php"
                        class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
                         첫 번째 피드 작성하기
                     </a>
