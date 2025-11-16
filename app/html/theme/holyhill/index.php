@@ -129,9 +129,9 @@ include_once(G5_THEME_PATH.'/head.php');
                     <?php if ($word['wr_subject']) { ?>
                         <h3 class="text-base font-bold mb-2 text-gray-900 text-left"><?php echo get_text($word['wr_subject']); ?></h3>
                     <?php } ?>
-                    <div style="white-space: pre-line; word-break: break-word; line-height: 1.6; text-align: left;">
+                    
                         <?php echo $word_content; ?>
-                    </div>
+                    
                 </a>
                 <?php } else { ?>
                 <a href="<?php echo G5_BBS_URL; ?>/board.php?bo_table=word&wr_id=<?php echo $word['wr_id']; ?>"
