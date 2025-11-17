@@ -269,10 +269,25 @@ if ($is_member) {
                     <div class="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
                         <div class="flex items-start gap-3">
                             <?php
-                            $comment_profile_img = get_member_profile_img($comment['mb_id']);
-                            if ($comment_profile_img) {
+                            // 프로필 이미지 URL 가져오기
+                            $comment_profile_img_url = '';
+                            if ($comment['mb_id']) {
+                                $member_img_dir = G5_DATA_PATH.'/member_image/'.substr($comment['mb_id'],0,2);
+                                $member_img_name = get_mb_icon_name($comment['mb_id']);
+                                $extensions = array('gif', 'jpg', 'jpeg', 'png');
+
+                                foreach ($extensions as $ext) {
+                                    $test_path = $member_img_dir.'/'.$member_img_name.'.'.$ext;
+                                    if (is_file($test_path)) {
+                                        $comment_profile_img_url = str_replace(G5_DATA_PATH, G5_DATA_URL, $test_path);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if ($comment_profile_img_url) {
                             ?>
-                            <img src="<?php echo $comment_profile_img; ?>" class="w-8 h-8 rounded-full object-cover flex-shrink-0" alt="profile">
+                            <img src="<?php echo $comment_profile_img_url; ?>" class="w-8 h-8 rounded-full object-cover flex-shrink-0" alt="profile">
                             <?php } else { ?>
                             <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
                                 <i class="fa-solid fa-user text-gray-500 text-xs"></i>
