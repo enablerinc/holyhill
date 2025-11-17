@@ -266,7 +266,7 @@ if ($is_member) {
                             set_session('ss_delete_comment_'.$comment['wr_id'].'_token', $delete_comment_token);
                         }
                     ?>
-                    <div class="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                    <div class="border-b border-gray-100 pb-4 last:border-0 last:pb-0" id="comment-<?php echo $comment['wr_id']; ?>">
                         <div class="flex items-start gap-3">
                             <?php
                             // 프로필 이미지 URL 가져오기
@@ -297,11 +297,10 @@ if ($is_member) {
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="font-semibold text-sm text-gray-800"><?php echo $comment_nick; ?></span>
                                     <?php if ($is_comment_owner || $is_admin) { ?>
-                                    <a href="<?php echo G5_BBS_URL; ?>/delete_comment.php?bo_table=<?php echo $bo_table; ?>&comment_id=<?php echo $comment['wr_id']; ?>&wr_id=<?php echo $wr_id; ?>&token=<?php echo $delete_comment_token; ?>"
-                                       onclick="return confirm('댓글을 삭제하시겠습니까?');"
+                                    <button onclick="deleteComment('<?php echo $comment['wr_id']; ?>', '<?php echo $bo_table; ?>', '<?php echo $wr_id; ?>', '<?php echo $delete_comment_token; ?>');"
                                        class="text-xs text-red-500 hover:text-red-700">
                                         삭제
-                                    </a>
+                                    </button>
                                     <?php } ?>
                                 </div>
                                 <p class="text-sm text-gray-700 leading-relaxed"><?php echo nl2br(get_text($comment['wr_content'])); ?></p>
@@ -440,6 +439,43 @@ function submit_comment(f) {
     });
 
     return false; // 기본 form submit 방지
+}
+
+// 댓글 삭제 (AJAX)
+function deleteComment(comment_id, bo_table, wr_id, token) {
+    if (!confirm('댓글을 삭제하시겠습니까?')) {
+        return false;
+    }
+
+    $.ajax({
+        url: '<?php echo G5_BBS_URL; ?>/delete_comment.php',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            comment_id: comment_id,
+            bo_table: bo_table,
+            wr_id: wr_id,
+            token: token,
+            ajax: '1'
+        },
+        success: function(response) {
+            if (response.success) {
+                // 댓글 요소를 부드럽게 제거
+                $('#comment-' + comment_id).fadeOut(300, function() {
+                    $(this).remove();
+                    // 댓글 카운트 업데이트
+                    if (response.comment_count !== undefined) {
+                        $('.fa-comment').next('span').text(response.comment_count + '개');
+                    }
+                });
+            } else {
+                alert(response.message || '댓글 삭제 중 오류가 발생했습니다.');
+            }
+        },
+        error: function(xhr, status, error) {
+            alert('댓글 삭제 중 오류가 발생했습니다.');
+        }
+    });
 }
 </script>
 
