@@ -20,12 +20,17 @@ if (!$board) {
 }
 
 // 마지막 댓글 ID 이후의 새로운 댓글들 가져오기
-$sql = "SELECT wr_id, wr_content, wr_name, wr_datetime, mb_id, wr_comment_reply
+// 기존 10자리와 새로운 12자리 댓글 모두 처리
+$sql = "SELECT wr_id, wr_content, wr_name, wr_datetime, mb_id, wr_comment_reply,
+        CASE
+            WHEN LENGTH(wr_comment_reply) = 10 THEN CONCAT(wr_comment_reply, '00')
+            ELSE wr_comment_reply
+        END as sort_key
         FROM {$g5['write_prefix']}{$bo_table}
         WHERE wr_parent = '{$wr_id}'
         AND wr_is_comment = 1
         AND wr_id > '{$last_comment_id}'
-        ORDER BY wr_comment_reply ASC";
+        ORDER BY sort_key ASC";
 
 $result = sql_query($sql);
 $new_comments = array();
@@ -55,7 +60,11 @@ while ($row = sql_fetch_array($result)) {
     }
 
     // 대댓글 여부 확인
-    $is_reply = strlen($row['wr_comment_reply']) > 10;
+    // - 10자리: 일반 댓글 (기존 방식)
+    // - 12자리 중 마지막 2자리가 00: 일반 댓글 (새 방식)
+    // - 12자리 중 마지막 2자리가 00이 아님: 대댓글 (새 방식)
+    $reply_len = strlen($row['wr_comment_reply']);
+    $is_reply = ($reply_len == 12 && substr($row['wr_comment_reply'], -2) !== '00');
 
     $new_comments[] = array(
         'wr_id' => $row['wr_id'],

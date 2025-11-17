@@ -314,7 +314,16 @@ foreach ($images as $idx => $image) {
                 <h3 class="font-semibold mb-4">댓글 <?php echo $write['wr_comment']; ?>개</h3>
                 <div id="comment-list">
                 <?php
-                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_comment_reply ASC LIMIT 200");
+                // 기존 10자리와 새로운 12자리 댓글 모두 처리 (10자리는 뒤에 00 붙여서 정렬)
+                $comment_result = sql_query("SELECT *,
+                    CASE
+                        WHEN LENGTH(wr_comment_reply) = 10 THEN CONCAT(wr_comment_reply, '00')
+                        ELSE wr_comment_reply
+                    END as sort_key
+                    FROM {$write_table}
+                    WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1
+                    ORDER BY sort_key ASC
+                    LIMIT 200");
 
                 if (sql_num_rows($comment_result) > 0) {
                     while ($c = sql_fetch_array($comment_result)) {
@@ -333,8 +342,12 @@ foreach ($images as $idx => $image) {
                             }
                         }
 
-                        // 대댓글 여부 확인 (wr_comment_reply 길이가 10자 초과면 대댓글)
-                        $is_reply = strlen($c['wr_comment_reply']) > 10;
+                        // 대댓글 여부 확인
+                        // - 10자리: 일반 댓글 (기존 방식)
+                        // - 12자리 중 마지막 2자리가 00: 일반 댓글 (새 방식)
+                        // - 12자리 중 마지막 2자리가 00이 아님: 대댓글 (새 방식)
+                        $reply_len = strlen($c['wr_comment_reply']);
+                        $is_reply = ($reply_len == 12 && substr($c['wr_comment_reply'], -2) !== '00');
                         $indent_class = $is_reply ? 'ml-11' : '';
                         ?>
                         <div id="c_<?php echo $c['wr_id']; ?>" class="mb-3 <?php echo $indent_class; ?>">
@@ -345,13 +358,17 @@ foreach ($images as $idx => $image) {
                                         <div class="font-semibold text-xs mb-1"><?php echo $c_nick; ?></div>
                                         <div class="text-sm"><?php echo nl2br(get_text($c['wr_content'])); ?></div>
                                     </div>
-                                    <?php if ($is_member && !$is_reply) { ?>
+                                    <?php
+                                    // 답글 버튼은 12자리 일반 댓글에만 표시 (새 방식만 지원)
+                                    $show_reply_btn = $is_member && !$is_reply && $reply_len == 12;
+                                    if ($show_reply_btn) {
+                                    ?>
                                     <button onclick="toggleReplyForm(<?php echo $c['wr_id']; ?>)" class="text-xs text-gray-500 mt-1 ml-3">답글</button>
                                     <?php } ?>
                                 </div>
                             </div>
                             <!-- 답글 입력창 -->
-                            <?php if ($is_member && !$is_reply) { ?>
+                            <?php if ($show_reply_btn) { ?>
                             <div id="reply-form-<?php echo $c['wr_id']; ?>" class="hidden mt-2 ml-11">
                                 <div class="flex gap-2 items-center">
                                     <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">

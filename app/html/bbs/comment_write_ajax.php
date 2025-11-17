@@ -67,13 +67,22 @@ if ($parent_comment_id > 0) {
     $wr_comment_reply = $parent_reply . $new_suffix;
 } else {
     // 일반 댓글 (기존 로직)
-    $row = sql_fetch("SELECT MAX(CAST(wr_comment_reply AS UNSIGNED)) as max_reply
+    // 길이를 12자리로 통일 (마지막 2자리는 00)
+    $row = sql_fetch("SELECT MAX(wr_comment_reply) as max_reply
                       FROM {$write_table}
                       WHERE wr_parent = '{$wr_id}'
                       AND wr_is_comment = 1
-                      AND LENGTH(wr_comment_reply) = 10");
-    $reply_num = $row['max_reply'] ? $row['max_reply'] + 1 : 1;
-    $wr_comment_reply = str_pad($reply_num, 10, '0', STR_PAD_LEFT);
+                      AND LENGTH(wr_comment_reply) = 12
+                      AND wr_comment_reply LIKE '%00'");
+
+    if ($row['max_reply']) {
+        // 기존 댓글이 있으면 앞 10자리를 추출해서 +1
+        $last_num = intval(substr($row['max_reply'], 0, 10));
+        $reply_num = $last_num + 1;
+    } else {
+        $reply_num = 1;
+    }
+    $wr_comment_reply = str_pad($reply_num, 10, '0', STR_PAD_LEFT) . '00';
 }
 
 sql_query("INSERT INTO {$write_table} SET 
