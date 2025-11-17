@@ -229,21 +229,34 @@ if ($w == 'c') // 댓글 입력
 
     // 알림 생성
     if ($comment_id && $mb_id) {
+        // 디버깅 로그
+        $debug_msg = "알림 디버그: comment_id=$comment_id, mb_id=$mb_id, wr_mb_id={$wr['mb_id']}, tmp_comment_reply='$tmp_comment_reply'";
+        if ($tmp_comment_reply && isset($reply_array['mb_id'])) {
+            $debug_msg .= ", reply_array_mb_id={$reply_array['mb_id']}";
+        }
+        error_log($debug_msg);
+
         // 대댓글인 경우
         if ($tmp_comment_reply && $reply_array['mb_id']) {
             // 부모 댓글 작성자에게 알림
             $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
             $notification_content = generate_notification_content('reply', $from_nick);
             $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
-            create_notification('reply', $mb_id, $reply_array['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
+            $result = create_notification('reply', $mb_id, $reply_array['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
+            error_log("대댓글 알림 생성: " . ($result ? "성공" : "실패") . " - to {$reply_array['mb_id']}");
         }
         // 일반 댓글인 경우 - 원글 작성자에게 알림
         else if ($wr['mb_id']) {
             $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
             $notification_content = generate_notification_content('comment', $from_nick);
             $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
-            create_notification('comment', $mb_id, $wr['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
+            $result = create_notification('comment', $mb_id, $wr['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
+            error_log("일반 댓글 알림 생성: " . ($result ? "성공" : "실패") . " - to {$wr['mb_id']}");
+        } else {
+            error_log("알림 생성 안됨: wr['mb_id']가 비어있음");
         }
+    } else {
+        error_log("알림 조건 실패: comment_id=$comment_id, mb_id=$mb_id");
     }
 
     // 메일발송 사용
