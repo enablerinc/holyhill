@@ -251,7 +251,7 @@ if ($is_member) {
             <div class="bg-white rounded-2xl shadow-md overflow-hidden p-4">
                 <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-comments text-purple-600"></i>
-                    댓글 <?php echo number_format($comment_count['cnt']); ?>개
+                    댓글 <span class="comment-count"><?php echo number_format($comment_count['cnt']); ?></span>개
                 </h3>
                 <div class="space-y-4">
                     <?php
@@ -423,15 +423,73 @@ function submit_comment(f) {
         return false;
     }
 
-    var formData = $(f).serialize();
+    var formData = $(f).serialize() + '&ajax=1';
 
     $.ajax({
         url: $(f).attr('action'),
         type: 'POST',
+        dataType: 'json',
         data: formData,
         success: function(response) {
-            // 댓글이 성공적으로 등록되면 페이지 새로고침
-            location.reload();
+            if (response.success) {
+                // 댓글 입력창 초기화
+                $('#wr_content').val('');
+
+                // 댓글 목록이 없으면 새로 생성
+                var commentSection = $('.space-y-4');
+                if (commentSection.length === 0) {
+                    var newCommentSection = `
+                        <div class="bg-white rounded-2xl shadow-md overflow-hidden p-4">
+                            <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-comments text-purple-600"></i>
+                                댓글 <span class="comment-count">1</span>개
+                            </h3>
+                            <div class="space-y-4"></div>
+                        </div>
+                    `;
+                    $('.bg-white.rounded-2xl.shadow-md.overflow-hidden.p-4.mt-4').first().before(newCommentSection);
+                    commentSection = $('.space-y-4');
+                }
+
+                // 새 댓글 HTML 생성
+                var newComment = `
+                    <div class="border-b border-gray-100 pb-4 last:border-0 last:pb-0" id="comment-${response.comment_id}">
+                        <div class="flex items-start gap-3">
+                            ${response.profile_img ?
+                                `<img src="${response.profile_img}" class="w-8 h-8 rounded-full object-cover flex-shrink-0" alt="profile">` :
+                                `<div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-user text-gray-500 text-xs"></i>
+                                </div>`
+                            }
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-semibold text-sm text-gray-800">${response.wr_name}</span>
+                                    <button onclick="deleteComment('${response.comment_id}', '<?php echo $bo_table; ?>', '<?php echo $wr_id; ?>', '${response.delete_token}');"
+                                       class="text-xs text-red-500 hover:text-red-700">
+                                        삭제
+                                    </button>
+                                </div>
+                                <p class="text-sm text-gray-700 leading-relaxed">${response.wr_content}</p>
+                                <span class="text-xs text-gray-500 mt-1 inline-block">${response.datetime}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 댓글 목록에 추가
+                commentSection.append(newComment);
+
+                // 댓글 카운트 업데이트
+                if (response.comment_count !== undefined) {
+                    $('.comment-count').text(response.comment_count);
+                    $('.fa-comment').next('span').text(response.comment_count + '개');
+                }
+
+                // 새 댓글 강조 효과
+                $('#comment-' + response.comment_id).hide().fadeIn(300);
+            } else {
+                alert(response.message || '댓글 등록 중 오류가 발생했습니다.');
+            }
         },
         error: function(xhr, status, error) {
             alert('댓글 등록 중 오류가 발생했습니다.');
@@ -443,10 +501,6 @@ function submit_comment(f) {
 
 // 댓글 삭제 (AJAX)
 function deleteComment(comment_id, bo_table, wr_id, token) {
-    if (!confirm('댓글을 삭제하시겠습니까?')) {
-        return false;
-    }
-
     $.ajax({
         url: '<?php echo G5_BBS_URL; ?>/delete_comment.php',
         type: 'POST',
@@ -465,6 +519,7 @@ function deleteComment(comment_id, bo_table, wr_id, token) {
                     $(this).remove();
                     // 댓글 카운트 업데이트
                     if (response.comment_count !== undefined) {
+                        $('.comment-count').text(response.comment_count);
                         $('.fa-comment').next('span').text(response.comment_count + '개');
                     }
                 });
