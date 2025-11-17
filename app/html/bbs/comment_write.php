@@ -56,7 +56,7 @@ if ($board['bo_comment_point']) {
                  "{$board['bo_subject']} 댓글", $bo_table, $wr_id, '댓글');
 }
 
-$url = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+$url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
 ?>
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head><body>

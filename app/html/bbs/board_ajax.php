@@ -167,7 +167,7 @@ while ($row = sql_fetch_array($result)) {
     $text_content = preg_replace('/\[이미지\d+\]/', '', $text_content);
     $text_content = trim($text_content);
 
-    $view_href = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+    $view_href = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
     $good_count = isset($row['wr_good']) ? (int)$row['wr_good'] : 0;
 
     $items[] = array(

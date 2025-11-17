@@ -141,5 +141,5 @@ if ($is_ajax) {
     ));
     exit;
 } else {
-    goto_url(short_url_clean(G5_HTTP_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$write['wr_parent'].'&amp;page='.$page. $qstr));
+    goto_url(short_url_clean(G5_HTTP_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$write['wr_parent'].'&amp;page='.$page. $qstr));
 }

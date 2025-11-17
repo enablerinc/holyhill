@@ -234,14 +234,14 @@ if ($w == 'c') // 댓글 입력
             // 부모 댓글 작성자에게 알림
             $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
             $notification_content = generate_notification_content('reply', $from_nick);
-            $notification_url = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+            $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
             create_notification('reply', $mb_id, $reply_array['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
         }
         // 일반 댓글인 경우 - 원글 작성자에게 알림
         else if ($wr['mb_id']) {
             $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
             $notification_content = generate_notification_content('comment', $from_nick);
-            $notification_url = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+            $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
             create_notification('comment', $mb_id, $wr['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
         }
     }
@@ -391,7 +391,7 @@ else if ($w == 'cu') // 댓글 수정
 
 delete_cache_latest($bo_table);
 
-$redirect_url = short_url_clean(G5_HTTP_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$wr['wr_parent'].'&amp;'.$qstr.'&amp;#c_'.$comment_id);
+$redirect_url = short_url_clean(G5_HTTP_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$wr['wr_parent'].'&amp;'.$qstr.'&amp;#c_'.$comment_id);
 
 run_event('comment_update_after', $board, $wr_id, $w, $qstr, $redirect_url, $comment_id, $reply_array);
 

@@ -14,7 +14,7 @@ if (!$board) {
 // 글쓰기 권한 체크
 if ($member['mb_level'] < $board['bo_write_level']) {
     if ($member['mb_id'])
-        alert('글을 쓸 권한이 없습니다.', G5_BBS_URL.'/board.php?bo_table='.$bo_table);
+        alert('글을 쓸 권한이 없습니다.', G5_BBS_URL.'/feed.php');
     else
         alert('글을 쓸 권한이 없습니다.\\n\\n회원이시라면 로그인 후 이용해 보십시오.', G5_BBS_URL.'/login.php?url='.urlencode(G5_BBS_URL.'/write_word.php'));
 }

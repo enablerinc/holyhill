@@ -40,7 +40,7 @@ run_event('bbs_write', $board, $wr_id, $w);
 
 if ($w == '') {
     if ($wr_id) {
-        alert('글쓰기에는 \$wr_id 값을 사용하지 않습니다.', G5_BBS_URL.'/board.php?bo_table='.$bo_table);
+        alert('글쓰기에는 \$wr_id 값을 사용하지 않습니다.', G5_BBS_URL.'/feed.php');
     }
 
     if ($member['mb_level'] < $board['bo_write_level']) {
