@@ -57,13 +57,28 @@ while ($row = sql_fetch_array($result)) {
     // 대댓글 여부 확인
     $is_reply = strlen($row['wr_comment_reply']) > 10;
 
+    // 대댓글인 경우 부모 댓글 ID 찾기
+    $parent_comment_id = null;
+    if ($is_reply) {
+        $parent_reply = substr($row['wr_comment_reply'], 0, 10);
+        $parent_sql = "SELECT wr_id FROM {$g5['write_prefix']}{$bo_table}
+                       WHERE wr_parent = '{$wr_id}'
+                       AND wr_is_comment = 1
+                       AND wr_comment_reply = '{$parent_reply}'";
+        $parent_result = sql_fetch($parent_sql);
+        if ($parent_result) {
+            $parent_comment_id = $parent_result['wr_id'];
+        }
+    }
+
     $new_comments[] = array(
         'wr_id' => $row['wr_id'],
         'content' => $row['wr_content'],
         'name' => $row['wr_name'],
         'photo' => $c_photo,
         'datetime' => $time_str,
-        'is_reply' => $is_reply
+        'is_reply' => $is_reply,
+        'parent_comment_id' => $parent_comment_id
     );
 }
 
