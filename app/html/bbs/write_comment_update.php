@@ -4,16 +4,35 @@ include_once('./_common.php');
 include_once(G5_CAPTCHA_PATH.'/captcha.lib.php');
 include_once(G5_BBS_PATH.'/notification.lib.php');
 
+// AJAX 요청 확인
+$is_ajax = isset($_POST['ajax']) && $_POST['ajax'] == '1';
+
+// AJAX 에러 응답 함수
+function ajax_error($message) {
+    header('Content-Type: application/json');
+    echo json_encode(array('success' => false, 'message' => $message));
+    exit;
+}
+
 // 토큰체크
 $comment_token = trim(get_session('ss_comment_token'));
 set_session('ss_comment_token', '');
-if(empty($_POST['token']) || !$comment_token || $comment_token != $_POST['token'])
-    alert('올바른 방법으로 이용해 주십시오.');
+if(empty($_POST['token']) || !$comment_token || $comment_token != $_POST['token']) {
+    if ($is_ajax) {
+        ajax_error('올바른 방법으로 이용해 주십시오.');
+    } else {
+        alert('올바른 방법으로 이용해 주십시오.');
+    }
+}
 
 // 090710
 if (substr_count($wr_content, "&#") > 50) {
-    alert('내용에 올바르지 않은 코드가 다수 포함되어 있습니다.');
-    exit;
+    if ($is_ajax) {
+        ajax_error('내용에 올바르지 않은 코드가 다수 포함되어 있습니다.');
+    } else {
+        alert('내용에 올바르지 않은 코드가 다수 포함되어 있습니다.');
+        exit;
+    }
 }
 
 $w = isset($_POST['w']) ? clean_xss_tags($_POST['w']) : '';
@@ -375,5 +394,47 @@ delete_cache_latest($bo_table);
 $redirect_url = short_url_clean(G5_HTTP_BBS_URL.'/board.php?bo_table='.$bo_table.'&amp;wr_id='.$wr['wr_parent'].'&amp;'.$qstr.'&amp;#c_'.$comment_id);
 
 run_event('comment_update_after', $board, $wr_id, $w, $qstr, $redirect_url, $comment_id, $reply_array);
+
+// AJAX 요청인 경우 JSON 응답 반환
+if ($is_ajax && $w == 'c') {
+    // 프로필 이미지 URL 가져오기
+    $profile_img_url = '';
+    if ($mb_id) {
+        $member_img_dir = G5_DATA_PATH.'/member_image/'.substr($mb_id,0,2);
+        $member_img_name = get_mb_icon_name($mb_id);
+        $extensions = array('gif', 'jpg', 'jpeg', 'png');
+
+        foreach ($extensions as $ext) {
+            $test_path = $member_img_dir.'/'.$member_img_name.'.'.$ext;
+            if (is_file($test_path)) {
+                $profile_img_url = str_replace(G5_DATA_PATH, G5_DATA_URL, $test_path);
+                break;
+            }
+        }
+    }
+
+    // 삭제 토큰 생성
+    $delete_token = uniqid(time());
+    set_session('ss_delete_comment_'.$comment_id.'_token', $delete_token);
+
+    // 댓글 수 계산
+    $comment_count_result = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1");
+
+    // 날짜 형식 변환
+    $datetime = date('Y-m-d H:i', strtotime(G5_TIME_YMDHIS));
+
+    header('Content-Type: application/json');
+    echo json_encode(array(
+        'success' => true,
+        'comment_id' => $comment_id,
+        'wr_name' => get_text($wr_name),
+        'wr_content' => nl2br(get_text($wr_content)),
+        'profile_img' => $profile_img_url,
+        'delete_token' => $delete_token,
+        'datetime' => $datetime,
+        'comment_count' => $comment_count_result['cnt']
+    ));
+    exit;
+}
 
 goto_url($redirect_url);
