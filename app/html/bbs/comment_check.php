@@ -32,11 +32,11 @@ $new_comments = array();
 
 while ($row = sql_fetch_array($result)) {
     // 작성자 프로필 사진 가져오기
-    $c_photo = G5_THEME_URL.'/img/no-profile.svg';
+    $c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
     if ($row['mb_id']) {
-        $c_photo_html = get_member_profile_img($row['mb_id']);
-        if ($c_photo_html && preg_match('/src="([^"]+)"/', $c_photo_html, $matches)) {
-            $c_photo = $matches[1];
+        $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif';
+        if (file_exists($c_profile_path)) {
+            $c_photo = G5_DATA_URL.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif';
         }
     }
 
