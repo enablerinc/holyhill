@@ -568,7 +568,7 @@ function submitReply(parentCommentId) {
             const parentComment = document.getElementById('c_' + parentCommentId);
             if (parentComment) {
                 const newReplyHTML = `
-                    <div class="mb-3 ml-11" style="animation: slideIn 0.3s ease-out;">
+                    <div id="c_${data.comment.id}" class="mb-3 ml-11" style="animation: slideIn 0.3s ease-out;">
                         <div class="flex gap-3">
                             <img src="${data.comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
                             <div class="flex-1">
@@ -593,9 +593,12 @@ function submitReply(parentCommentId) {
 
                 // 하이라이트 제거
                 setTimeout(() => {
-                    const newReply = insertAfter.nextElementSibling;
-                    if (newReply && newReply.querySelector('.flex-1 > div')) {
-                        newReply.querySelector('.flex-1 > div').style.background = '';
+                    const newReply = document.getElementById('c_' + data.comment.id);
+                    if (newReply) {
+                        const bgElement = newReply.querySelector('.bg-gray-50');
+                        if (bgElement) {
+                            bgElement.style.background = '';
+                        }
                     }
                 }, 2000);
             }
@@ -707,12 +710,37 @@ window.lastCommentId = <?php
                 }
 
                 const newCommentHTML = `
-                    <div class="flex gap-3 mb-3" style="animation: slideIn 0.3s ease-out;">
-                        <img src="${data.comment.photo}" class="w-8 h-8 rounded-full">
-                        <div class="flex-1 bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
-                            <div class="font-semibold text-xs mb-1">${data.comment.nick}</div>
-                            <div class="text-sm">${data.comment.content}</div>
+                    <div id="c_${data.comment.id}" class="mb-3" style="animation: slideIn 0.3s ease-out;">
+                        <div class="flex gap-3">
+                            <img src="${data.comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
+                            <div class="flex-1">
+                                <div class="bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
+                                    <div class="font-semibold text-xs mb-1">${data.comment.nick}</div>
+                                    <div class="text-sm">${data.comment.content}</div>
+                                </div>
+                                <?php if ($is_member) { ?>
+                                <button onclick="toggleReplyForm(${data.comment.id})" class="text-xs text-gray-500 mt-1 ml-3">답글</button>
+                                <?php } ?>
+                            </div>
                         </div>
+                        <?php if ($is_member) { ?>
+                        <div id="reply-form-${data.comment.id}" class="hidden mt-2 ml-11">
+                            <div class="flex gap-2 items-center">
+                                <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
+                                <div class="flex-1 flex gap-2 bg-gray-100 rounded-full px-3 py-2 items-center">
+                                    <input
+                                        type="text"
+                                        class="reply-input flex-1 bg-transparent border-none outline-none text-sm"
+                                        placeholder="답글 입력..."
+                                        data-parent-id="${data.comment.id}"
+                                        onkeypress="if(event.key==='Enter'){submitReply(${data.comment.id})}">
+                                    <button onclick="submitReply(${data.comment.id})" class="bg-transparent border-none cursor-pointer p-1">
+                                        <i class="fa-solid fa-paper-plane text-purple-600 text-base"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <?php } ?>
                     </div>
                 `;
 
@@ -722,13 +750,17 @@ window.lastCommentId = <?php
 
                     commentList.insertAdjacentHTML('beforeend', newCommentHTML);
 
-                    const allComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
-                    const lastComment = allComments[allComments.length - 1];
-                    lastComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const newComment = document.getElementById('c_' + data.comment.id);
+                    if (newComment) {
+                        newComment.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                    setTimeout(() => {
-                        lastComment.querySelector('.flex-1').style.background = '';
-                    }, 2000);
+                        setTimeout(() => {
+                            const bgElement = newComment.querySelector('.bg-gray-50');
+                            if (bgElement) {
+                                bgElement.style.background = '';
+                            }
+                        }, 2000);
+                    }
                 }
 
                 const commentCountH3 = commentList.previousElementSibling;
@@ -771,6 +803,34 @@ window.lastCommentId = <?php
                 if (data.success && data.has_new) {
                     data.comments.forEach(comment => {
                         const indentClass = comment.is_reply ? 'ml-11' : '';
+
+                        // 일반 댓글인 경우 답글 버튼 포함
+                        let replyButton = '';
+                        let replyForm = '';
+                        <?php if ($is_member) { ?>
+                        if (!comment.is_reply) {
+                            replyButton = `<button onclick="toggleReplyForm(${comment.wr_id})" class="text-xs text-gray-500 mt-1 ml-3">답글</button>`;
+                            replyForm = `
+                                <div id="reply-form-${comment.wr_id}" class="hidden mt-2 ml-11">
+                                    <div class="flex gap-2 items-center">
+                                        <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
+                                        <div class="flex-1 flex gap-2 bg-gray-100 rounded-full px-3 py-2 items-center">
+                                            <input
+                                                type="text"
+                                                class="reply-input flex-1 bg-transparent border-none outline-none text-sm"
+                                                placeholder="답글 입력..."
+                                                data-parent-id="${comment.wr_id}"
+                                                onkeypress="if(event.key==='Enter'){submitReply(${comment.wr_id})}">
+                                            <button onclick="submitReply(${comment.wr_id})" class="bg-transparent border-none cursor-pointer p-1">
+                                                <i class="fa-solid fa-paper-plane text-purple-600 text-base"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        <?php } ?>
+
                         const newCommentHTML = `
                             <div id="c_${comment.wr_id}" class="mb-3 ${indentClass}" style="animation: slideIn 0.3s ease-out;">
                                 <div class="flex gap-3">
@@ -780,8 +840,10 @@ window.lastCommentId = <?php
                                             <div class="font-semibold text-xs mb-1">${comment.name}</div>
                                             <div class="text-sm">${comment.content}</div>
                                         </div>
+                                        ${replyButton}
                                     </div>
                                 </div>
+                                ${replyForm}
                             </div>
                         `;
 
