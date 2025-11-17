@@ -52,7 +52,21 @@ RUN apk del .build-deps && \
 # 작업 디렉토리
 WORKDIR /var/www/html
 
+# www-data 사용자의 UID/GID 설정 (Alpine의 기본값)
+# data 디렉토리 권한 설정
+RUN mkdir -p /var/www/html/data/file \
+    /var/www/html/data/cache \
+    /var/www/html/data/session \
+    /var/www/html/data/log && \
+    chown -R www-data:www-data /var/www/html/data && \
+    chmod -R 775 /var/www/html/data
+
+# Entrypoint 스크립트 복사 및 실행 권한 설정
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # PHP-FPM 설정
 EXPOSE 9000
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
