@@ -19,13 +19,18 @@ if (!defined('_GNUBOARD_')) exit;
 function create_notification($type, $from_mb_id, $to_mb_id, $bo_table = '', $wr_id = 0, $comment_id = 0, $content = '', $url = '') {
     global $g5;
 
+    // 디버깅 로그
+    error_log("create_notification 호출: type=$type, from=$from_mb_id, to=$to_mb_id");
+
     // 자기 자신에게는 알림 안 보냄
     if ($from_mb_id === $to_mb_id) {
+        error_log("알림 생성 실패: 자기 자신에게 알림 (from=$from_mb_id, to=$to_mb_id)");
         return false;
     }
 
     // 받는 사람이 회원인지 확인
     if (!$to_mb_id) {
+        error_log("알림 생성 실패: 받는 사람 ID 없음");
         return false;
     }
 
@@ -41,7 +46,13 @@ function create_notification($type, $from_mb_id, $to_mb_id, $bo_table = '', $wr_
                 no_is_read = 0,
                 no_datetime = '".G5_TIME_YMDHIS."' ";
 
-    return sql_query($sql);
+    $result = sql_query($sql);
+    if (!$result) {
+        error_log("알림 생성 SQL 실패: " . sql_error());
+    } else {
+        error_log("알림 생성 성공: type=$type, to=$to_mb_id");
+    }
+    return $result;
 }
 
 /**
