@@ -100,6 +100,15 @@ if ($is_member) {
     set_session('ss_comment_token', $comment_token);
 }
 
+// 댓글 작성자 프로필 사진 (답글 입력창에서 사용)
+$comment_profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
+if ($is_member) {
+    $comment_profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
+    if (file_exists($comment_profile_path)) {
+        $comment_profile_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
+    }
+}
+
 // 본문에 사용된 이미지 인덱스 추출
 $used_image_indices = array();
 preg_match_all('/\[이미지(\d+)\]/', $write['wr_content'], $matches);
@@ -386,15 +395,6 @@ foreach ($images as $idx => $image) {
             <input type="hidden" name="token" value="<?php echo $comment_token; ?>">
 
             <div style="display: flex; gap: 12px; align-items: center;">
-                <?php
-                $comment_profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-                if ($is_member) {
-                    $comment_profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-                    if (file_exists($comment_profile_path)) {
-                        $comment_profile_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-                    }
-                }
-                ?>
                 <img src="<?php echo $comment_profile_photo; ?>" style="width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;" alt="프로필">
                 <div style="flex: 1; display: flex; gap: 8px; background: #f3f4f6; border-radius: 9999px; padding: 8px 16px; align-items: center;">
                     <input
