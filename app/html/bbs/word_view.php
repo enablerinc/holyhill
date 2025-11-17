@@ -262,17 +262,31 @@ if ($is_member) {
                     while ($comment = sql_fetch_array($comment_result)) {
                         $comment_nick = $comment['wr_name'];
                         $is_comment_owner = ($is_member && $member['mb_id'] == $comment['mb_id']);
+
+                        // 댓글 삭제 토큰 생성
+                        $delete_comment_token = '';
+                        if ($is_comment_owner || $is_admin) {
+                            $delete_comment_token = uniqid(time());
+                            set_session('ss_delete_comment_'.$comment['wr_id'].'_token', $delete_comment_token);
+                        }
                     ?>
                     <div class="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
                         <div class="flex items-start gap-3">
+                            <?php
+                            $comment_profile_img = get_member_profile_img($comment['mb_id']);
+                            if ($comment_profile_img) {
+                            ?>
+                            <img src="<?php echo $comment_profile_img; ?>" class="w-8 h-8 rounded-full object-cover flex-shrink-0" alt="profile">
+                            <?php } else { ?>
                             <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
                                 <i class="fa-solid fa-user text-gray-500 text-xs"></i>
                             </div>
+                            <?php } ?>
                             <div class="flex-1">
                                 <div class="flex items-center justify-between mb-1">
                                     <span class="font-semibold text-sm text-gray-800"><?php echo $comment_nick; ?></span>
                                     <?php if ($is_comment_owner || $is_admin) { ?>
-                                    <a href="<?php echo G5_BBS_URL; ?>/delete_comment.php?bo_table=<?php echo $bo_table; ?>&comment_id=<?php echo $comment['wr_id']; ?>&wr_id=<?php echo $wr_id; ?>"
+                                    <a href="<?php echo G5_BBS_URL; ?>/delete_comment.php?bo_table=<?php echo $bo_table; ?>&comment_id=<?php echo $comment['wr_id']; ?>&wr_id=<?php echo $wr_id; ?>&token=<?php echo $delete_comment_token; ?>"
                                        onclick="return confirm('댓글을 삭제하시겠습니까?');"
                                        class="text-xs text-red-500 hover:text-red-700">
                                         삭제
@@ -294,7 +308,7 @@ if ($is_member) {
             <!-- 댓글 작성 -->
             <?php if ($is_member) { ?>
             <div class="bg-white rounded-2xl shadow-md overflow-hidden p-4 mt-4">
-                <form method="post" action="<?php echo G5_BBS_URL; ?>/write_comment_update.php" onsubmit="return validate_comment(this);">
+                <form id="commentForm" method="post" action="<?php echo G5_BBS_URL; ?>/write_comment_update.php" onsubmit="return submit_comment(this);">
                     <input type="hidden" name="token" value="<?php echo $comment_token; ?>">
                     <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
                     <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
@@ -363,7 +377,8 @@ function toggleGood() {
             js: 'on',
             bo_table: '<?php echo $bo_table; ?>',
             wr_id: '<?php echo $wr_id; ?>',
-            good: 'good'
+            good: 'good',
+            js: 'on'
         },
         success: function(response) {
             if (response.error) {
@@ -391,6 +406,30 @@ function validate_comment(f) {
         return false;
     }
     return true;
+}
+
+// 댓글 제출 (AJAX)
+function submit_comment(f) {
+    if (!validate_comment(f)) {
+        return false;
+    }
+
+    var formData = $(f).serialize();
+
+    $.ajax({
+        url: $(f).attr('action'),
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            // 댓글이 성공적으로 등록되면 페이지 새로고침
+            location.reload();
+        },
+        error: function(xhr, status, error) {
+            alert('댓글 등록 중 오류가 발생했습니다.');
+        }
+    });
+
+    return false; // 기본 form submit 방지
 }
 </script>
 
