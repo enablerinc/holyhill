@@ -305,7 +305,7 @@ foreach ($images as $idx => $image) {
                 <h3 class="font-semibold mb-4">댓글 <?php echo $write['wr_comment']; ?>개</h3>
                 <div id="comment-list">
                 <?php
-                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_num LIMIT 50");
+                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_comment_reply ASC LIMIT 200");
 
                 if (sql_num_rows($comment_result) > 0) {
                     while ($c = sql_fetch_array($comment_result)) {
@@ -323,13 +323,43 @@ foreach ($images as $idx => $image) {
                                 $c_photo = G5_DATA_URL.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
                             }
                         }
+
+                        // 대댓글 여부 확인 (wr_comment_reply 길이가 10자 초과면 대댓글)
+                        $is_reply = strlen($c['wr_comment_reply']) > 10;
+                        $indent_class = $is_reply ? 'ml-11' : '';
                         ?>
-                        <div id="c_<?php echo $c['wr_id']; ?>" class="flex gap-3 mb-3">
-                            <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full">
-                            <div class="flex-1 bg-gray-50 rounded-2xl px-3 py-2">
-                                <div class="font-semibold text-xs mb-1"><?php echo $c_nick; ?></div>
-                                <div class="text-sm"><?php echo nl2br(get_text($c['wr_content'])); ?></div>
+                        <div id="c_<?php echo $c['wr_id']; ?>" class="mb-3 <?php echo $indent_class; ?>">
+                            <div class="flex gap-3">
+                                <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full flex-shrink-0">
+                                <div class="flex-1">
+                                    <div class="bg-gray-50 rounded-2xl px-3 py-2">
+                                        <div class="font-semibold text-xs mb-1"><?php echo $c_nick; ?></div>
+                                        <div class="text-sm"><?php echo nl2br(get_text($c['wr_content'])); ?></div>
+                                    </div>
+                                    <?php if ($is_member && !$is_reply) { ?>
+                                    <button onclick="toggleReplyForm(<?php echo $c['wr_id']; ?>)" class="text-xs text-gray-500 mt-1 ml-3">답글</button>
+                                    <?php } ?>
+                                </div>
                             </div>
+                            <!-- 답글 입력창 -->
+                            <?php if ($is_member && !$is_reply) { ?>
+                            <div id="reply-form-<?php echo $c['wr_id']; ?>" class="hidden mt-2 ml-11">
+                                <div class="flex gap-2 items-center">
+                                    <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
+                                    <div class="flex-1 flex gap-2 bg-gray-100 rounded-full px-3 py-2 items-center">
+                                        <input
+                                            type="text"
+                                            class="reply-input flex-1 bg-transparent border-none outline-none text-sm"
+                                            placeholder="답글 입력..."
+                                            data-parent-id="<?php echo $c['wr_id']; ?>"
+                                            onkeypress="if(event.key==='Enter'){submitReply(<?php echo $c['wr_id']; ?>)}">
+                                        <button onclick="submitReply(<?php echo $c['wr_id']; ?>)" class="bg-transparent border-none cursor-pointer p-1">
+                                            <i class="fa-solid fa-paper-plane text-purple-600 text-base"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php } ?>
                         </div>
                         <?php
                     }
@@ -412,6 +442,135 @@ function confirmDelete(e) {
     if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
         location.href = '<?php echo $delete_href; ?>';
     }
+}
+
+// 답글 폼 토글
+function toggleReplyForm(commentId) {
+    // 모든 답글 폼 닫기
+    document.querySelectorAll('[id^="reply-form-"]').forEach(form => {
+        if (form.id !== 'reply-form-' + commentId) {
+            form.classList.add('hidden');
+        }
+    });
+
+    // 현재 답글 폼 토글
+    const replyForm = document.getElementById('reply-form-' + commentId);
+    if (replyForm) {
+        replyForm.classList.toggle('hidden');
+        if (!replyForm.classList.contains('hidden')) {
+            const input = replyForm.querySelector('.reply-input');
+            if (input) input.focus();
+        }
+    }
+}
+
+// 답글 제출
+function submitReply(parentCommentId) {
+    const replyForm = document.getElementById('reply-form-' + parentCommentId);
+    if (!replyForm) return;
+
+    const input = replyForm.querySelector('.reply-input');
+    if (!input || !input.value.trim()) {
+        alert('답글 내용을 입력해주세요.');
+        return;
+    }
+
+    const commentForm = document.getElementById('commentForm');
+    if (!commentForm) return;
+
+    const tokenInput = commentForm.querySelector('input[name="token"]');
+    if (!tokenInput || !tokenInput.value) {
+        alert('토큰 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('w', 'c');
+    formData.append('bo_table', '<?php echo $bo_table; ?>');
+    formData.append('wr_id', '<?php echo $wr_id; ?>');
+    formData.append('wr_content', input.value.trim());
+    formData.append('parent_comment_id', parentCommentId);
+    formData.append('token', tokenInput.value);
+
+    const submitBtn = replyForm.querySelector('button');
+    const originalContent = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+    fetch('<?php echo G5_BBS_URL; ?>/comment_write_ajax.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.new_token && tokenInput) {
+                tokenInput.value = data.new_token;
+            }
+
+            if (data.comment.id) {
+                window.lastCommentId = Math.max(window.lastCommentId, data.comment.id);
+            }
+
+            // 답글을 부모 댓글 아래에 추가
+            const parentComment = document.getElementById('c_' + parentCommentId);
+            if (parentComment) {
+                const newReplyHTML = `
+                    <div class="mb-3 ml-11" style="animation: slideIn 0.3s ease-out;">
+                        <div class="flex gap-3">
+                            <img src="${data.comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
+                            <div class="flex-1">
+                                <div class="bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
+                                    <div class="font-semibold text-xs mb-1">${data.comment.nick}</div>
+                                    <div class="text-sm">${data.comment.content}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 부모 댓글의 다음 형제 요소들 중에서 마지막 대댓글 찾기
+                let insertAfter = parentComment;
+                let nextElement = parentComment.nextElementSibling;
+                while (nextElement && nextElement.classList.contains('ml-11')) {
+                    insertAfter = nextElement;
+                    nextElement = nextElement.nextElementSibling;
+                }
+
+                insertAfter.insertAdjacentHTML('afterend', newReplyHTML);
+
+                // 하이라이트 제거
+                setTimeout(() => {
+                    const newReply = insertAfter.nextElementSibling;
+                    if (newReply && newReply.querySelector('.flex-1 > div')) {
+                        newReply.querySelector('.flex-1 > div').style.background = '';
+                    }
+                }, 2000);
+            }
+
+            // 댓글 개수 업데이트
+            const commentCountH3 = document.querySelector('#comment-list').previousElementSibling;
+            if (commentCountH3) {
+                const match = commentCountH3.textContent.match(/\d+/);
+                const currentCount = match ? parseInt(match[0]) : 0;
+                commentCountH3.textContent = '댓글 ' + (currentCount + 1) + '개';
+            }
+
+            // 입력창 초기화 및 닫기
+            input.value = '';
+            replyForm.classList.add('hidden');
+
+        } else {
+            alert(data.message || '답글 작성 중 오류가 발생했습니다.');
+        }
+    })
+    .catch(error => {
+        alert('오류 발생!\n\n' + error.message);
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalContent;
+    });
 }
 
 function toggleGood() {
@@ -559,13 +718,17 @@ window.lastCommentId = <?php
             .then(data => {
                 if (data.success && data.has_new) {
                     data.comments.forEach(comment => {
+                        const indentClass = comment.is_reply ? 'ml-11' : '';
                         const newCommentHTML = `
-                            <div class="flex gap-3 mb-3" style="animation: slideIn 0.3s ease-out;">
-                                <img src="${comment.photo}" class="w-8 h-8 rounded-full">
-                                <div class="flex-1 bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
-                                    <div class="font-semibold text-xs mb-1">${comment.name}</div>
-                                    <div class="text-sm">${comment.content}</div>
-                                    <div class="text-xs text-gray-400 mt-1">${comment.datetime}</div>
+                            <div class="mb-3 ${indentClass}" style="animation: slideIn 0.3s ease-out;">
+                                <div class="flex gap-3">
+                                    <img src="${comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
+                                    <div class="flex-1">
+                                        <div class="bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
+                                            <div class="font-semibold text-xs mb-1">${comment.name}</div>
+                                            <div class="text-sm">${comment.content}</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -577,11 +740,11 @@ window.lastCommentId = <?php
 
                         window.lastCommentId = Math.max(window.lastCommentId, comment.wr_id);
 
-                        const allNewComments = commentList.querySelectorAll('.flex.gap-3.mb-3');
+                        const allNewComments = commentList.querySelectorAll('.mb-3');
                         const lastComment = allNewComments[allNewComments.length - 1];
                         setTimeout(() => {
-                            if (lastComment && lastComment.querySelector('.flex-1')) {
-                                lastComment.querySelector('.flex-1').style.background = '';
+                            if (lastComment && lastComment.querySelector('.flex-1 > div')) {
+                                lastComment.querySelector('.flex-1 > div').style.background = '';
                             }
                         }, 2000);
                     });

@@ -20,12 +20,12 @@ if (!$board) {
 }
 
 // 마지막 댓글 ID 이후의 새로운 댓글들 가져오기
-$sql = "SELECT wr_id, wr_content, wr_name, wr_datetime, mb_id
+$sql = "SELECT wr_id, wr_content, wr_name, wr_datetime, mb_id, wr_comment_reply
         FROM {$g5['write_prefix']}{$bo_table}
         WHERE wr_parent = '{$wr_id}'
         AND wr_is_comment = 1
         AND wr_id > '{$last_comment_id}'
-        ORDER BY wr_id ASC";
+        ORDER BY wr_comment_reply ASC";
 
 $result = sql_query($sql);
 $new_comments = array();
@@ -54,12 +54,16 @@ while ($row = sql_fetch_array($result)) {
         $time_str = date('Y-m-d H:i', $datetime);
     }
 
+    // 대댓글 여부 확인
+    $is_reply = strlen($row['wr_comment_reply']) > 10;
+
     $new_comments[] = array(
         'wr_id' => $row['wr_id'],
         'content' => $row['wr_content'],
         'name' => $row['wr_name'],
         'photo' => $c_photo,
-        'datetime' => $time_str
+        'datetime' => $time_str,
+        'is_reply' => $is_reply
     );
 }
 

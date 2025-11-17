@@ -18,6 +18,7 @@ if(empty($_POST['token']) || !$comment_token || $comment_token != $_POST['token'
 $bo_table = preg_replace('/[^a-z0-9_]/i', '', $_POST['bo_table']);
 $wr_id = (int)$_POST['wr_id'];
 $wr_content = trim($_POST['wr_content']);
+$parent_comment_id = isset($_POST['parent_comment_id']) ? (int)$_POST['parent_comment_id'] : 0; // 대댓글 부모 ID
 
 if (!$bo_table || !$wr_id || !$wr_content) {
     echo json_encode(['success' => false, 'message' => '잘못된 접근입니다.']);
@@ -33,11 +34,47 @@ if (!$write) {
     exit;
 }
 
-$row = sql_fetch("SELECT MAX(CAST(wr_comment_reply AS UNSIGNED)) as max_reply 
-                  FROM {$write_table} 
-                  WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1");
-$reply_num = $row['max_reply'] ? $row['max_reply'] + 1 : 1;
-$wr_comment_reply = str_pad($reply_num, 10, '0', STR_PAD_LEFT);
+// 대댓글 처리
+if ($parent_comment_id > 0) {
+    // 부모 댓글 정보 가져오기
+    $parent_comment = sql_fetch("SELECT * FROM {$write_table} WHERE wr_id = '{$parent_comment_id}' AND wr_parent = '{$wr_id}' AND wr_is_comment = 1");
+
+    if (!$parent_comment) {
+        echo json_encode(['success' => false, 'message' => '부모 댓글을 찾을 수 없습니다.']);
+        exit;
+    }
+
+    // 부모 댓글의 reply 값에서 마지막 대댓글 번호 찾기
+    $parent_reply = $parent_comment['wr_comment_reply'];
+
+    // 같은 부모를 가진 대댓글 중 최대값 찾기
+    $row = sql_fetch("SELECT MAX(wr_comment_reply) as max_reply
+                      FROM {$write_table}
+                      WHERE wr_parent = '{$wr_id}'
+                      AND wr_is_comment = 1
+                      AND wr_comment_reply LIKE '{$parent_reply}%'
+                      AND LENGTH(wr_comment_reply) > LENGTH('{$parent_reply}')");
+
+    if ($row['max_reply']) {
+        // 기존 대댓글이 있으면 마지막 2자리 증가
+        $last_suffix = intval(substr($row['max_reply'], -2));
+        $new_suffix = str_pad($last_suffix + 1, 2, '0', STR_PAD_LEFT);
+    } else {
+        // 첫 대댓글이면 01
+        $new_suffix = '01';
+    }
+
+    $wr_comment_reply = $parent_reply . $new_suffix;
+} else {
+    // 일반 댓글 (기존 로직)
+    $row = sql_fetch("SELECT MAX(CAST(wr_comment_reply AS UNSIGNED)) as max_reply
+                      FROM {$write_table}
+                      WHERE wr_parent = '{$wr_id}'
+                      AND wr_is_comment = 1
+                      AND LENGTH(wr_comment_reply) = 10");
+    $reply_num = $row['max_reply'] ? $row['max_reply'] + 1 : 1;
+    $wr_comment_reply = str_pad($reply_num, 10, '0', STR_PAD_LEFT);
+}
 
 sql_query("INSERT INTO {$write_table} SET 
     wr_num = '{$write['wr_num']}',
