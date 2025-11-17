@@ -324,7 +324,7 @@ foreach ($images as $idx => $image) {
                             }
                         }
                         ?>
-                        <div class="flex gap-3 mb-3">
+                        <div id="c_<?php echo $c['wr_id']; ?>" class="flex gap-3 mb-3">
                             <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full">
                             <div class="flex-1 bg-gray-50 rounded-2xl px-3 py-2">
                                 <div class="font-semibold text-xs mb-1"><?php echo $c_nick; ?></div>
@@ -600,6 +600,12 @@ window.lastCommentId = <?php
     }, 3000);
 })();
 </script>
+
+<!-- 댓글 위치로 스크롤 -->
+<script src="<?php echo G5_BBS_URL; ?>/scroll_to_comment.js"></script>
+
+<!-- 알림 위젯 -->
+<?php include_once(G5_BBS_PATH.'/notification_widget.php'); ?>
 
 </body>
 </html>
