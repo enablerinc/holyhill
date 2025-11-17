@@ -314,10 +314,40 @@ foreach ($images as $idx => $image) {
                 <h3 class="font-semibold mb-4">댓글 <?php echo $write['wr_comment']; ?>개</h3>
                 <div id="comment-list">
                 <?php
-                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_comment_reply ASC LIMIT 200");
+                // 모든 댓글 가져오기
+                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_id ASC LIMIT 200");
 
-                if (sql_num_rows($comment_result) > 0) {
-                    while ($c = sql_fetch_array($comment_result)) {
+                // 댓글을 배열로 변환하고 계층 구조 생성
+                $all_comments = array();
+                $parent_comments = array();
+                $reply_comments = array();
+
+                while ($c = sql_fetch_array($comment_result)) {
+                    $all_comments[$c['wr_id']] = $c;
+
+                    // 대댓글 여부 확인 (wr_comment_reply 길이가 10자 초과면 대댓글)
+                    if (strlen($c['wr_comment_reply']) > 10) {
+                        // 대댓글: 부모 댓글 찾기
+                        $parent_reply = substr($c['wr_comment_reply'], 0, 10);
+                        // 같은 parent_reply를 가진 부모 댓글 찾기
+                        foreach ($all_comments as $p_id => $p_comment) {
+                            if ($p_comment['wr_comment_reply'] === $parent_reply) {
+                                if (!isset($reply_comments[$p_id])) {
+                                    $reply_comments[$p_id] = array();
+                                }
+                                $reply_comments[$p_id][] = $c;
+                                break;
+                            }
+                        }
+                    } else {
+                        // 일반 댓글
+                        $parent_comments[] = $c;
+                    }
+                }
+
+                if (count($parent_comments) > 0 || count($reply_comments) > 0) {
+                    // 부모 댓글을 먼저 출력하고, 각 부모 댓글 아래에 대댓글 출력
+                    foreach ($parent_comments as $c) {
                         $c_nick = $c['wr_name'] ? $c['wr_name'] : '알 수 없음';
                         $c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 
@@ -332,12 +362,8 @@ foreach ($images as $idx => $image) {
                                 $c_photo = G5_DATA_URL.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
                             }
                         }
-
-                        // 대댓글 여부 확인 (wr_comment_reply 길이가 10자 초과면 대댓글)
-                        $is_reply = strlen($c['wr_comment_reply']) > 10;
-                        $indent_class = $is_reply ? 'ml-11' : '';
                         ?>
-                        <div id="c_<?php echo $c['wr_id']; ?>" class="mb-3 <?php echo $indent_class; ?>">
+                        <div id="c_<?php echo $c['wr_id']; ?>" class="mb-3">
                             <div class="flex gap-3">
                                 <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full flex-shrink-0">
                                 <div class="flex-1">
@@ -345,13 +371,13 @@ foreach ($images as $idx => $image) {
                                         <div class="font-semibold text-xs mb-1"><?php echo $c_nick; ?></div>
                                         <div class="text-sm"><?php echo nl2br(get_text($c['wr_content'])); ?></div>
                                     </div>
-                                    <?php if ($is_member && !$is_reply) { ?>
+                                    <?php if ($is_member) { ?>
                                     <button onclick="toggleReplyForm(<?php echo $c['wr_id']; ?>)" class="text-xs text-gray-500 mt-1 ml-3">답글</button>
                                     <?php } ?>
                                 </div>
                             </div>
                             <!-- 답글 입력창 -->
-                            <?php if ($is_member && !$is_reply) { ?>
+                            <?php if ($is_member) { ?>
                             <div id="reply-form-<?php echo $c['wr_id']; ?>" class="hidden mt-2 ml-11">
                                 <div class="flex gap-2 items-center">
                                     <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
@@ -371,6 +397,39 @@ foreach ($images as $idx => $image) {
                             <?php } ?>
                         </div>
                         <?php
+
+                        // 이 부모 댓글의 대댓글들 출력
+                        if (isset($reply_comments[$c['wr_id']])) {
+                            foreach ($reply_comments[$c['wr_id']] as $r) {
+                                $r_nick = $r['wr_name'] ? $r['wr_name'] : '알 수 없음';
+                                $r_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
+
+                                if ($r['mb_id']) {
+                                    $r_mb = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$r['mb_id']}'");
+                                    if ($r_mb) {
+                                        $r_nick = $r_mb['mb_nick'];
+                                    }
+
+                                    $r_profile_path = G5_DATA_PATH.'/member_image/'.substr($r['mb_id'], 0, 2).'/'.$r['mb_id'].'.gif';
+                                    if (file_exists($r_profile_path)) {
+                                        $r_photo = G5_DATA_URL.'/member_image/'.substr($r['mb_id'], 0, 2).'/'.$r['mb_id'].'.gif';
+                                    }
+                                }
+                                ?>
+                                <div id="c_<?php echo $r['wr_id']; ?>" class="mb-3 ml-11">
+                                    <div class="flex gap-3">
+                                        <img src="<?php echo $r_photo; ?>" class="w-8 h-8 rounded-full flex-shrink-0">
+                                        <div class="flex-1">
+                                            <div class="bg-gray-50 rounded-2xl px-3 py-2">
+                                                <div class="font-semibold text-xs mb-1"><?php echo $r_nick; ?></div>
+                                                <div class="text-sm"><?php echo nl2br(get_text($r['wr_content'])); ?></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                        }
                     }
                 } else {
                     echo '<div class="text-center text-gray-500 py-4">첫 댓글을 남겨보세요!</div>';
@@ -720,7 +779,7 @@ window.lastCommentId = <?php
                     data.comments.forEach(comment => {
                         const indentClass = comment.is_reply ? 'ml-11' : '';
                         const newCommentHTML = `
-                            <div class="mb-3 ${indentClass}" style="animation: slideIn 0.3s ease-out;">
+                            <div id="c_${comment.wr_id}" class="mb-3 ${indentClass}" style="animation: slideIn 0.3s ease-out;">
                                 <div class="flex gap-3">
                                     <img src="${comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
                                     <div class="flex-1">
@@ -736,15 +795,33 @@ window.lastCommentId = <?php
                         const emptyMessage = commentList.querySelector('.text-center.text-gray-500');
                         if (emptyMessage) emptyMessage.remove();
 
-                        commentList.insertAdjacentHTML('beforeend', newCommentHTML);
+                        // 대댓글인 경우 부모 댓글 아래에 삽입
+                        if (comment.is_reply && comment.parent_comment_id) {
+                            const parentComment = document.getElementById('c_' + comment.parent_comment_id);
+                            if (parentComment) {
+                                // 부모 댓글의 다음 형제 요소들 중에서 마지막 대댓글 찾기
+                                let insertAfter = parentComment;
+                                let nextElement = parentComment.nextElementSibling;
+                                while (nextElement && nextElement.classList.contains('ml-11')) {
+                                    insertAfter = nextElement;
+                                    nextElement = nextElement.nextElementSibling;
+                                }
+                                insertAfter.insertAdjacentHTML('afterend', newCommentHTML);
+                            } else {
+                                // 부모 댓글을 찾을 수 없으면 맨 아래에 추가
+                                commentList.insertAdjacentHTML('beforeend', newCommentHTML);
+                            }
+                        } else {
+                            // 일반 댓글은 맨 아래에 추가
+                            commentList.insertAdjacentHTML('beforeend', newCommentHTML);
+                        }
 
                         window.lastCommentId = Math.max(window.lastCommentId, comment.wr_id);
 
-                        const allNewComments = commentList.querySelectorAll('.mb-3');
-                        const lastComment = allNewComments[allNewComments.length - 1];
+                        const newComment = document.getElementById('c_' + comment.wr_id);
                         setTimeout(() => {
-                            if (lastComment && lastComment.querySelector('.flex-1 > div')) {
-                                lastComment.querySelector('.flex-1 > div').style.background = '';
+                            if (newComment && newComment.querySelector('.flex-1 > div')) {
+                                newComment.querySelector('.flex-1 > div').style.background = '';
                             }
                         }, 2000);
                     });
