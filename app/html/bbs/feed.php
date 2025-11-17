@@ -109,11 +109,19 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             <img src="../img/logo.png" alt="성산교회 로고" class="w-8 h-8 rounded-lg object-cover">
             <h1 class="text-lg font-semibold text-grace-green">피드</h1>
         </div>
-        <?php if ($write_href) { ?>
-        <a href="<?php echo $write_href; ?>" class="w-8 h-8 flex items-center justify-center">
-            <i class="fa-solid fa-plus text-grace-green text-lg"></i>
-        </a>
-        <?php } ?>
+        <div class="flex items-center gap-4">
+            <?php if ($is_member) { ?>
+            <div class="relative">
+                <i id="notification-bell" class="fa-regular fa-bell text-gray-700 text-lg cursor-pointer hover:text-purple-600 transition-colors"></i>
+                <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+            </div>
+            <?php } ?>
+            <?php if ($write_href) { ?>
+            <a href="<?php echo $write_href; ?>" class="w-8 h-8 flex items-center justify-center">
+                <i class="fa-solid fa-plus text-grace-green text-lg"></i>
+            </a>
+            <?php } ?>
+        </div>
     </div>
 </header>
 
@@ -475,6 +483,11 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
     }
 })();
 </script>
+
+<!-- 알림 위젯 -->
+<?php if ($is_member) { ?>
+<?php include_once(G5_BBS_PATH.'/notification_widget.php'); ?>
+<?php } ?>
 
 </body>
 </html>
