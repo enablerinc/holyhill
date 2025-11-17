@@ -2,6 +2,7 @@
 define('G5_CAPTCHA', true);
 include_once('./_common.php');
 include_once(G5_CAPTCHA_PATH.'/captcha.lib.php');
+include_once(G5_BBS_PATH.'/notification.lib.php');
 
 // 토큰체크
 $comment_token = trim(get_session('ss_comment_token'));
@@ -206,6 +207,25 @@ if ($w == 'c') // 댓글 입력
 
     // 포인트 부여
     insert_point($member['mb_id'], $board['bo_comment_point'], "{$board['bo_subject']} {$wr_id}-{$comment_id} 댓글쓰기", $bo_table, $comment_id, '댓글');
+
+    // 알림 생성
+    if ($comment_id && $mb_id) {
+        // 대댓글인 경우
+        if ($tmp_comment_reply && $reply_array['mb_id']) {
+            // 부모 댓글 작성자에게 알림
+            $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
+            $notification_content = generate_notification_content('reply', $from_nick);
+            $notification_url = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+            create_notification('reply', $mb_id, $reply_array['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
+        }
+        // 일반 댓글인 경우 - 원글 작성자에게 알림
+        else if ($wr['mb_id']) {
+            $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
+            $notification_content = generate_notification_content('comment', $from_nick);
+            $notification_url = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+            create_notification('comment', $mb_id, $wr['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
+        }
+    }
 
     // 메일발송 사용
     if ($config['cf_email_use'] && $board['bo_use_email'])

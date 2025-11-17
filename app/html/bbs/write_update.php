@@ -1,5 +1,6 @@
 <?php
 include_once('./_common.php');
+include_once(G5_BBS_PATH.'/notification.lib.php');
 include_once(G5_LIB_PATH.'/naver_syndi.lib.php');
 include_once(G5_CAPTCHA_PATH.'/captcha.lib.php');
 
@@ -334,6 +335,24 @@ if ($w == '' || $w == 'r') {
         }
 
         insert_point($member['mb_id'], $board['bo_write_point'], "{$board['bo_subject']} {$wr_id} 글쓰기", $bo_table, $wr_id, '쓰기');
+
+        // 새 말씀 등록 시 알림 생성
+        if ($bo_table == 'word' && $member['mb_id']) {
+            $notification_content = "새로운 말씀이 등록되었습니다.";
+            $notification_url = G5_BBS_URL.'/word_view.php?wr_id='.$wr_id;
+
+            // 레벨 2 이상의 모든 회원에게 알림 (작성자 제외, 최대 100명)
+            $member_sql = "SELECT mb_id FROM {$g5['member_table']}
+                          WHERE mb_level >= 2
+                          AND mb_id != '{$member['mb_id']}'
+                          ORDER BY mb_today_login DESC
+                          LIMIT 100";
+            $member_result = sql_query($member_sql);
+
+            while ($notify_member = sql_fetch_array($member_result)) {
+                create_notification('word', $member['mb_id'], $notify_member['mb_id'], $bo_table, $wr_id, 0, $notification_content, $notification_url);
+            }
+        }
     } else {
         // 답변은 코멘트 포인트를 부여함
         // 답변 포인트가 많은 경우 코멘트 대신 답변을 하는 경우가 많음

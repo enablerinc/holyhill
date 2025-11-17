@@ -1,5 +1,6 @@
 <?php
 include_once('./_common.php');
+include_once(G5_BBS_PATH.'/notification.lib.php');
 
 run_event('bbs_good_before', $bo_table, $wr_id, $good);
 
@@ -83,8 +84,16 @@ if(isset($_POST['js']) && $_POST['js'] === "on") {
             $row = sql_fetch($sql);
 
             $count = $row['count'];
-			
+
 			run_event('bbs_increase_good_json', $bo_table, $wr_id, $good);
+
+            // 알림 생성 (추천인 경우만)
+            if ($good == 'good' && $write['mb_id'] && $member['mb_id']) {
+                $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
+                $notification_content = generate_notification_content('good', $from_nick);
+                $notification_url = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+                create_notification('good', $member['mb_id'], $write['mb_id'], $bo_table, $wr_id, 0, $notification_content, $notification_url);
+            }
 
             print_result($error, $count);
         }
@@ -149,8 +158,16 @@ if(isset($_POST['js']) && $_POST['js'] === "on") {
                 $status = '비추천';
 
             $href = get_pretty_url($bo_table, $wr_id);
-			
+
 			run_event('bbs_increase_good_html', $bo_table, $wr_id, $good, $href);
+
+            // 알림 생성 (추천인 경우만)
+            if ($good == 'good' && $write['mb_id'] && $member['mb_id']) {
+                $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
+                $notification_content = generate_notification_content('good', $from_nick);
+                $notification_url = G5_BBS_URL.'/board.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+                create_notification('good', $member['mb_id'], $write['mb_id'], $bo_table, $wr_id, 0, $notification_content, $notification_url);
+            }
 
             alert("이 글을 $status 하셨습니다.", '', false);
         }

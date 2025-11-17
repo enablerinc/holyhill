@@ -83,7 +83,10 @@ include_once(G5_PATH.'/head.sub.php');
         </div>
         <div class="flex items-center gap-4">
             <?php if ($is_member) { ?>
-            <i class="fa-regular fa-bell text-gray-700 text-lg cursor-pointer"></i>
+            <div class="relative">
+                <i id="notification-bell" class="fa-regular fa-bell text-gray-700 text-lg cursor-pointer hover:text-purple-600 transition-colors"></i>
+                <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+            </div>
             <?php } else { ?>
             <a href="<?php echo G5_BBS_URL; ?>/login.php" class="text-sm text-purple-600 font-medium">
                 로그인
