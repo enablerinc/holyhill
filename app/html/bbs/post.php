@@ -78,11 +78,26 @@ if ($write['mb_id']) {
     }
 }
 
-// 이미지
+// 미디어 파일 (이미지 + 동영상)
+$media_files = array();
 $images = array();
-$file_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no");
+$videos = array();
+
+$file_result = sql_query("SELECT bf_file, bf_type FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' ORDER BY bf_no");
 while ($file = sql_fetch_array($file_result)) {
-    $images[] = $file['bf_file'];
+    $file_ext = strtolower(pathinfo($file['bf_file'], PATHINFO_EXTENSION));
+    $video_exts = array('mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv');
+
+    $media_files[] = array(
+        'file' => $file['bf_file'],
+        'type' => in_array($file_ext, $video_exts) ? 'video' : 'image'
+    );
+
+    if (in_array($file_ext, $video_exts)) {
+        $videos[] = $file['bf_file'];
+    } else if ($file['bf_type'] >= 1 && $file['bf_type'] <= 3) {
+        $images[] = $file['bf_file'];
+    }
 }
 
 // 좋아요 체크
@@ -109,12 +124,22 @@ if ($is_member) {
     }
 }
 
-// 본문에 사용된 이미지 인덱스 추출
-$used_image_indices = array();
+// 본문에 사용된 미디어 인덱스 추출 (이미지 + 동영상)
+$used_media_indices = array();
+
+// 이미지 인덱스
 preg_match_all('/\[이미지(\d+)\]/', $write['wr_content'], $matches);
 if (!empty($matches[1])) {
     foreach ($matches[1] as $num) {
-        $used_image_indices[] = intval($num) - 1;
+        $used_media_indices[] = intval($num) - 1;
+    }
+}
+
+// 동영상 인덱스
+preg_match_all('/\[동영상(\d+)\]/', $write['wr_content'], $matches);
+if (!empty($matches[1])) {
+    foreach ($matches[1] as $num) {
+        $used_media_indices[] = intval($num) - 1;
     }
 }
 
@@ -161,12 +186,30 @@ function restore_youtube_iframes($content) {
 }
 
 // 본문에서 [이미지N]을 실제 이미지로 변환
-function replace_image_placeholders($content, $images, $bo_table) {
-    $content = preg_replace_callback('/\[이미지(\d+)\]/', function($matches) use ($images, $bo_table) {
+function replace_image_placeholders($content, $media_files, $bo_table) {
+    $content = preg_replace_callback('/\[이미지(\d+)\]/', function($matches) use ($media_files, $bo_table) {
         $index = intval($matches[1]) - 1;
-        if (isset($images[$index])) {
-            $image_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$images[$index];
+        if (isset($media_files[$index]) && $media_files[$index]['type'] === 'image') {
+            $image_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media_files[$index]['file'];
             return '<div class="my-4"><img src="'.$image_url.'" class="w-full rounded-lg" alt="이미지'.($index+1).'"></div>';
+        }
+        return $matches[0];
+    }, $content);
+    return $content;
+}
+
+// 본문에서 [동영상N]을 실제 비디오 플레이어로 변환
+function replace_video_placeholders($content, $media_files, $bo_table) {
+    $content = preg_replace_callback('/\[동영상(\d+)\]/', function($matches) use ($media_files, $bo_table) {
+        $index = intval($matches[1]) - 1;
+        if (isset($media_files[$index]) && $media_files[$index]['type'] === 'video') {
+            $video_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media_files[$index]['file'];
+            return '<div class="video-container my-4" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;">
+                <video style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem; object-fit: contain; background: #000;" controls controlsList="nodownload">
+                    <source src="'.$video_url.'" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>';
         }
         return $matches[0];
     }, $content);
@@ -180,17 +223,19 @@ $raw_content = extract_youtube_urls($raw_content);
 // 2. 텍스트 정리
 $processed_content = get_text($raw_content);
 // 3. 이미지 변환
-$processed_content = replace_image_placeholders($processed_content, $images, $bo_table);
-// 4. 줄바꿈 처리
+$processed_content = replace_image_placeholders($processed_content, $media_files, $bo_table);
+// 4. 동영상 변환
+$processed_content = replace_video_placeholders($processed_content, $media_files, $bo_table);
+// 5. 줄바꿈 처리
 $processed_content = nl2br($processed_content);
-// 5. 플레이스홀더를 실제 iframe으로 복원
+// 6. 플레이스홀더를 실제 iframe으로 복원
 $processed_content = restore_youtube_iframes($processed_content);
 
 // 상단 갤러리용 이미지 (본문에 사용되지 않은 이미지만)
 $gallery_images = array();
-foreach ($images as $idx => $image) {
-    if (!in_array($idx, $used_image_indices)) {
-        $gallery_images[] = $image;
+foreach ($media_files as $idx => $media) {
+    if (!in_array($idx, $used_media_indices) && $media['type'] === 'image') {
+        $gallery_images[] = $media['file'];
     }
 }
 ?>

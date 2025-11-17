@@ -167,26 +167,44 @@ if ($is_member) {
                     </div>
                 </div>
 
-                <!-- 사진 업로드 영역 -->
+                <!-- 미디어 업로드 영역 -->
                 <div class="px-4 py-4">
-                    <div id="image-upload-area" class="relative">
+                    <div id="media-upload-area" class="relative">
+                        <!-- 미디어 선택 버튼 그룹 -->
+                        <div class="flex gap-2 mb-4">
+                            <button type="button" onclick="selectFromGallery()" class="flex-1 bg-purple-100 hover:bg-purple-200 text-purple-700 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-images"></i>
+                                <span class="text-sm">갤러리</span>
+                            </button>
+                            <button type="button" onclick="capturePhoto()" class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-camera"></i>
+                                <span class="text-sm">사진 촬영</span>
+                            </button>
+                            <button type="button" onclick="selectVideo()" class="flex-1 bg-pink-100 hover:bg-pink-200 text-pink-700 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-video"></i>
+                                <span class="text-sm">동영상</span>
+                            </button>
+                        </div>
+
                         <!-- 드래그 앤 드롭 영역 -->
                         <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-colors">
-                            <i class="fa-solid fa-images text-3xl text-gray-400 mb-2"></i>
-                            <p class="text-gray-600 mb-1 font-medium text-sm">사진을 드래그하거나 클릭하여 선택하세요</p>
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-600 mb-1 font-medium text-sm">이미지 또는 동영상을 드래그하세요</p>
                             <p class="text-xs text-gray-400">최대 10개까지 업로드 가능</p>
-                            <input type="file" id="image-input" name="bf_file[]" accept="image/*" multiple style="display: none;">
+                            <input type="file" id="gallery-input" name="bf_file[]" accept="image/*,video/*" multiple style="display: none;">
+                            <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+                            <input type="file" id="video-input" accept="video/*" style="display: none;">
                         </div>
 
-                        <!-- 이미지 프리뷰 그리드 -->
+                        <!-- 미디어 프리뷰 그리드 -->
                         <div id="preview-grid" class="grid grid-cols-5 gap-2 mt-4 hidden">
-                            <!-- 프리뷰 이미지가 여기에 추가됩니다 -->
+                            <!-- 프리뷰가 여기에 추가됩니다 -->
                         </div>
 
-                        <!-- 업로드된 이미지 카운터 -->
-                        <div id="image-counter" class="text-center text-sm text-gray-500 mt-2 hidden">
-                            <i class="fa-solid fa-image text-gray-400 mr-1"></i>
-                            <span id="current-count">0</span> / 10 장
+                        <!-- 업로드된 미디어 카운터 -->
+                        <div id="media-counter" class="text-center text-sm text-gray-500 mt-2 hidden">
+                            <i class="fa-solid fa-photo-film text-gray-400 mr-1"></i>
+                            <span id="current-count">0</span> / 10 개
                         </div>
                     </div>
                 </div>
@@ -237,7 +255,7 @@ if ($is_member) {
 </div>
 
 <style>
-/* 이미지 프리뷰 스타일 */
+/* 미디어 프리뷰 스타일 */
 .preview-item {
     position: relative;
     aspect-ratio: 1;
@@ -245,10 +263,25 @@ if ($is_member) {
     border-radius: 8px;
     overflow: hidden;
 }
-.preview-item img {
+.preview-item img,
+.preview-item video {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+.preview-item .media-type-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(236, 72, 153, 0.9);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
 }
 .preview-item .insert-content-btn {
     position: absolute;
@@ -301,14 +334,30 @@ if ($is_member) {
 }
 .preview-item .index-badge {
     position: absolute;
-    top: 4px;
-    left: 4px;
+    bottom: 4px;
+    right: 4px;
     background: rgba(0, 0, 0, 0.6);
     color: white;
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 4px;
     font-weight: 600;
+}
+.preview-item .play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    pointer-events: none;
 }
 
 /* 드래그 오버 효과 */
@@ -319,18 +368,42 @@ if ($is_member) {
 </style>
 
 <script>
-// 이미지 업로드 관리
+// 미디어 업로드 관리
 let uploadedFiles = [];
 const MAX_FILES = 10;
 
+// 갤러리에서 선택
+function selectFromGallery() {
+    document.getElementById('gallery-input').click();
+}
+
+// 카메라로 촬영
+function capturePhoto() {
+    document.getElementById('camera-input').click();
+}
+
+// 동영상 선택
+function selectVideo() {
+    document.getElementById('video-input').click();
+}
+
 // 드롭존 클릭 이벤트
 document.getElementById('drop-zone').addEventListener('click', function(e) {
-    if (e.target.id !== 'drop-zone' && !e.target.closest('#drop-zone')) return;
-    document.getElementById('image-input').click();
+    if (e.target.id === 'drop-zone' || e.target.closest('#drop-zone')) {
+        selectFromGallery();
+    }
 });
 
 // 파일 선택 이벤트
-document.getElementById('image-input').addEventListener('change', function(e) {
+document.getElementById('gallery-input').addEventListener('change', function(e) {
+    handleFiles(this.files);
+});
+
+document.getElementById('camera-input').addEventListener('change', function(e) {
+    handleFiles(this.files);
+});
+
+document.getElementById('video-input').addEventListener('change', function(e) {
     handleFiles(this.files);
 });
 
@@ -360,32 +433,33 @@ dropZone.addEventListener('drop', function(e) {
 
 // 파일 처리 함수
 function handleFiles(files) {
-    const imageInput = document.getElementById('image-input');
     const previewGrid = document.getElementById('preview-grid');
-    const imageCounter = document.getElementById('image-counter');
+    const mediaCounter = document.getElementById('media-counter');
     const currentCount = document.getElementById('current-count');
 
-    // 이미지 파일만 필터링
-    let imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+    // 이미지 및 동영상 파일 필터링
+    let mediaFiles = Array.from(files).filter(file =>
+        file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
 
     // 최대 개수 체크
     const availableSlots = MAX_FILES - uploadedFiles.length;
-    if (imageFiles.length > availableSlots) {
-        alert(`최대 ${MAX_FILES}개의 이미지만 업로드할 수 있습니다. (현재: ${uploadedFiles.length}개)`);
-        imageFiles = imageFiles.slice(0, availableSlots);
+    if (mediaFiles.length > availableSlots) {
+        alert(`최대 ${MAX_FILES}개의 파일만 업로드할 수 있습니다. (현재: ${uploadedFiles.length}개)`);
+        mediaFiles = mediaFiles.slice(0, availableSlots);
     }
 
-    if (imageFiles.length === 0) return;
+    if (mediaFiles.length === 0) return;
 
     // 파일 추가
-    imageFiles.forEach(file => {
+    mediaFiles.forEach(file => {
         uploadedFiles.push(file);
         addPreview(file, uploadedFiles.length - 1);
     });
 
     // UI 업데이트
     previewGrid.classList.remove('hidden');
-    imageCounter.classList.remove('hidden');
+    mediaCounter.classList.remove('hidden');
     currentCount.textContent = uploadedFiles.length;
 
     // FileList 업데이트
@@ -396,18 +470,34 @@ function handleFiles(files) {
 function addPreview(file, index) {
     const previewGrid = document.getElementById('preview-grid');
     const reader = new FileReader();
+    const isVideo = file.type.startsWith('video/');
 
     reader.onload = function(e) {
         const div = document.createElement('div');
         div.className = 'preview-item';
         div.setAttribute('data-index', index);
+
+        let mediaElement = '';
+        let typeBadge = '';
+        let playIcon = '';
+
+        if (isVideo) {
+            mediaElement = `<video src="${e.target.result}" muted></video>`;
+            typeBadge = '<span class="media-type-badge"><i class="fa-solid fa-video"></i> 동영상</span>';
+            playIcon = '<div class="play-icon"><i class="fa-solid fa-play"></i></div>';
+        } else {
+            mediaElement = `<img src="${e.target.result}" alt="preview">`;
+        }
+
         div.innerHTML = `
-            <img src="${e.target.result}" alt="preview" data-index="${index}">
+            ${mediaElement}
+            ${typeBadge}
             <span class="index-badge">${index + 1}</span>
-            <button type="button" class="insert-content-btn" onclick="insertImageToContent(${index})" title="본문에 삽입">
+            ${playIcon}
+            <button type="button" class="insert-content-btn" onclick="insertMediaToContent(${index})" title="본문에 삽입">
                 <i class="fa-solid fa-plus"></i>
             </button>
-            <button type="button" class="remove-btn" onclick="removeImage(${index})">
+            <button type="button" class="remove-btn" onclick="removeMedia(${index})">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         `;
@@ -417,26 +507,29 @@ function addPreview(file, index) {
     reader.readAsDataURL(file);
 }
 
-// 이미지를 본문에 삽입
-function insertImageToContent(index) {
+// 미디어를 본문에 삽입
+function insertMediaToContent(index) {
     const contentTextarea = document.getElementById('wr_content');
     if (!contentTextarea) {
         alert('본문 입력창을 찾을 수 없습니다.');
         return;
     }
 
-    // 이미지 placeholder 생성
-    const imagePlaceholder = `[이미지${index + 1}]\n\n`;
+    const file = uploadedFiles[index];
+    const isVideo = file.type.startsWith('video/');
+
+    // 미디어 placeholder 생성
+    const mediaPlaceholder = isVideo ? `[동영상${index + 1}]\n\n` : `[이미지${index + 1}]\n\n`;
 
     // 커서 위치에 삽입
     const startPos = contentTextarea.selectionStart;
     const endPos = contentTextarea.selectionEnd;
     const currentValue = contentTextarea.value;
 
-    contentTextarea.value = currentValue.substring(0, startPos) + imagePlaceholder + currentValue.substring(endPos);
+    contentTextarea.value = currentValue.substring(0, startPos) + mediaPlaceholder + currentValue.substring(endPos);
 
     // 커서 위치를 삽입된 텍스트 뒤로 이동
-    contentTextarea.selectionStart = contentTextarea.selectionEnd = startPos + imagePlaceholder.length;
+    contentTextarea.selectionStart = contentTextarea.selectionEnd = startPos + mediaPlaceholder.length;
     contentTextarea.focus();
 
     // 피드백
@@ -452,8 +545,8 @@ function insertImageToContent(index) {
     }
 }
 
-// 이미지 제거
-function removeImage(index) {
+// 미디어 제거
+function removeMedia(index) {
     uploadedFiles.splice(index, 1);
 
     const previewGrid = document.getElementById('preview-grid');
@@ -470,7 +563,7 @@ function removeImage(index) {
 
     if (uploadedFiles.length === 0) {
         previewGrid.classList.add('hidden');
-        document.getElementById('image-counter').classList.add('hidden');
+        document.getElementById('media-counter').classList.add('hidden');
     }
 
     updateFileInput();
@@ -478,14 +571,14 @@ function removeImage(index) {
 
 // FileInput 업데이트
 function updateFileInput() {
-    const imageInput = document.getElementById('image-input');
+    const galleryInput = document.getElementById('gallery-input');
     const dataTransfer = new DataTransfer();
 
     uploadedFiles.forEach(file => {
         dataTransfer.items.add(file);
     });
 
-    imageInput.files = dataTransfer.files;
+    galleryInput.files = dataTransfer.files;
 }
 
 // 폼 제출
