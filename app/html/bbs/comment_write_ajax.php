@@ -76,10 +76,11 @@ if ($parent_comment_id > 0) {
     $wr_comment_reply = str_pad($reply_num, 10, '0', STR_PAD_LEFT);
 }
 
-sql_query("INSERT INTO {$write_table} SET 
+sql_query("INSERT INTO {$write_table} SET
     wr_num = '{$write['wr_num']}',
     wr_comment = 1,
     wr_comment_reply = '{$wr_comment_reply}',
+    wr_comment_parent = '{$parent_comment_id}',
     wr_is_comment = 1,
     wr_parent = '{$wr_id}',
     wr_content = '" . addslashes($wr_content) . "',

@@ -20,12 +20,12 @@ if (!$board) {
 }
 
 // 마지막 댓글 ID 이후의 새로운 댓글들 가져오기
-$sql = "SELECT wr_id, wr_content, wr_name, wr_datetime, mb_id, wr_comment_reply
+$sql = "SELECT wr_id, wr_content, wr_name, wr_datetime, mb_id, wr_comment_parent
         FROM {$g5['write_prefix']}{$bo_table}
         WHERE wr_parent = '{$wr_id}'
         AND wr_is_comment = 1
         AND wr_id > '{$last_comment_id}'
-        ORDER BY wr_comment_reply ASC";
+        ORDER BY wr_id ASC";
 
 $result = sql_query($sql);
 $new_comments = array();
@@ -54,22 +54,9 @@ while ($row = sql_fetch_array($result)) {
         $time_str = date('Y-m-d H:i', $datetime);
     }
 
-    // 대댓글 여부 확인
-    $is_reply = strlen($row['wr_comment_reply']) > 10;
-
-    // 대댓글인 경우 부모 댓글 ID 찾기
-    $parent_comment_id = null;
-    if ($is_reply) {
-        $parent_reply = substr($row['wr_comment_reply'], 0, 10);
-        $parent_sql = "SELECT wr_id FROM {$g5['write_prefix']}{$bo_table}
-                       WHERE wr_parent = '{$wr_id}'
-                       AND wr_is_comment = 1
-                       AND wr_comment_reply = '{$parent_reply}'";
-        $parent_result = sql_fetch($parent_sql);
-        if ($parent_result) {
-            $parent_comment_id = $parent_result['wr_id'];
-        }
-    }
+    // wr_comment_parent로 대댓글 여부 확인 (0이면 일반 댓글, 0이 아니면 대댓글)
+    $is_reply = $row['wr_comment_parent'] > 0;
+    $parent_comment_id = $row['wr_comment_parent'];
 
     $new_comments[] = array(
         'wr_id' => $row['wr_id'],

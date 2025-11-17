@@ -314,8 +314,8 @@ foreach ($images as $idx => $image) {
                 <h3 class="font-semibold mb-4">댓글 <?php echo $write['wr_comment']; ?>개</h3>
                 <div id="comment-list">
                 <?php
-                // 모든 댓글 가져오기 (wr_comment_reply 순서로 정렬하면 부모 댓글이 대댓글보다 먼저 옴)
-                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_comment_reply ASC LIMIT 200");
+                // 모든 댓글 가져오기 (wr_comment_parent 필드로 명확한 부모-자식 관계 확인)
+                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_id ASC LIMIT 200");
 
                 // 댓글을 배열로 변환하고 계층 구조 생성
                 $all_comments = array();
@@ -325,20 +325,13 @@ foreach ($images as $idx => $image) {
                 while ($c = sql_fetch_array($comment_result)) {
                     $all_comments[$c['wr_id']] = $c;
 
-                    // 대댓글 여부 확인 (wr_comment_reply 길이가 10자 초과면 대댓글)
-                    if (strlen($c['wr_comment_reply']) > 10) {
-                        // 대댓글: 부모 댓글 찾기
-                        $parent_reply = substr($c['wr_comment_reply'], 0, 10);
-                        // 같은 parent_reply를 가진 부모 댓글 찾기
-                        foreach ($all_comments as $p_id => $p_comment) {
-                            if ($p_comment['wr_comment_reply'] === $parent_reply) {
-                                if (!isset($reply_comments[$p_id])) {
-                                    $reply_comments[$p_id] = array();
-                                }
-                                $reply_comments[$p_id][] = $c;
-                                break;
-                            }
+                    // wr_comment_parent로 대댓글 여부 확인 (0이면 일반 댓글, 0이 아니면 대댓글)
+                    if ($c['wr_comment_parent'] > 0) {
+                        // 대댓글: wr_comment_parent에 저장된 부모 댓글 ID로 그룹화
+                        if (!isset($reply_comments[$c['wr_comment_parent']])) {
+                            $reply_comments[$c['wr_comment_parent']] = array();
                         }
+                        $reply_comments[$c['wr_comment_parent']][] = $c;
                     } else {
                         // 일반 댓글
                         $parent_comments[] = $c;
