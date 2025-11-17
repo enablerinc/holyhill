@@ -206,11 +206,22 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                     $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
                 }
 
-                // 첫 번째 이미지 가져오기
+                // 첫 번째 미디어 파일 가져오기 (이미지 또는 동영상)
                 $first_image = '';
-                $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
-                if ($img_result && $img = sql_fetch_array($img_result)) {
-                    $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
+                $first_video = '';
+                $is_video_file = false;
+
+                $file_result = sql_query("SELECT bf_file, bf_type FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' ORDER BY bf_no LIMIT 1");
+                if ($file_result && $file = sql_fetch_array($file_result)) {
+                    $file_ext = strtolower(pathinfo($file['bf_file'], PATHINFO_EXTENSION));
+                    $video_exts = array('mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv');
+
+                    if (in_array($file_ext, $video_exts)) {
+                        $first_video = G5_DATA_URL.'/file/'.$bo_table.'/'.$file['bf_file'];
+                        $is_video_file = true;
+                    } else if ($file['bf_type'] >= 1 && $file['bf_type'] <= 3) {
+                        $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$file['bf_file'];
+                    }
                 }
 
                 $view_href = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
@@ -245,6 +256,35 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                         <!-- 클릭 시 상세 페이지로 이동 -->
                         <a href="<?php echo $view_href; ?>" class="absolute inset-0 z-10"></a>
                     </div>
+                <?php } elseif ($is_video_file && $first_video) { ?>
+                    <!-- 업로드된 동영상 표시 -->
+                    <a href="<?php echo $view_href; ?>" class="block w-full h-full relative">
+                        <video class="w-full h-full object-cover bg-black" muted>
+                            <source src="<?php echo $first_video; ?>" type="video/mp4">
+                        </video>
+
+                        <!-- Play 아이콘 오버레이 -->
+                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all">
+                            <div class="w-12 h-12 rounded-full bg-white bg-opacity-90 flex items-center justify-center shadow-lg">
+                                <i class="fa-solid fa-play text-purple-600 text-xl ml-0.5"></i>
+                            </div>
+                        </div>
+
+                        <!-- 좋아요 카운트 -->
+                        <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity z-20">
+                            <i class="fa-solid fa-heart text-red-400 text-xs"></i>
+                            <?php echo number_format($good_count); ?>
+                        </div>
+
+                        <!-- 제목 오버레이 (호버 시 표시) -->
+                        <?php if (!empty($list[$i]['wr_subject'])) { ?>
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
+                                <?php echo strip_tags($list[$i]['wr_subject']); ?>
+                            </p>
+                        </div>
+                        <?php } ?>
+                    </a>
                 <?php } elseif ($first_image) { ?>
                     <a href="<?php echo $view_href; ?>" class="block w-full h-full">
                         <!-- 이미지 표시 -->

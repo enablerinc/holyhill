@@ -288,15 +288,29 @@ function convert_youtube_to_iframe_index($content) {
                     // YouTube URL이 있는지 확인
                     $has_youtube_feed = preg_match('/(youtube\.com|youtu\.be)/', $feed['wr_content']);
 
-                    // 첨부 이미지
-                    $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']}
+                    // 첨부 파일 (이미지 및 동영상)
+                    $img_result = sql_query("SELECT bf_file, bf_type FROM {$g5['board_file_table']}
                                             WHERE bo_table = 'gallery'
                                             AND wr_id = '{$feed['wr_id']}'
-                                            AND bf_type BETWEEN 1 AND 3
                                             ORDER BY bf_no
                                             LIMIT 1");
-                    $img = sql_fetch_array($img_result);
-                    $feed_img = $img ? G5_DATA_URL.'/file/gallery/'.$img['bf_file'] : '';
+                    $file = sql_fetch_array($img_result);
+
+                    $feed_img = '';
+                    $feed_video = '';
+                    $is_video = false;
+
+                    if ($file) {
+                        $file_ext = strtolower(pathinfo($file['bf_file'], PATHINFO_EXTENSION));
+                        $video_exts = array('mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv');
+
+                        if (in_array($file_ext, $video_exts)) {
+                            $feed_video = G5_DATA_URL.'/file/gallery/'.$file['bf_file'];
+                            $is_video = true;
+                        } else if ($file['bf_type'] >= 1 && $file['bf_type'] <= 3) {
+                            $feed_img = G5_DATA_URL.'/file/gallery/'.$file['bf_file'];
+                        }
+                    }
 
                     $comment_cnt = $feed['wr_comment'];
                     $good_cnt = $feed['wr_good'];
@@ -330,6 +344,22 @@ function convert_youtube_to_iframe_index($content) {
                                 $feed_content = get_text($feed['wr_content']);
                                 echo convert_youtube_to_iframe_index($feed_content);
                                 ?>
+                            </a>
+                        </div>
+                        <?php } elseif ($is_video && $feed_video) { ?>
+                        <!-- 동영상이 있을 때 -->
+                        <div class="w-full relative">
+                            <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>"
+                               class="block relative group">
+                                <video class="w-full h-auto max-h-[500px] object-cover bg-black" muted>
+                                    <source src="<?php echo $feed_video; ?>" type="video/mp4">
+                                </video>
+                                <!-- Play 아이콘 오버레이 -->
+                                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all">
+                                    <div class="w-20 h-20 rounded-full bg-white bg-opacity-90 flex items-center justify-center shadow-lg">
+                                        <i class="fa-solid fa-play text-purple-600 text-3xl ml-1"></i>
+                                    </div>
+                                </div>
                             </a>
                         </div>
                         <?php } elseif ($feed_img) { ?>
