@@ -231,11 +231,11 @@ $processed_content = nl2br($processed_content);
 // 6. 플레이스홀더를 실제 iframe으로 복원
 $processed_content = restore_youtube_iframes($processed_content);
 
-// 상단 갤러리용 이미지 (본문에 사용되지 않은 이미지만)
-$gallery_images = array();
+// 상단 갤러리용 미디어 (본문에 사용되지 않은 이미지와 동영상)
+$gallery_media = array();
 foreach ($media_files as $idx => $media) {
-    if (!in_array($idx, $used_media_indices) && $media['type'] === 'image') {
-        $gallery_images[] = $media['file'];
+    if (!in_array($idx, $used_media_indices)) {
+        $gallery_media[] = $media;
     }
 }
 ?>
@@ -323,14 +323,25 @@ foreach ($media_files as $idx => $media) {
 
             <!-- 내용 -->
             <div class="p-4">
-                <!-- 이미지 갤러리 (본문에 삽입되지 않은 이미지만 표시) -->
-                <?php if (count($gallery_images) > 0) { ?>
+                <!-- 미디어 갤러리 (본문에 삽입되지 않은 이미지와 동영상 표시) -->
+                <?php if (count($gallery_media) > 0) { ?>
                 <div class="flex overflow-x-auto gap-3 mb-4 -mx-4 px-4 scrollbar-hide" style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
-                    <?php foreach ($gallery_images as $image) { ?>
+                    <?php foreach ($gallery_media as $media) {
+                        $media_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media['file'];
+                    ?>
                     <div class="flex-shrink-0" style="scroll-snap-align: start; width: 85vw; max-width: 500px;">
-                        <img src="<?php echo G5_DATA_URL.'/file/'.$bo_table.'/'.$image; ?>"
-                             class="w-full h-80 object-cover rounded-lg"
-                             alt="갤러리 이미지">
+                        <?php if ($media['type'] === 'video') { ?>
+                            <div class="relative w-full h-80 bg-black rounded-lg overflow-hidden">
+                                <video class="w-full h-full object-contain" controls controlsList="nodownload">
+                                    <source src="<?php echo $media_url; ?>" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        <?php } else { ?>
+                            <img src="<?php echo $media_url; ?>"
+                                 class="w-full h-80 object-cover rounded-lg"
+                                 alt="갤러리 이미지">
+                        <?php } ?>
                     </div>
                     <?php } ?>
                 </div>
