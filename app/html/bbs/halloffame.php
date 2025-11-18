@@ -278,19 +278,19 @@ $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
 
         <?php if (count($top_members) > 0): ?>
         <div class="flex gap-3 overflow-x-auto pb-2">
-            <?php foreach ($top_members as $idx => $member): ?>
+            <?php foreach ($top_members as $idx => $top_member): ?>
             <?php
                 $border_class = '';
                 $gradient_class = '';
                 $badge_color = '';
 
-                if ($member['rank'] == 1) {
+                if ($top_member['rank'] == 1) {
                     $border_class = 'border-2 border-divine-lilac/30';
                     $gradient_class = 'golden-gradient';
                     $badge_color = 'bg-divine-lilac';
                     $shadow_class = 'shadow-divine';
                     $crown_class = 'crown-shadow';
-                } elseif ($member['rank'] == 2) {
+                } elseif ($top_member['rank'] == 2) {
                     $border_class = 'border border-gray-200';
                     $gradient_class = 'silver-gradient';
                     $badge_color = 'bg-lilac';
@@ -304,34 +304,34 @@ $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
                     $crown_class = '';
                 }
 
-                $width_class = $member['rank'] == 1 ? 'min-w-[140px]' : 'min-w-[130px]';
-                $img_size = $member['rank'] == 1 ? 'w-20 h-20' : 'w-18 h-18';
+                $width_class = $top_member['rank'] == 1 ? 'min-w-[140px]' : 'min-w-[130px]';
+                $img_size = $top_member['rank'] == 1 ? 'w-20 h-20' : 'w-18 h-18';
             ?>
 
             <div class="<?php echo $width_class; ?> bg-white rounded-2xl p-4 <?php echo $shadow_class; ?> <?php echo $border_class; ?>">
                 <div class="text-center">
                     <div class="relative mb-3">
                         <div class="<?php echo $img_size; ?> <?php echo $gradient_class; ?> rounded-full p-1 mx-auto <?php echo $crown_class; ?>">
-                            <img src="<?php echo $member['avatar']; ?>" class="w-full h-full rounded-full object-cover">
+                            <img src="<?php echo $top_member['avatar']; ?>" class="w-full h-full rounded-full object-cover">
                         </div>
-                        <?php if ($member['rank'] == 1): ?>
+                        <?php if ($top_member['rank'] == 1): ?>
                         <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
                             <i class="fa-solid fa-crown text-divine-lilac text-xl crown-shadow"></i>
                         </div>
                         <?php endif; ?>
-                        <div class="absolute -bottom-1 -right-1 <?php echo $member['rank'] == 1 ? 'w-6 h-6' : 'w-5 h-5'; ?> <?php echo $badge_color; ?> rounded-full flex items-center justify-center">
-                            <span class="text-white text-xs font-bold"><?php echo $member['rank']; ?></span>
+                        <div class="absolute -bottom-1 -right-1 <?php echo $top_member['rank'] == 1 ? 'w-6 h-6' : 'w-5 h-5'; ?> <?php echo $badge_color; ?> rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-bold"><?php echo $top_member['rank']; ?></span>
                         </div>
                     </div>
-                    <h4 class="font-semibold text-grace-green text-sm mb-1"><?php echo $member['name']; ?></h4>
-                    <p class="text-xs text-gray-500 mb-2"><?php echo $member['nick']; ?></p>
+                    <h4 class="font-semibold text-grace-green text-sm mb-1"><?php echo $top_member['name']; ?></h4>
+                    <p class="text-xs text-gray-500 mb-2"><?php echo $top_member['nick']; ?></p>
                     <div class="flex items-center justify-center gap-1 mb-2">
-                        <i class="fa-solid fa-cross text-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?> text-xs"></i>
-                        <span class="text-sm font-bold text-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?>"><?php echo number_format($member['points']); ?>점</span>
+                        <i class="fa-solid fa-cross text-<?php echo $top_member['rank'] == 1 ? 'divine-lilac' : ($top_member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?> text-xs"></i>
+                        <span class="text-sm font-bold text-<?php echo $top_member['rank'] == 1 ? 'divine-lilac' : ($top_member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?>"><?php echo number_format($top_member['points']); ?>점</span>
                     </div>
                     <div class="flex flex-wrap gap-1 justify-center">
-                        <span class="text-xs bg-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full">글 <?php echo $member['post_count']; ?>개</span>
-                        <span class="text-xs bg-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full">댓글 <?php echo $member['comment_count']; ?>개</span>
+                        <span class="text-xs bg-<?php echo $top_member['rank'] == 1 ? 'divine-lilac' : ($top_member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full">글 <?php echo $top_member['post_count']; ?>개</span>
+                        <span class="text-xs bg-<?php echo $top_member['rank'] == 1 ? 'divine-lilac' : ($top_member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full">댓글 <?php echo $top_member['comment_count']; ?>개</span>
                     </div>
                 </div>
             </div>
@@ -357,26 +357,26 @@ $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
 
         <div class="space-y-3">
             <?php if (count($excellent_members) > 0): ?>
-                <?php foreach ($excellent_members as $member): ?>
+                <?php foreach ($excellent_members as $excellent_member): ?>
                 <div class="bg-white rounded-xl p-4 shadow-warm flex items-center gap-4">
                     <div class="relative">
-                        <img src="<?php echo $member['avatar']; ?>" class="w-14 h-14 rounded-full object-cover">
+                        <img src="<?php echo $excellent_member['avatar']; ?>" class="w-14 h-14 rounded-full object-cover">
                         <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
-                            <span class="text-white text-xs font-bold"><?php echo $member['rank']; ?></span>
+                            <span class="text-white text-xs font-bold"><?php echo $excellent_member['rank']; ?></span>
                         </div>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1">
-                            <h4 class="font-semibold text-grace-green"><?php echo $member['name']; ?></h4>
-                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full"><?php echo $member['nick']; ?></span>
+                            <h4 class="font-semibold text-grace-green"><?php echo $excellent_member['name']; ?></h4>
+                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full"><?php echo $excellent_member['nick']; ?></span>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
                             <i class="fa-solid fa-cross text-lilac text-xs"></i>
-                            <span class="text-sm font-semibold text-lilac"><?php echo number_format($member['points']); ?>점</span>
+                            <span class="text-sm font-semibold text-lilac"><?php echo number_format($excellent_member['points']); ?>점</span>
                         </div>
                         <div class="flex gap-1">
-                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">글 <?php echo $member['post_count']; ?>개</span>
-                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">댓글 <?php echo $member['comment_count']; ?>개</span>
+                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">글 <?php echo $excellent_member['post_count']; ?>개</span>
+                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">댓글 <?php echo $excellent_member['comment_count']; ?>개</span>
                         </div>
                     </div>
                 </div>
