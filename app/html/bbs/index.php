@@ -162,11 +162,11 @@ function convert_youtube_to_iframe_index($content) {
         <!-- 오늘의 말씀 위젯 -->
         <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
             <?php
-            // 오늘 날짜에 등록된 말씀만 가져오기
+            // 오늘 이전에 등록된 말씀 중 가장 최신 것을 가져오기 (다음 말씀이 올라올 때까지 유지)
             $word_sql = "SELECT wr_id, wr_subject, wr_content, wr_datetime, wr_name
                          FROM {$g5['write_prefix']}word
                          WHERE wr_is_comment = 0
-                         AND DATE(wr_datetime) = CURDATE()
+                         AND DATE(wr_datetime) <= CURDATE()
                          ORDER BY wr_id DESC
                          LIMIT 1";
             $word_result = sql_query($word_sql);
@@ -184,20 +184,11 @@ function convert_youtube_to_iframe_index($content) {
                     $word_content = trim($word_content);
                     $word_content = cut_str($word_content, 120);
                 }
-
-                // 오늘 등록된 말씀 개수 체크
-                $today_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}word
-                                   WHERE wr_is_comment = 0 AND DATE(wr_datetime) = CURDATE()";
-                $today_count = sql_fetch($today_count_sql);
-                $has_multiple = $today_count['cnt'] > 1;
                 ?>
                 <div class="<?php echo $has_youtube ? '' : 'text-center'; ?>">
                     <h3 class="text-sm font-medium text-purple-900 mb-2 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-book-bible text-purple-600"></i>
                         오늘의 말씀
-                        <?php if ($has_multiple) { ?>
-                        <span class="text-xs text-orange-600">(오늘 <?php echo $today_count['cnt']; ?>개 등록됨)</span>
-                        <?php } ?>
                     </h3>
                     <?php if ($has_youtube) { ?>
                     <a href="<?php echo G5_BBS_URL; ?>/word_view.php?wr_id=<?php echo $word['wr_id']; ?>"
@@ -241,7 +232,7 @@ function convert_youtube_to_iframe_index($content) {
                         오늘의 말씀
                     </h3>
                     <p class="text-base font-medium text-gray-600 leading-relaxed mb-3">
-                        오늘 등록된 말씀이 아직 없습니다
+                        등록된 말씀이 아직 없습니다
                     </p>
                     <?php if ($is_admin) { ?>
                     <a href="<?php echo G5_BBS_URL; ?>/write_word.php"
