@@ -705,7 +705,7 @@ function toggleGood() {
         if (data.result) {
             document.getElementById('heartIcon').classList.toggle('fa-regular');
             document.getElementById('heartIcon').classList.toggle('fa-solid');
-            document.getElementById('goodCount').textContent = '아멘 ' + data.count + '개';
+            document.getElementById('goodCount').textContent = '좋아요 ' + data.count + '개';
         }
     });
 }
