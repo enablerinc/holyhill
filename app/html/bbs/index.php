@@ -118,19 +118,15 @@ function convert_youtube_to_iframe_index($content) {
         <!-- 현재 활동중인 사용자 섹션 -->
         <section id="online-users" class="bg-white px-4 py-2 mb-2 sticky top-16 z-40 border-b border-gray-100">
             <?php
-            // 최근 활동한 회원 표시 (최근 30분 내 활동 기준)
-            // 1. 최근 게시글/댓글 작성자
-            $recent_activity_sql = "
-                SELECT DISTINCT m.mb_id, m.mb_nick, MAX(g.wr_datetime) as last_activity
-                FROM {$g5['write_prefix']}gallery g
-                INNER JOIN {$g5['member_table']} m ON (g.mb_id = m.mb_id)
-                WHERE g.wr_datetime >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
-                AND m.mb_id != ''
-                GROUP BY m.mb_id, m.mb_nick
-                ORDER BY last_activity DESC
-                LIMIT 10
+            // 오늘 출석(로그인)한 모든 회원 표시
+            $today_login_sql = "
+                SELECT mb_id, mb_nick
+                FROM {$g5['member_table']}
+                WHERE mb_id != ''
+                AND DATE(mb_today_login) = CURDATE()
+                ORDER BY mb_today_login DESC
             ";
-            $story_result = sql_query($recent_activity_sql);
+            $story_result = sql_query($today_login_sql);
             ?>
 
             <!-- 사용자 목록 -->
