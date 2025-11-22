@@ -115,29 +115,43 @@ function convert_youtube_to_iframe_index($content) {
 
     <div id="main-container" class="max-w-2xl mx-auto">
 
-        <!-- 스토리 섹션 -->
-        <section id="stories" class="bg-white px-4 py-3 mb-2 sticky top-16 z-40">
-            <div class="flex gap-3 overflow-x-auto scrollbar-hide">
-                <div class="flex flex-col items-center gap-2 min-w-[64px]">
-                    <button onclick="alert('스토리 기능은 추후 구현됩니다')"
-                            class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 p-0.5">
-                        <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
-                            <i class="fa-solid fa-plus text-purple-500 text-lg"></i>
-                        </div>
-                    </button>
-                    <span class="text-xs text-gray-700 font-medium">내 이야기</span>
-                </div>
+        <!-- 현재 활동중인 사용자 섹션 -->
+        <section id="online-users" class="bg-white px-4 py-3 mb-2 sticky top-16 z-40 border-b border-gray-100">
+            <?php
+            // 현재 접속중인 회원 수 먼저 계산
+            $online_count_sql = "SELECT COUNT(*) as cnt
+                                FROM {$g5['login_table']} a
+                                LEFT JOIN {$g5['member_table']} b ON (a.mb_id = b.mb_id)
+                                WHERE a.mb_id != ''
+                                AND b.mb_level >= 2";
+            $online_count = sql_fetch($online_count_sql);
+            $total_online = $online_count['cnt'];
 
+            // 현재 접속중인 회원 표시 (login 테이블 활용)
+            $story_sql = "SELECT b.mb_id, b.mb_nick
+                         FROM {$g5['login_table']} a
+                         LEFT JOIN {$g5['member_table']} b ON (a.mb_id = b.mb_id)
+                         WHERE a.mb_id != ''
+                         AND b.mb_level >= 2
+                         ORDER BY a.lo_datetime DESC
+                         LIMIT 10";
+            $story_result = sql_query($story_sql);
+            ?>
+
+            <!-- 헤더 -->
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle text-green-500 text-xs animate-pulse"></i>
+                    지금 활동중
+                </h3>
+                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                    <?php echo number_format($total_online); ?>명
+                </span>
+            </div>
+
+            <!-- 사용자 목록 -->
+            <div class="flex gap-3 overflow-x-auto scrollbar-hide">
                 <?php
-                // 현재 접속중인 회원 표시 (login 테이블 활용)
-                $story_sql = "SELECT b.mb_id, b.mb_nick
-                             FROM {$g5['login_table']} a
-                             LEFT JOIN {$g5['member_table']} b ON (a.mb_id = b.mb_id)
-                             WHERE a.mb_id != ''
-                             AND b.mb_level >= 2
-                             ORDER BY a.lo_datetime DESC
-                             LIMIT 10";
-                $story_result = sql_query($story_sql);
 
                 while ($story = sql_fetch_array($story_result)) {
                     // 프로필 이미지
@@ -149,13 +163,26 @@ function convert_youtube_to_iframe_index($content) {
 
                     $story_nick = $story['mb_nick'] ? $story['mb_nick'] : '회원';
                     ?>
-                    <div class="flex flex-col items-center gap-2 min-w-[64px]">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 p-0.5">
-                            <img src="<?php echo $story_photo; ?>"
-                                 class="w-full h-full rounded-full object-cover border-2 border-white"
-                                 alt="<?php echo $story_nick; ?>">
+                    <div class="flex flex-col items-center gap-2 min-w-[64px] cursor-pointer hover:opacity-80 transition-opacity">
+                        <div class="relative">
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 p-0.5">
+                                <img src="<?php echo $story_photo; ?>"
+                                     class="w-full h-full rounded-full object-cover border-2 border-white"
+                                     alt="<?php echo $story_nick; ?>">
+                            </div>
+                            <!-- 온라인 상태 표시 -->
+                            <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                         </div>
-                        <span class="text-xs text-gray-700"><?php echo cut_str($story_nick, 6); ?></span>
+                        <span class="text-xs text-gray-700 font-medium"><?php echo cut_str($story_nick, 6); ?></span>
+                    </div>
+                    <?php
+                }
+
+                // 접속자가 없을 때
+                if (sql_num_rows($story_result) == 0) {
+                    ?>
+                    <div class="w-full text-center py-4">
+                        <p class="text-sm text-gray-400">현재 활동중인 회원이 없습니다</p>
                     </div>
                     <?php
                 }
