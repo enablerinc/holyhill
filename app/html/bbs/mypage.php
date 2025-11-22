@@ -324,19 +324,25 @@ $my_comments_result = sql_query($my_comments_sql);
                     ?>
                     <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $comment['wr_parent']; ?>#c_<?php echo $comment['wr_id']; ?>"
                        class="bg-white rounded-2xl p-4 shadow-warm block hover:shadow-lg transition-shadow">
-                        <div class="flex items-start gap-3 mb-3">
+                        <div class="flex items-start gap-3">
                             <img src="<?php echo $comment_author_photo; ?>"
                                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                  alt="<?php echo $comment['comment_author_nick']; ?>">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-sm font-semibold text-grace-green"><?php echo $comment['comment_author_nick']; ?></span>
-                                    <span class="text-xs text-gray-400"><?php echo $time_str; ?></span>
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <p class="text-xs text-gray-500 flex items-center gap-1 mb-1">
+                                            <i class="fa-solid fa-reply text-purple-500"></i>
+                                            <span class="text-purple-600 font-medium">@<?php echo $comment['comment_author_nick']; ?></span>님이 댓글을 남겼습니다
+                                        </p>
+                                        <?php if ($comment['parent_subject']) { ?>
+                                        <p class="text-xs text-gray-400">
+                                            <?php echo cut_str($comment['parent_subject'], 40); ?>
+                                        </p>
+                                        <?php } ?>
+                                    </div>
+                                    <span class="text-xs text-gray-400 ml-2"><?php echo $time_str; ?></span>
                                 </div>
-                                <p class="text-xs text-gray-500 mb-2">
-                                    <i class="fa-solid fa-reply text-purple-500"></i>
-                                    <?php echo cut_str($comment['parent_subject'], 30); ?>에 댓글
-                                </p>
                                 <p class="text-sm text-gray-700 line-clamp-2"><?php echo strip_tags($comment['wr_content']); ?></p>
                             </div>
                         </div>
