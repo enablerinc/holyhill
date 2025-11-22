@@ -20,10 +20,19 @@ include_once(G5_THEME_PATH.'/head.php');
             </div>
 
             <?php
-            $story_sql = "SELECT mb_id, mb_nick FROM {$g5['member_table']}
-                         WHERE mb_level >= 2
-                         ORDER BY mb_today_login DESC
-                         LIMIT 10";
+            // 최근 활동(로그인, 글쓰기, 댓글) 기준으로 정렬
+            $story_sql = "
+                SELECT m.mb_id, m.mb_nick,
+                    GREATEST(
+                        COALESCE(m.mb_today_login, '1000-01-01 00:00:00'),
+                        COALESCE((SELECT MAX(wr_datetime) FROM {$g5['write_prefix']}gallery WHERE mb_id = m.mb_id), '1000-01-01 00:00:00'),
+                        COALESCE((SELECT MAX(wr_datetime) FROM {$g5['write_prefix']}word WHERE mb_id = m.mb_id), '1000-01-01 00:00:00')
+                    ) as last_activity
+                FROM {$g5['member_table']} m
+                WHERE m.mb_level >= 2
+                ORDER BY last_activity DESC
+                LIMIT 10
+            ";
             $story_result = sql_query($story_sql);
             
             while ($story = sql_fetch_array($story_result)) {
