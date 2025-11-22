@@ -163,7 +163,7 @@ $is_online = $online_check['cnt'] > 0;
                     </div>
                     <div class="text-center">
                         <div class="text-lg font-bold text-red-500"><?php echo number_format($total_goods); ?></div>
-                        <div class="text-xs text-gray-500">아멘</div>
+                        <div class="text-xs text-gray-500">좋아요</div>
                     </div>
                 </div>
             </div>

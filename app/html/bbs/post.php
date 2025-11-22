@@ -700,45 +700,13 @@ function toggleGood() {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>'
     })
-    .then(response => {
-        console.log('응답 상태:', response.status);
-        console.log('응답 OK:', response.ok);
-        return response.text();
-    })
-    .then(text => {
-        console.log('서버 응답 원본:', text);
-        try {
-            const data = JSON.parse(text);
-            console.log('파싱된 데이터:', data);
-
-            if (data.result && data.result !== 'error') {
-                const heartIcon = document.getElementById('heartIcon');
-                console.log('현재 하트 클래스:', heartIcon.className);
-                console.log('is_good 상태:', data.is_good);
-
-                // 서버에서 받은 is_good 상태에 따라 하트 아이콘 설정
-                if (data.is_good) {
-                    heartIcon.className = 'fa-solid fa-heart text-red-500 text-2xl';
-                } else {
-                    heartIcon.className = 'fa-regular fa-heart text-red-500 text-2xl';
-                }
-                console.log('변경된 하트 클래스:', heartIcon.className);
-
-                document.getElementById('goodCount').textContent = '좋아요 ' + data.count + '개';
-                console.log('좋아요 수 업데이트 완료:', data.count);
-            } else {
-                console.error('에러 응답:', data);
-                alert('오류: ' + (data.message || '알 수 없는 오류'));
-            }
-        } catch (e) {
-            console.error('JSON 파싱 실패:', e);
-            console.error('원본 텍스트:', text);
-            alert('서버 응답 파싱 실패');
+    .then(r => r.json())
+    .then(data => {
+        if (data.result) {
+            document.getElementById('heartIcon').classList.toggle('fa-regular');
+            document.getElementById('heartIcon').classList.toggle('fa-solid');
+            document.getElementById('goodCount').textContent = '아멘 ' + data.count + '개';
         }
-    })
-    .catch(error => {
-        console.error('요청 실패:', error);
-        alert('요청 실패: ' + error.message);
     });
 }
 
