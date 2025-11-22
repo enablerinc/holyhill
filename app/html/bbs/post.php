@@ -698,18 +698,24 @@ function toggleGood() {
     })
     .then(r => r.json())
     .then(data => {
+        console.log('서버 응답:', data); // 디버깅용
         if (data.result && data.result !== 'error') {
             const heartIcon = document.getElementById('heartIcon');
+            console.log('is_good 상태:', data.is_good); // 디버깅용
+
             // 서버에서 받은 is_good 상태에 따라 하트 아이콘 설정
             if (data.is_good) {
-                heartIcon.classList.remove('fa-regular');
-                heartIcon.classList.add('fa-solid');
+                heartIcon.className = 'fa-solid fa-heart text-red-500 text-2xl';
             } else {
-                heartIcon.classList.remove('fa-solid');
-                heartIcon.classList.add('fa-regular');
+                heartIcon.className = 'fa-regular fa-heart text-red-500 text-2xl';
             }
             document.getElementById('goodCount').textContent = '좋아요 ' + data.count + '개';
+        } else {
+            console.error('에러:', data);
         }
+    })
+    .catch(error => {
+        console.error('요청 실패:', error);
     });
 }
 
