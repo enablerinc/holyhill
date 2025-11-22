@@ -118,13 +118,18 @@ function convert_youtube_to_iframe_index($content) {
         <!-- 현재 활동중인 사용자 섹션 -->
         <section id="online-users" class="bg-white px-4 py-2 mb-2 sticky top-16 z-40 border-b border-gray-100">
             <?php
-            // 오늘 출석(로그인)한 모든 회원 표시
+            // 오늘 출석(로그인)한 모든 회원을 최근 활동 순으로 표시
             $today_login_sql = "
-                SELECT mb_id, mb_nick
-                FROM {$g5['member_table']}
-                WHERE mb_id != ''
-                AND DATE(mb_today_login) = CURDATE()
-                ORDER BY mb_today_login DESC
+                SELECT m.mb_id, m.mb_nick,
+                    GREATEST(
+                        COALESCE(m.mb_today_login, '1000-01-01 00:00:00'),
+                        COALESCE((SELECT MAX(wr_datetime) FROM {$g5['write_prefix']}gallery WHERE mb_id = m.mb_id), '1000-01-01 00:00:00'),
+                        COALESCE((SELECT MAX(wr_datetime) FROM {$g5['write_prefix']}word WHERE mb_id = m.mb_id), '1000-01-01 00:00:00')
+                    ) as last_activity
+                FROM {$g5['member_table']} m
+                WHERE m.mb_id != ''
+                AND DATE(m.mb_today_login) = CURDATE()
+                ORDER BY last_activity DESC
             ";
             $story_result = sql_query($today_login_sql);
             ?>
