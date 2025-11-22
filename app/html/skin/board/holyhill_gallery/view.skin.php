@@ -165,11 +165,11 @@ foreach ($images as $idx => $image) {
             <!-- 구분선 -->
             <hr class="border-gray-200">
 
-            <!-- 아멘(하트) -->
+            <!-- 좋아요(하트) -->
             <div class="p-4">
                 <button onclick="toggleGood()" class="flex items-center gap-2">
                     <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-red-500 text-2xl" id="heartIcon"></i>
-                    <span id="goodCount" class="font-semibold text-sm">아멘 <?php echo $view['wr_good']; ?>개</span>
+                    <span id="goodCount" class="font-semibold text-sm">좋아요 <?php echo $view['wr_good']; ?>개</span>
                 </button>
             </div>
 
@@ -305,7 +305,7 @@ function toggleGood() {
         if (data.result) {
             document.getElementById('heartIcon').classList.toggle('fa-regular');
             document.getElementById('heartIcon').classList.toggle('fa-solid');
-            document.getElementById('goodCount').textContent = '아멘 ' + data.count + '개';
+            document.getElementById('goodCount').textContent = '좋아요 ' + data.count + '개';
         }
     });
 }

@@ -231,7 +231,7 @@ if ($is_member) {
                 <div class="flex items-center gap-4">
                     <button onclick="toggleGood()" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
                         <i class="fa-solid fa-heart text-red-500 text-xl"></i>
-                        <span class="text-sm text-gray-700">아멘 <span id="good-count"><?php echo number_format($write['wr_good']); ?></span>개</span>
+                        <span class="text-sm text-gray-700">좋아요 <span id="good-count"><?php echo number_format($write['wr_good']); ?></span>개</span>
                     </button>
                     <div class="flex items-center gap-2">
                         <i class="fa-regular fa-comment text-gray-700 text-xl"></i>

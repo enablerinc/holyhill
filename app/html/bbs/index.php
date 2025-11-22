@@ -373,7 +373,7 @@ function convert_youtube_to_iframe_index($content) {
                                 <button onclick="location.href='<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'"
                                         class="flex items-center gap-2">
                                     <i class="fa-solid fa-heart text-red-500 text-xl"></i>
-                                    <span class="text-sm text-gray-700">아멘 <?php echo number_format($good_cnt); ?>개</span>
+                                    <span class="text-sm text-gray-700">좋아요 <?php echo number_format($good_cnt); ?>개</span>
                                 </button>
                                 <button onclick="location.href='<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>'"
                                         class="flex items-center gap-2">

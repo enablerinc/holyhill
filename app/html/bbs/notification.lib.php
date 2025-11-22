@@ -133,7 +133,7 @@ function generate_notification_content($type, $from_nick, $content = '') {
         case 'reply':
             return "{$from_nick}님이 회원님의 댓글에 답글을 남겼습니다.";
         case 'good':
-            return "{$from_nick}님이 회원님의 게시글에 아멘을 눌렀습니다.";
+            return "{$from_nick}님이 회원님의 게시글에 좋아요를 눌렀습니다.";
         case 'word':
             return "새로운 말씀이 등록되었습니다.";
         default:

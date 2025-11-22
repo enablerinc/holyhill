@@ -412,7 +412,7 @@ $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
 
             <div class="text-center p-3 bg-[#EEF3F8] rounded-xl">
                 <i class="fa-solid fa-heart text-lilac text-xl mb-2"></i>
-                <p class="text-sm text-grace-green">아멘 총합</p>
+                <p class="text-sm text-grace-green">좋아요 총합</p>
                 <p class="text-lg font-bold text-lilac"><?php echo number_format($total_amens); ?>개</p>
             </div>
 
