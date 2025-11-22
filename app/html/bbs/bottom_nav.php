@@ -3,9 +3,11 @@ if (!defined('_GNUBOARD_')) exit; // 개별 페이지 접근 불가
 
 // 프로필 이미지 경로 (로그인한 경우에만)
 $nav_profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-if ($is_member) {
-    $nav_profile_img = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif')) {
+if ($is_member && isset($_SESSION['ss_mb_id'])) {
+    // 세션에서 직접 가져와서 extract()에 의한 변수 오염 방지
+    $safe_mb_id = $_SESSION['ss_mb_id'];
+    $nav_profile_img = G5_DATA_URL.'/member_image/'.substr($safe_mb_id, 0, 2).'/'.$safe_mb_id.'.gif';
+    if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($safe_mb_id, 0, 2).'/'.$safe_mb_id.'.gif')) {
         $nav_profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
     }
 }
