@@ -143,7 +143,8 @@ function convert_youtube_to_iframe_index($content) {
 
                     $story_nick = $story['mb_nick'] ? $story['mb_nick'] : '회원';
                     ?>
-                    <div class="flex flex-col items-center gap-2 min-w-[64px] cursor-pointer hover:opacity-80 transition-opacity">
+                    <a href="<?php echo G5_BBS_URL; ?>/user_profile.php?mb_id=<?php echo $story['mb_id']; ?>"
+                       class="flex flex-col items-center gap-2 min-w-[64px] cursor-pointer hover:opacity-80 transition-opacity">
                         <div class="relative">
                             <div class="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 p-0.5">
                                 <img src="<?php echo $story_photo; ?>"
@@ -154,7 +155,7 @@ function convert_youtube_to_iframe_index($content) {
                             <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                         </div>
                         <span class="text-xs text-gray-700 font-medium"><?php echo cut_str($story_nick, 6); ?></span>
-                    </div>
+                    </a>
                     <?php
                 }
 
