@@ -66,11 +66,22 @@ if ($row) {
     $result = 'success';
 }
 
-// 현재 추천 수
+// 현재 추천 수 및 좋아요 상태
 $write = sql_fetch("SELECT wr_good FROM {$write_table} WHERE wr_id = '{$wr_id}'");
+
+// 현재 사용자의 좋아요 상태 확인
+$is_good = false;
+$good_check = sql_fetch("SELECT COUNT(*) as cnt FROM {$g5['board_good_table']}
+                         WHERE bo_table = '{$bo_table}'
+                         AND wr_id = '{$wr_id}'
+                         AND mb_id = '{$member['mb_id']}'");
+if ($good_check && $good_check['cnt'] > 0) {
+    $is_good = true;
+}
 
 echo json_encode([
     'result' => $result,
-    'count' => (int)$write['wr_good']
+    'count' => (int)$write['wr_good'],
+    'is_good' => $is_good
 ]);
 ?>

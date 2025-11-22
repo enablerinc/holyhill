@@ -354,11 +354,11 @@ foreach ($media_files as $idx => $media) {
             <!-- 구분선 -->
             <hr class="border-gray-200">
 
-            <!-- 아멘(하트) -->
+            <!-- 좋아요(하트) -->
             <div class="p-4">
                 <button onclick="toggleGood()" class="flex items-center gap-2">
                     <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-red-500 text-2xl" id="heartIcon"></i>
-                    <span id="goodCount" class="font-semibold text-sm">아멘 <?php echo $write['wr_good']; ?>개</span>
+                    <span id="goodCount" class="font-semibold text-sm">좋아요 <?php echo $write['wr_good']; ?>개</span>
                 </button>
             </div>
 
@@ -698,10 +698,17 @@ function toggleGood() {
     })
     .then(r => r.json())
     .then(data => {
-        if (data.result) {
-            document.getElementById('heartIcon').classList.toggle('fa-regular');
-            document.getElementById('heartIcon').classList.toggle('fa-solid');
-            document.getElementById('goodCount').textContent = '아멘 ' + data.count + '개';
+        if (data.result && data.result !== 'error') {
+            const heartIcon = document.getElementById('heartIcon');
+            // 서버에서 받은 is_good 상태에 따라 하트 아이콘 설정
+            if (data.is_good) {
+                heartIcon.classList.remove('fa-regular');
+                heartIcon.classList.add('fa-solid');
+            } else {
+                heartIcon.classList.remove('fa-solid');
+                heartIcon.classList.add('fa-regular');
+            }
+            document.getElementById('goodCount').textContent = '좋아요 ' + data.count + '개';
         }
     });
 }
