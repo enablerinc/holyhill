@@ -4,32 +4,34 @@ include_once('./_common.php');
 $g5['title'] = '홈';
 
 // YouTube URL을 iframe으로 변환
-function convert_youtube_to_iframe_index($content) {
-    $patterns = array(
-        '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
-        '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
-        '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
-    );
+if (!function_exists('convert_youtube_to_iframe_index')) {
+    function convert_youtube_to_iframe_index($content) {
+        $patterns = array(
+            '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
+            '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
+            '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
+        );
 
-    foreach ($patterns as $pattern) {
-        $content = preg_replace_callback($pattern, function($matches) {
-            $video_id = $matches[1];
-            $iframe_html = '
-            <div class="youtube-container my-4" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;">
-                <iframe
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;"
-                    src="https://www.youtube.com/embed/' . htmlspecialchars($video_id) . '"
-                    title="YouTube video player"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen>
-                </iframe>
-            </div>';
-            return $iframe_html;
-        }, $content);
+        foreach ($patterns as $pattern) {
+            $content = preg_replace_callback($pattern, function($matches) {
+                $video_id = $matches[1];
+                $iframe_html = '
+                <div class="youtube-container my-4" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;">
+                    <iframe
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;"
+                        src="https://www.youtube.com/embed/' . htmlspecialchars($video_id) . '"
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>';
+                return $iframe_html;
+            }, $content);
+        }
+
+        return $content;
     }
-
-    return $content;
 }
 ?>
 
