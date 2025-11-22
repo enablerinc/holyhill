@@ -62,8 +62,8 @@ if ($w == "") {
 
 } else if ($w == 'u') {
 
-    if ($is_admin == 'super')
-        alert('관리자의 회원정보는 관리자 화면에서 수정해 주십시오.', G5_URL);
+    if ($member['mb_id'] === 'admin')
+        alert('admin 계정은 수정할 수 없습니다.', G5_URL);
 
     if (!$is_member)
         alert('로그인 후 이용하여 주십시오.', G5_URL);
