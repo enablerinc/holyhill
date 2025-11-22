@@ -116,17 +116,8 @@ function convert_youtube_to_iframe_index($content) {
     <div id="main-container" class="max-w-2xl mx-auto">
 
         <!-- 현재 활동중인 사용자 섹션 -->
-        <section id="online-users" class="bg-white px-4 py-3 mb-2 sticky top-16 z-40 border-b border-gray-100">
+        <section id="online-users" class="bg-white px-4 py-2 mb-2 sticky top-16 z-40 border-b border-gray-100">
             <?php
-            // 현재 접속중인 회원 수 먼저 계산
-            $online_count_sql = "SELECT COUNT(*) as cnt
-                                FROM {$g5['login_table']} a
-                                LEFT JOIN {$g5['member_table']} b ON (a.mb_id = b.mb_id)
-                                WHERE a.mb_id != ''
-                                AND b.mb_level >= 2";
-            $online_count = sql_fetch($online_count_sql);
-            $total_online = $online_count['cnt'];
-
             // 현재 접속중인 회원 표시 (login 테이블 활용)
             $story_sql = "SELECT b.mb_id, b.mb_nick
                          FROM {$g5['login_table']} a
@@ -137,17 +128,6 @@ function convert_youtube_to_iframe_index($content) {
                          LIMIT 10";
             $story_result = sql_query($story_sql);
             ?>
-
-            <!-- 헤더 -->
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-circle text-green-500 text-xs animate-pulse"></i>
-                    지금 활동중
-                </h3>
-                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    <?php echo number_format($total_online); ?>명
-                </span>
-            </div>
 
             <!-- 사용자 목록 -->
             <div class="flex gap-3 overflow-x-auto scrollbar-hide">
