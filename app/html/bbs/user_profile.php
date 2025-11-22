@@ -51,9 +51,13 @@ $recent_posts_sql = "SELECT * FROM {$g5['write_prefix']}gallery
 $recent_posts = sql_query($recent_posts_sql);
 
 // 최근 댓글 가져오기
-$recent_comments_sql = "SELECT a.*, b.wr_subject as parent_subject
+$recent_comments_sql = "SELECT a.*,
+                               b.wr_subject as parent_subject,
+                               b.mb_id as parent_mb_id,
+                               m.mb_nick as parent_author_nick
                         FROM {$g5['write_prefix']}gallery a
                         LEFT JOIN {$g5['write_prefix']}gallery b ON (a.wr_parent = b.wr_id)
+                        LEFT JOIN {$g5['member_table']} m ON (b.mb_id = m.mb_id)
                         WHERE a.mb_id = '{$mb_id}' AND a.wr_is_comment = 1
                         ORDER BY a.wr_id DESC
                         LIMIT 10";
@@ -252,11 +256,24 @@ $is_online = $online_check['cnt'] > 0;
                 <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $comment['wr_parent']; ?>#c_<?php echo $comment['wr_id']; ?>"
                    class="block p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex justify-between items-start mb-2">
-                        <p class="text-xs text-gray-500 flex items-center gap-1">
-                            <i class="fa-solid fa-reply text-purple-500"></i>
-                            <?php echo cut_str($comment['parent_subject'], 30); ?>
-                        </p>
-                        <span class="text-xs text-gray-400"><?php echo date('m/d', strtotime($comment['wr_datetime'])); ?></span>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-500 flex items-center gap-1 mb-1">
+                                <i class="fa-solid fa-reply text-purple-500"></i>
+                                <?php
+                                if ($comment['parent_author_nick']) {
+                                    echo '<span class="text-purple-600 font-medium">@'.$comment['parent_author_nick'].'</span>에게 댓글';
+                                } else {
+                                    echo cut_str($comment['parent_subject'], 30);
+                                }
+                                ?>
+                            </p>
+                            <?php if ($comment['parent_subject']) { ?>
+                            <p class="text-xs text-gray-400">
+                                <?php echo cut_str($comment['parent_subject'], 40); ?>
+                            </p>
+                            <?php } ?>
+                        </div>
+                        <span class="text-xs text-gray-400 ml-2"><?php echo date('m/d', strtotime($comment['wr_datetime'])); ?></span>
                     </div>
                     <p class="text-sm text-gray-700 line-clamp-2"><?php echo strip_tags($comment['wr_content']); ?></p>
                 </a>
