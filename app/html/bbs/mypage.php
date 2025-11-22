@@ -54,6 +54,21 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
     $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 }
 
+// 내게 온 댓글 조회 (gallery 게시판)
+$my_comments_sql = "SELECT c.*,
+                           p.wr_subject as parent_subject,
+                           m.mb_nick as comment_author_nick,
+                           m.mb_id as comment_author_id
+                    FROM {$g5['write_prefix']}gallery c
+                    LEFT JOIN {$g5['write_prefix']}gallery p ON (c.wr_parent = p.wr_id)
+                    LEFT JOIN {$g5['member_table']} m ON (c.mb_id = m.mb_id)
+                    WHERE c.wr_is_comment = 1
+                    AND p.mb_id = '{$mb['mb_id']}'
+                    AND c.mb_id != '{$mb['mb_id']}'
+                    ORDER BY c.wr_datetime DESC
+                    LIMIT 5";
+$my_comments_result = sql_query($my_comments_sql);
+
 ?>
 
 <!DOCTYPE html>
@@ -267,6 +282,72 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
                 ?>
                 <div class="bg-white rounded-2xl p-4 shadow-warm text-center">
                     <span class="text-sm text-gray-400">최근 활동이 없습니다.</span>
+                </div>
+                <?php
+            }
+            ?>
+        </div>
+    </section>
+
+    <section id="my-comments" class="px-4 mt-6">
+        <h3 class="text-lg font-semibold text-grace-green mb-4 flex items-center justify-between">
+            <span>내게 온 댓글</span>
+            <?php if (sql_num_rows($my_comments_result) > 0) { ?>
+            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                <?php echo sql_num_rows($my_comments_result); ?>개
+            </span>
+            <?php } ?>
+        </h3>
+
+        <div class="space-y-3">
+            <?php
+            if (sql_num_rows($my_comments_result) > 0) {
+                while ($comment = sql_fetch_array($my_comments_result)) {
+                    // 시간 계산
+                    $time_diff = time() - strtotime($comment['wr_datetime']);
+                    if ($time_diff < 3600) {
+                        $time_str = floor($time_diff / 60) . '분 전';
+                    } elseif ($time_diff < 86400) {
+                        $time_str = floor($time_diff / 3600) . '시간 전';
+                    } else {
+                        $time_str = floor($time_diff / 86400) . '일 전';
+                    }
+
+                    // 댓글 작성자 프로필 이미지
+                    $comment_author_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
+                    if ($comment['comment_author_id']) {
+                        $author_profile_path = G5_DATA_PATH.'/member_image/'.substr($comment['comment_author_id'], 0, 2).'/'.$comment['comment_author_id'].'.gif';
+                        if (file_exists($author_profile_path)) {
+                            $comment_author_photo = G5_DATA_URL.'/member_image/'.substr($comment['comment_author_id'], 0, 2).'/'.$comment['comment_author_id'].'.gif';
+                        }
+                    }
+                    ?>
+                    <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $comment['wr_parent']; ?>#c_<?php echo $comment['wr_id']; ?>"
+                       class="bg-white rounded-2xl p-4 shadow-warm block hover:shadow-lg transition-shadow">
+                        <div class="flex items-start gap-3 mb-3">
+                            <img src="<?php echo $comment_author_photo; ?>"
+                                 class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                 alt="<?php echo $comment['comment_author_nick']; ?>">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-sm font-semibold text-grace-green"><?php echo $comment['comment_author_nick']; ?></span>
+                                    <span class="text-xs text-gray-400"><?php echo $time_str; ?></span>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-2">
+                                    <i class="fa-solid fa-reply text-purple-500"></i>
+                                    <?php echo cut_str($comment['parent_subject'], 30); ?>에 댓글
+                                </p>
+                                <p class="text-sm text-gray-700 line-clamp-2"><?php echo strip_tags($comment['wr_content']); ?></p>
+                            </div>
+                        </div>
+                    </a>
+                    <?php
+                }
+            } else {
+                ?>
+                <div class="bg-white rounded-2xl p-8 shadow-warm text-center">
+                    <i class="fa-regular fa-comment text-gray-300 text-4xl mb-3"></i>
+                    <p class="text-sm text-gray-400">아직 받은 댓글이 없습니다.</p>
                 </div>
                 <?php
             }
