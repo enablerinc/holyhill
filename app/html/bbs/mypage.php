@@ -18,24 +18,11 @@ $diff = $now - $join_date;
 $years = floor($diff / (365 * 60 * 60 * 24));
 $months = floor(($diff - $years * 365 * 60 * 60 * 24) / (30 * 60 * 60 * 24));
 
-// 게시물 수 조회 - 모든 게시판의 게시물 합계
-$sql = "SELECT COUNT(*) as cnt FROM (";
-$board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
-$first = true;
-while ($board = sql_fetch_array($board_list)) {
-    if (!$first) $sql .= " UNION ALL ";
-    $sql .= "SELECT wr_id FROM {$g5['write_prefix']}{$board['bo_table']} WHERE mb_id = '{$mb['mb_id']}'";
-    $first = false;
-}
-$sql .= ") as total_posts";
-
-if ($first) {
-    // 게시판이 없는 경우
-    $post_count = 0;
-} else {
-    $result = sql_fetch($sql);
-    $post_count = ($result && isset($result['cnt'])) ? $result['cnt'] : 0;
-}
+// 게시물 수 조회 - gallery 게시판의 게시물만 (user_profile.php와 동일)
+$post_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}gallery
+                   WHERE mb_id = '{$mb['mb_id']}' AND wr_is_comment = 0";
+$post_count_result = sql_fetch($post_count_sql);
+$post_count = $post_count_result['cnt'];
 
 // 포인트
 $point = number_format($mb['mb_point']);
@@ -57,7 +44,7 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
 // 내게 온 댓글 조회 (gallery 게시판)
 $my_comments_sql = "SELECT c.*,
                            p.wr_subject as parent_subject,
-                           m.mb_nick as comment_author_nick,
+                           m.mb_name as comment_author_nick,
                            m.mb_id as comment_author_id
                     FROM {$g5['write_prefix']}gallery c
                     LEFT JOIN {$g5['write_prefix']}gallery p ON (c.wr_parent = p.wr_id)
@@ -77,6 +64,8 @@ $my_comments_result = sql_query($my_comments_sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $g5['title']; ?></title>
+    <link rel="icon" type="image/png" href="<?php echo G5_IMG_URL; ?>/logo.png">
+    <link rel="apple-touch-icon" href="<?php echo G5_IMG_URL; ?>/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -131,7 +120,7 @@ $my_comments_result = sql_query($my_comments_sql);
 
     <section id="profile-info" class="pt-16 px-4 text-center">
         <h2 class="text-xl font-semibold text-grace-green mb-1"><?php echo get_text($mb['mb_name']); ?></h2>
-        <p class="text-sm text-gray-500 mb-2"><?php echo get_text($mb['mb_nick']); ?></p>
+        <p class="text-sm text-gray-500 mb-2">@<?php echo get_text($mb['mb_id']); ?></p>
         <p class="text-xs text-grace-green mb-4">
             <?php
             if ($years > 0) {

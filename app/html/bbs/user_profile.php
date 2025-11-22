@@ -15,7 +15,7 @@ if (!$mb['mb_id']) {
     alert_close('회원정보가 존재하지 않습니다.');
 }
 
-$g5['title'] = $mb['mb_nick'].'님의 프로필';
+$g5['title'] = $mb['mb_name'].'님의 프로필';
 
 // 프로필 이미지
 $profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
@@ -54,7 +54,7 @@ $recent_posts = sql_query($recent_posts_sql);
 $recent_comments_sql = "SELECT a.*,
                                b.wr_subject as parent_subject,
                                b.mb_id as parent_mb_id,
-                               m.mb_nick as parent_author_nick
+                               m.mb_name as parent_author_nick
                         FROM {$g5['write_prefix']}gallery a
                         LEFT JOIN {$g5['write_prefix']}gallery b ON (a.wr_parent = b.wr_id)
                         LEFT JOIN {$g5['member_table']} m ON (b.mb_id = m.mb_id)
@@ -80,6 +80,8 @@ $is_online = $online_check['cnt'] > 0;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $g5['title']; ?></title>
+    <link rel="icon" type="image/png" href="<?php echo G5_IMG_URL; ?>/logo.png">
+    <link rel="apple-touch-icon" href="<?php echo G5_IMG_URL; ?>/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -141,7 +143,7 @@ $is_online = $online_check['cnt'] > 0;
             <!-- 기본 정보 -->
             <div class="flex-1">
                 <div class="flex items-center gap-2 mb-2">
-                    <h2 class="text-xl font-bold text-gray-800"><?php echo $mb['mb_nick']; ?></h2>
+                    <h2 class="text-xl font-bold text-gray-800"><?php echo $mb['mb_name']; ?></h2>
                     <?php if ($is_online) { ?>
                     <span class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full flex items-center gap-1">
                         <i class="fa-solid fa-circle text-green-500 text-[6px] animate-pulse"></i>

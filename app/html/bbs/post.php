@@ -53,6 +53,43 @@ if (!get_session($ss_name)) {
 
 $g5['title'] = strip_tags($write['wr_subject']);
 
+// 시간 표시 함수
+function get_time_ago($datetime) {
+    $time_diff = time() - strtotime($datetime);
+
+    if ($time_diff < 60) {
+        return '방금 전';
+    } elseif ($time_diff < 3600) {
+        return floor($time_diff / 60) . '분 전';
+    } elseif ($time_diff < 86400) {
+        return floor($time_diff / 3600) . '시간 전';
+    } elseif ($time_diff < 2592000) { // 30일
+        return floor($time_diff / 86400) . '일 전';
+    } else {
+        return date('Y-m-d', strtotime($datetime));
+    }
+}
+
+// 댓글 내용에서 유튜브 URL을 iframe으로 변환하는 함수
+function process_comment_content($content) {
+    // YouTube URL 패턴
+    $patterns = array(
+        '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
+        '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
+        '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
+    );
+
+    foreach ($patterns as $pattern) {
+        $content = preg_replace_callback($pattern, function($matches) {
+            $video_id = $matches[1];
+            $iframe_html = '<div class="youtube-container my-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;" src="https://www.youtube.com/embed/' . $video_id . '" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
+            return $iframe_html;
+        }, $content);
+    }
+
+    return $content;
+}
+
 // 수정, 삭제 링크
 $update_href = $delete_href = '';
 if (($member['mb_id'] && ($member['mb_id'] === $write['mb_id'])) || $is_admin) {
@@ -66,9 +103,9 @@ $mb_nick = $write['wr_name'] ? $write['wr_name'] : '알 수 없음';
 $mb_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 
 if ($write['mb_id']) {
-    $mb_result = sql_query("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$write['mb_id']}'");
+    $mb_result = sql_query("SELECT mb_name FROM {$g5['member_table']} WHERE mb_id = '{$write['mb_id']}'");
     if ($mb_result && $row = sql_fetch_array($mb_result)) {
-        $mb_nick = $row['mb_nick'];
+        $mb_nick = $row['mb_name'];  // 이름 사용
     }
 
     // 프로필 이미지
@@ -246,6 +283,8 @@ foreach ($media_files as $idx => $media) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $g5['title']; ?></title>
+    <link rel="icon" type="image/png" href="<?php echo G5_IMG_URL; ?>/logo.png">
+    <link rel="apple-touch-icon" href="<?php echo G5_IMG_URL; ?>/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -315,7 +354,7 @@ foreach ($media_files as $idx => $media) {
                     <img src="<?php echo $mb_photo; ?>" class="w-10 h-10 rounded-full" alt="">
                     <div class="font-semibold"><?php echo $mb_nick; ?></div>
                 </div>
-                <div class="text-sm text-gray-500"><?php echo date('Y-m-d', strtotime($write['wr_datetime'])); ?></div>
+                <div class="text-sm text-gray-500"><?php echo get_time_ago($write['wr_datetime']); ?></div>
             </div>
 
             <!-- 구분선 -->
@@ -401,9 +440,9 @@ foreach ($media_files as $idx => $media) {
                         $c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 
                         if ($c['mb_id']) {
-                            $c_mb = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$c['mb_id']}'");
+                            $c_mb = sql_fetch("SELECT mb_name FROM {$g5['member_table']} WHERE mb_id = '{$c['mb_id']}'");
                             if ($c_mb) {
-                                $c_nick = $c_mb['mb_nick'];
+                                $c_nick = $c_mb['mb_name'];  // 이름 사용
                             }
 
                             $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
@@ -417,12 +456,21 @@ foreach ($media_files as $idx => $media) {
                                 <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full flex-shrink-0">
                                 <div class="flex-1">
                                     <div class="bg-gray-50 rounded-2xl px-3 py-2">
-                                        <div class="font-semibold text-xs mb-1"><?php echo $c_nick; ?></div>
-                                        <div class="text-sm"><?php echo nl2br(get_text($c['wr_content'])); ?></div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <div class="font-semibold text-xs"><?php echo $c_nick; ?></div>
+                                            <div class="text-xs text-gray-400"><?php echo get_time_ago($c['wr_datetime']); ?></div>
+                                        </div>
+                                        <div class="text-sm comment-content-<?php echo $c['wr_id']; ?>"><?php echo process_comment_content(nl2br(get_text($c['wr_content']))); ?></div>
                                     </div>
-                                    <?php if ($is_member) { ?>
-                                    <button onclick="toggleReplyForm(<?php echo $c['wr_id']; ?>)" class="text-xs text-gray-500 mt-1 ml-3">답글</button>
-                                    <?php } ?>
+                                    <div class="flex gap-2 mt-1 ml-3">
+                                        <?php if ($is_member) { ?>
+                                        <button onclick="toggleReplyForm(<?php echo $c['wr_id']; ?>)" class="text-xs text-gray-500">답글</button>
+                                        <?php } ?>
+                                        <?php if (($is_member && $member['mb_id'] === $c['mb_id']) || $is_admin) { ?>
+                                        <button onclick="editComment(<?php echo $c['wr_id']; ?>, '<?php echo addslashes(str_replace("\n", "\\n", get_text($c['wr_content']))); ?>')" class="text-xs text-gray-500">수정</button>
+                                        <button onclick="deleteComment(<?php echo $c['wr_id']; ?>)" class="text-xs text-red-500">삭제</button>
+                                        <?php } ?>
+                                    </div>
                                 </div>
                             </div>
                             <!-- 답글 입력창 -->
@@ -454,9 +502,9 @@ foreach ($media_files as $idx => $media) {
                                 $r_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 
                                 if ($r['mb_id']) {
-                                    $r_mb = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$r['mb_id']}'");
+                                    $r_mb = sql_fetch("SELECT mb_name FROM {$g5['member_table']} WHERE mb_id = '{$r['mb_id']}'");
                                     if ($r_mb) {
-                                        $r_nick = $r_mb['mb_nick'];
+                                        $r_nick = $r_mb['mb_name'];  // 이름 사용
                                     }
 
                                     $r_profile_path = G5_DATA_PATH.'/member_image/'.substr($r['mb_id'], 0, 2).'/'.$r['mb_id'].'.gif';
@@ -470,9 +518,18 @@ foreach ($media_files as $idx => $media) {
                                         <img src="<?php echo $r_photo; ?>" class="w-8 h-8 rounded-full flex-shrink-0">
                                         <div class="flex-1">
                                             <div class="bg-gray-50 rounded-2xl px-3 py-2">
-                                                <div class="font-semibold text-xs mb-1"><?php echo $r_nick; ?></div>
-                                                <div class="text-sm"><?php echo nl2br(get_text($r['wr_content'])); ?></div>
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <div class="font-semibold text-xs"><?php echo $r_nick; ?></div>
+                                                    <div class="text-xs text-gray-400"><?php echo get_time_ago($r['wr_datetime']); ?></div>
+                                                </div>
+                                                <div class="text-sm comment-content-<?php echo $r['wr_id']; ?>"><?php echo process_comment_content(nl2br(get_text($r['wr_content']))); ?></div>
                                             </div>
+                                            <?php if (($is_member && $member['mb_id'] === $r['mb_id']) || $is_admin) { ?>
+                                            <div class="flex gap-2 mt-1 ml-3">
+                                                <button onclick="editComment(<?php echo $r['wr_id']; ?>, '<?php echo addslashes(str_replace("\n", "\\n", get_text($r['wr_content']))); ?>')" class="text-xs text-gray-500">수정</button>
+                                                <button onclick="deleteComment(<?php echo $r['wr_id']; ?>)" class="text-xs text-red-500">삭제</button>
+                                            </div>
+                                            <?php } ?>
                                         </div>
                                     </div>
                                 </div>
@@ -681,6 +738,120 @@ function submitReply(parentCommentId) {
     .finally(() => {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalContent;
+    });
+}
+
+// 댓글 수정
+function editComment(commentId, currentContent) {
+    const contentDiv = document.querySelector('.comment-content-' + commentId);
+    if (!contentDiv) return;
+
+    // 이미 수정 중인 경우 취소
+    if (contentDiv.querySelector('textarea')) {
+        return;
+    }
+
+    // 원본 HTML 저장
+    const originalHTML = contentDiv.innerHTML;
+
+    // textarea로 변경
+    contentDiv.innerHTML = `
+        <div class="flex flex-col gap-2">
+            <textarea class="w-full p-2 border rounded text-sm" rows="3" id="edit-textarea-${commentId}">${currentContent}</textarea>
+            <div class="flex gap-2">
+                <button onclick="saveComment(${commentId})" class="px-3 py-1 bg-purple-600 text-white text-xs rounded">저장</button>
+                <button onclick="cancelEdit(${commentId}, \`${originalHTML.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" class="px-3 py-1 bg-gray-300 text-xs rounded">취소</button>
+            </div>
+        </div>
+    `;
+}
+
+// 댓글 수정 취소
+function cancelEdit(commentId, originalHTML) {
+    const contentDiv = document.querySelector('.comment-content-' + commentId);
+    if (contentDiv) {
+        contentDiv.innerHTML = originalHTML;
+    }
+}
+
+// 댓글 저장
+function saveComment(commentId) {
+    const textarea = document.getElementById('edit-textarea-' + commentId);
+    if (!textarea) return;
+
+    const newContent = textarea.value.trim();
+    if (!newContent) {
+        alert('내용을 입력해주세요.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('comment_id', commentId);
+    formData.append('content', newContent);
+    formData.append('bo_table', '<?php echo $bo_table; ?>');
+    formData.append('wr_id', '<?php echo $wr_id; ?>');
+
+    fetch('<?php echo G5_BBS_URL; ?>/comment_update.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 수정된 내용으로 업데이트
+            const contentDiv = document.querySelector('.comment-content-' + commentId);
+            if (contentDiv) {
+                contentDiv.innerHTML = newContent.replace(/\n/g, '<br>');
+            }
+            alert('댓글이 수정되었습니다.');
+        } else {
+            alert(data.message || '댓글 수정에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        alert('오류가 발생했습니다: ' + error.message);
+    });
+}
+
+// 댓글 삭제
+function deleteComment(commentId) {
+    if (!confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('comment_id', commentId);
+    formData.append('bo_table', '<?php echo $bo_table; ?>');
+    formData.append('wr_id', '<?php echo $wr_id; ?>');
+
+    fetch('<?php echo G5_BBS_URL; ?>/comment_delete.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 댓글 요소 제거
+            const commentElement = document.getElementById('c_' + commentId);
+            if (commentElement) {
+                commentElement.remove();
+            }
+
+            // 댓글 개수 업데이트
+            const commentCountH3 = document.querySelector('#comment-list').previousElementSibling;
+            if (commentCountH3) {
+                const match = commentCountH3.textContent.match(/\d+/);
+                const currentCount = match ? parseInt(match[0]) : 0;
+                commentCountH3.textContent = '댓글 ' + Math.max(0, currentCount - 1) + '개';
+            }
+
+            alert('댓글이 삭제되었습니다.');
+        } else {
+            alert(data.message || '댓글 삭제에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        alert('오류가 발생했습니다: ' + error.message);
     });
 }
 

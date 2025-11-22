@@ -13,7 +13,11 @@ include_once(G5_PATH.'/head.sub.php');
     <meta name="format-detection" content="telephone=no">
     
     <title><?php echo $g5['title']; ?></title>
-    
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?php echo G5_IMG_URL; ?>/logo.png">
+    <link rel="apple-touch-icon" href="<?php echo G5_IMG_URL; ?>/logo.png">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     

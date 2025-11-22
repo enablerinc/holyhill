@@ -84,7 +84,7 @@ sql_query("INSERT INTO {$write_table} SET
     wr_is_comment = 1,
     wr_parent = '{$wr_id}',
     wr_content = '" . addslashes($wr_content) . "',
-    wr_name = '{$member['mb_nick']}',
+    wr_name = '{$member['mb_name']}',
     mb_id = '{$member['mb_id']}',
     wr_datetime = '" . G5_TIME_YMDHIS . "',
     wr_ip = '{$_SERVER['REMOTE_ADDR']}'");
@@ -117,7 +117,7 @@ echo json_encode([
     'comment' => [
         'id' => $comment_id,
         'content' => htmlspecialchars($wr_content),
-        'nick' => $member['mb_nick'],
+        'nick' => $member['mb_name'],  // 이름 사용
         'photo' => $c_photo,
         'datetime' => '방금 전'
     ]
