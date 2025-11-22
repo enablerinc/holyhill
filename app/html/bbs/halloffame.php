@@ -4,7 +4,7 @@ include_once('./_common.php');
 $g5['title'] = '명예의 전당';
 
 // 우수 성산인 기준 점수 (여기서 변경 가능)
-define('EXCELLENT_MEMBER_POINT', 10000);
+define('EXCELLENT_MEMBER_POINT', 1000);
 
 // 현재 년도와 월 설정
 $current_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
