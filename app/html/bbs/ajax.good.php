@@ -51,16 +51,16 @@ if ($row) {
                    bg_datetime = NOW()");
     
     sql_query("UPDATE {$write_table} SET wr_good = wr_good + 1 WHERE wr_id = '{$wr_id}'");
-    
-    // 포인트 지급
+
+    // 포인트 지급 (추천한 사람에게 10포인트)
     $po_content = "{$board['bo_subject']} {$wr_id} 추천";
-    insert_point($member['mb_id'], 1, $po_content, $bo_table, $wr_id, '추천');
-    
-    // 작성자에게 포인트 지급
+    insert_point($member['mb_id'], 10, $po_content, $bo_table, $wr_id, '추천');
+
+    // 작성자에게 포인트 지급 (30포인트)
     $write = sql_fetch("SELECT mb_id FROM {$write_table} WHERE wr_id = '{$wr_id}'");
     if ($write['mb_id'] && $write['mb_id'] != $member['mb_id']) {
         $po_content = "{$board['bo_subject']} {$wr_id} 추천 받음";
-        insert_point($write['mb_id'], 3, $po_content, $bo_table, $wr_id, '추천받음');
+        insert_point($write['mb_id'], 30, $po_content, $bo_table, $wr_id, '추천받음');
     }
     
     $result = 'success';

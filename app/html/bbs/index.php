@@ -118,15 +118,15 @@ function convert_youtube_to_iframe_index($content) {
         <!-- 현재 활동중인 사용자 섹션 -->
         <section id="online-users" class="bg-white px-4 py-2 mb-2 sticky top-16 z-40 border-b border-gray-100">
             <?php
-            // 현재 접속중인 회원 표시 (login 테이블 활용)
-            $story_sql = "SELECT b.mb_id, b.mb_nick
-                         FROM {$g5['login_table']} a
-                         LEFT JOIN {$g5['member_table']} b ON (a.mb_id = b.mb_id)
-                         WHERE a.mb_id != ''
-                         AND b.mb_level >= 2
-                         ORDER BY a.lo_datetime DESC
-                         LIMIT 10";
-            $story_result = sql_query($story_sql);
+            // 오늘 출석(로그인)한 모든 회원 표시
+            $today_login_sql = "
+                SELECT mb_id, mb_nick
+                FROM {$g5['member_table']}
+                WHERE mb_id != ''
+                AND DATE(mb_today_login) = CURDATE()
+                ORDER BY mb_today_login DESC
+            ";
+            $story_result = sql_query($today_login_sql);
             ?>
 
             <!-- 사용자 목록 -->
