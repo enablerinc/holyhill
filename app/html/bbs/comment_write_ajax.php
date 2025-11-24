@@ -93,9 +93,10 @@ $comment_id = sql_insert_id();
 
 sql_query("UPDATE {$write_table} SET wr_comment = wr_comment + 1 WHERE wr_id = '{$wr_id}'");
 
+// 댓글 포인트 지급 (각 댓글마다 고유한 comment_id 사용)
 if ($board['bo_comment_point']) {
-    insert_point($member['mb_id'], $board['bo_comment_point'], 
-                 "{$board['bo_subject']} 댓글", $bo_table, $wr_id, '댓글');
+    insert_point($member['mb_id'], $board['bo_comment_point'],
+                 "{$board['bo_subject']} {$wr_id}-{$comment_id} 댓글쓰기", $bo_table, $comment_id, '댓글');
 }
 
 // ✅ 새 토큰 생성
