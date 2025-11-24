@@ -36,7 +36,7 @@ if ($po_result) {
 }
 
 // 프로필 이미지 경로
-$profile_img_path = get_member_profile_img($mb['mb_id'], true);
+$profile_img_path = get_member_profile_url($mb['mb_id']);
 if ($profile_img_path) {
     $profile_img = $profile_img_path;
 } else {
@@ -307,7 +307,7 @@ $my_comments_result = sql_query($my_comments_sql);
                     // 댓글 작성자 프로필 이미지
                     $comment_author_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
                     if ($comment['comment_author_id']) {
-                        $author_profile_img = get_member_profile_img($comment['comment_author_id'], true);
+                        $author_profile_img = get_member_profile_url($comment['comment_author_id']);
                         if ($author_profile_img) {
                             $comment_author_photo = $author_profile_img;
                         }

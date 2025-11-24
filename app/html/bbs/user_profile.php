@@ -19,7 +19,7 @@ $g5['title'] = $mb['mb_name'].'님의 프로필';
 
 // 프로필 이미지
 $profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-$profile_img = get_member_profile_img($mb['mb_id'], true);
+$profile_img = get_member_profile_url($mb['mb_id']);
 if ($profile_img) {
     $profile_photo = $profile_img;
 }

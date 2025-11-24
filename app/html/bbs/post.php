@@ -116,7 +116,7 @@ if ($write['mb_id']) {
     }
 
     // 프로필 이미지
-    $profile_img = get_member_profile_img($write['mb_id'], true);
+    $profile_img = get_member_profile_url($write['mb_id']);
     if ($profile_img) {
         $mb_photo = $profile_img;
     }
@@ -162,7 +162,7 @@ if ($is_member) {
 // 댓글 작성자 프로필 사진 (답글 입력창에서 사용)
 $comment_profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 if ($is_member) {
-    $comment_profile_img = get_member_profile_img($member['mb_id'], true);
+    $comment_profile_img = get_member_profile_url($member['mb_id']);
     if ($comment_profile_img) {
         $comment_profile_photo = $comment_profile_img;
     }
@@ -468,7 +468,7 @@ foreach ($media_files as $idx => $media) {
                                 $c_nick = $c_mb['mb_name'];  // 이름 사용
                             }
 
-                            $c_profile_img = get_member_profile_img($c['mb_id'], true);
+                            $c_profile_img = get_member_profile_url($c['mb_id']);
                             if ($c_profile_img) {
                                 $c_photo = $c_profile_img;
                             }
@@ -530,7 +530,7 @@ foreach ($media_files as $idx => $media) {
                                         $r_nick = $r_mb['mb_name'];  // 이름 사용
                                     }
 
-                                    $r_profile_img = get_member_profile_img($r['mb_id'], true);
+                                    $r_profile_img = get_member_profile_url($r['mb_id']);
                                     if ($r_profile_img) {
                                         $r_photo = $r_profile_img;
                                     }

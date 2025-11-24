@@ -136,7 +136,7 @@ set_session('ss_comment_token', $new_token);
 // 방금 작성한 댓글 정보 반환
 $c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 if ($member['mb_id']) {
-    $c_profile_img = get_member_profile_img($member['mb_id'], true);
+    $c_profile_img = get_member_profile_url($member['mb_id']);
     if ($c_profile_img) {
         $c_photo = $c_profile_img;
     }
