@@ -747,9 +747,18 @@ function submitReply(parentCommentId) {
                             <img src="${data.comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
                             <div class="flex-1">
                                 <div class="bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
-                                    <div class="font-semibold text-xs mb-1">${data.comment.nick}</div>
-                                    <div class="text-sm">${data.comment.content}</div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="font-semibold text-xs">${data.comment.nick}</div>
+                                        <div class="text-xs text-gray-400">${data.comment.datetime}</div>
+                                    </div>
+                                    <div class="text-sm comment-content-${data.comment.id}">${processCommentContent(data.comment.content)}</div>
                                 </div>
+                                <?php if ($is_member) { ?>
+                                <div class="flex gap-2 mt-1 ml-3">
+                                    <button onclick="editComment(${data.comment.id}, \`${data.comment.content.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/\n/g, '\\n')}\`)" class="text-xs text-gray-500">수정</button>
+                                    <button onclick="deleteComment(${data.comment.id})" class="text-xs text-red-500">삭제</button>
+                                </div>
+                                <?php } ?>
                             </div>
                         </div>
                     </div>
@@ -862,7 +871,7 @@ function saveComment(commentId) {
             // 수정된 내용으로 업데이트
             const contentDiv = document.querySelector('.comment-content-' + commentId);
             if (contentDiv) {
-                contentDiv.innerHTML = newContent.replace(/\n/g, '<br>');
+                contentDiv.innerHTML = processCommentContent(newContent);
             }
             alert('댓글이 수정되었습니다.');
         } else {
@@ -914,6 +923,35 @@ function deleteComment(commentId) {
     .catch(error => {
         alert('오류가 발생했습니다: ' + error.message);
     });
+}
+
+// JavaScript에서 댓글 내용 처리 (이미지 URL과 YouTube URL을 변환)
+function processCommentContent(content) {
+    if (!content) return '';
+
+    // 줄바꿈을 <br>로 변환
+    content = content.replace(/\n/g, '<br>');
+
+    // 이미지 URL 패턴 감지 및 변환
+    const imagePattern = /(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp))/gi;
+    content = content.replace(imagePattern, function(match) {
+        return '<div class="my-2"><img src="' + match + '" class="max-w-full rounded-lg" alt="댓글 이미지" style="max-height: 300px; object-fit: contain;"></div>';
+    });
+
+    // YouTube URL 패턴 감지 및 변환
+    const youtubePatterns = [
+        /https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/gi,
+        /https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/gi,
+        /https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/gi
+    ];
+
+    youtubePatterns.forEach(pattern => {
+        content = content.replace(pattern, function(match, videoId) {
+            return '<div class="youtube-container my-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;" src="https://www.youtube.com/embed/' + videoId + '" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
+        });
+    });
+
+    return content;
 }
 
 function toggleGood() {
@@ -1011,12 +1049,19 @@ window.lastCommentId = <?php
                             <img src="${data.comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
                             <div class="flex-1">
                                 <div class="bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
-                                    <div class="font-semibold text-xs mb-1">${data.comment.nick}</div>
-                                    <div class="text-sm">${data.comment.content}</div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="font-semibold text-xs">${data.comment.nick}</div>
+                                        <div class="text-xs text-gray-400">${data.comment.datetime}</div>
+                                    </div>
+                                    <div class="text-sm comment-content-${data.comment.id}">${processCommentContent(data.comment.content)}</div>
                                 </div>
-                                <?php if ($is_member) { ?>
-                                <button onclick="toggleReplyForm(${data.comment.id})" class="text-xs text-gray-500 mt-1 ml-3">답글</button>
-                                <?php } ?>
+                                <div class="flex gap-2 mt-1 ml-3">
+                                    <?php if ($is_member) { ?>
+                                    <button onclick="toggleReplyForm(${data.comment.id})" class="text-xs text-gray-500">답글</button>
+                                    <button onclick="editComment(${data.comment.id}, \`${data.comment.content.replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/\n/g, '\\n')}\`)" class="text-xs text-gray-500">수정</button>
+                                    <button onclick="deleteComment(${data.comment.id})" class="text-xs text-red-500">삭제</button>
+                                    <?php } ?>
+                                </div>
                             </div>
                         </div>
                         <?php if ($is_member) { ?>

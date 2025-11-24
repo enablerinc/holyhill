@@ -117,6 +117,7 @@ if ($has_image) {
             // 댓글 내용에 이미지 URL 추가
             $updated_content = trim($wr_content) . "\n" . $uploaded_image_url;
             sql_query("UPDATE {$write_table} SET wr_content = '" . addslashes($updated_content) . "' WHERE wr_id = '{$comment_id}'");
+            $wr_content = $updated_content; // 반환용으로 업데이트된 내용 저장
         }
     }
 }
