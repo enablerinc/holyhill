@@ -70,16 +70,23 @@ function get_time_ago($datetime) {
     }
 }
 
-// 댓글 내용에서 유튜브 URL을 iframe으로 변환하는 함수
+// 댓글 내용에서 유튜브 URL과 이미지 URL을 변환하는 함수
 function process_comment_content($content) {
+    // 이미지 URL 패턴 (먼저 처리)
+    $image_pattern = '/(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp))/i';
+    $content = preg_replace_callback($image_pattern, function($matches) {
+        $image_url = $matches[1];
+        return '<div class="my-2"><img src="' . $image_url . '" class="max-w-full rounded-lg" alt="댓글 이미지" style="max-height: 300px; object-fit: contain;"></div>';
+    }, $content);
+
     // YouTube URL 패턴
-    $patterns = array(
+    $youtube_patterns = array(
         '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
         '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
         '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
     );
 
-    foreach ($patterns as $pattern) {
+    foreach ($youtube_patterns as $pattern) {
         $content = preg_replace_callback($pattern, function($matches) {
             $video_id = $matches[1];
             $iframe_html = '<div class="youtube-container my-2" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 0.5rem;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 0.5rem;" src="https://www.youtube.com/embed/' . $video_id . '" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>';
@@ -109,9 +116,9 @@ if ($write['mb_id']) {
     }
 
     // 프로필 이미지
-    $profile_path = G5_DATA_PATH.'/member_image/'.substr($write['mb_id'], 0, 2).'/'.$write['mb_id'].'.gif';
-    if (file_exists($profile_path)) {
-        $mb_photo = G5_DATA_URL.'/member_image/'.substr($write['mb_id'], 0, 2).'/'.$write['mb_id'].'.gif';
+    $profile_img = get_member_profile_img($write['mb_id'], true);
+    if ($profile_img) {
+        $mb_photo = $profile_img;
     }
 }
 
@@ -155,9 +162,9 @@ if ($is_member) {
 // 댓글 작성자 프로필 사진 (답글 입력창에서 사용)
 $comment_profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 if ($is_member) {
-    $comment_profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (file_exists($comment_profile_path)) {
-        $comment_profile_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
+    $comment_profile_img = get_member_profile_img($member['mb_id'], true);
+    if ($comment_profile_img) {
+        $comment_profile_photo = $comment_profile_img;
     }
 }
 
@@ -390,6 +397,22 @@ foreach ($media_files as $idx => $media) {
                 <div><?php echo $processed_content; ?></div>
             </div>
 
+            <?php if ($is_member && ($member['mb_id'] === $write['mb_id'] || $is_admin)) { ?>
+            <!-- 게시물 수정/삭제 버튼 -->
+            <div class="px-4 pb-4">
+                <div class="flex gap-2">
+                    <button onclick="location.href='<?php echo G5_BBS_URL; ?>/write.php?w=u&bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>'"
+                            class="flex-1 py-2.5 bg-purple-50 text-purple-600 rounded-lg font-medium hover:bg-purple-100 transition-colors">
+                        <i class="fa-solid fa-pen text-sm"></i> 수정
+                    </button>
+                    <button onclick="deletePost()"
+                            class="flex-1 py-2.5 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors">
+                        <i class="fa-solid fa-trash text-sm"></i> 삭제
+                    </button>
+                </div>
+            </div>
+            <?php } ?>
+
             <!-- 구분선 -->
             <hr class="border-gray-200">
 
@@ -445,9 +468,9 @@ foreach ($media_files as $idx => $media) {
                                 $c_nick = $c_mb['mb_name'];  // 이름 사용
                             }
 
-                            $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
-                            if (file_exists($c_profile_path)) {
-                                $c_photo = G5_DATA_URL.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
+                            $c_profile_img = get_member_profile_img($c['mb_id'], true);
+                            if ($c_profile_img) {
+                                $c_photo = $c_profile_img;
                             }
                         }
                         ?>
@@ -507,9 +530,9 @@ foreach ($media_files as $idx => $media) {
                                         $r_nick = $r_mb['mb_name'];  // 이름 사용
                                     }
 
-                                    $r_profile_path = G5_DATA_PATH.'/member_image/'.substr($r['mb_id'], 0, 2).'/'.$r['mb_id'].'.gif';
-                                    if (file_exists($r_profile_path)) {
-                                        $r_photo = G5_DATA_URL.'/member_image/'.substr($r['mb_id'], 0, 2).'/'.$r['mb_id'].'.gif';
+                                    $r_profile_img = get_member_profile_img($r['mb_id'], true);
+                                    if ($r_profile_img) {
+                                        $r_photo = $r_profile_img;
                                     }
                                 }
                                 ?>
@@ -552,16 +575,28 @@ foreach ($media_files as $idx => $media) {
 <div id="commentFormWrapper" style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 2px solid #e5e7eb; z-index: 99999; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);">
     <div style="max-width: 640px; margin: 0 auto;">
         <?php if ($is_member) { ?>
-        <form id="commentForm" method="post" action="<?php echo G5_BBS_URL; ?>/comment_write_ajax.php" style="padding: 16px;" novalidate>
+        <form id="commentForm" method="post" action="<?php echo G5_BBS_URL; ?>/comment_write_ajax.php" style="padding: 16px;" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="w" value="c">
             <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
             <input type="hidden" name="wr_id" value="<?php echo $wr_id; ?>">
             <input type="hidden" name="comment_id" value="">
             <input type="hidden" name="token" value="<?php echo $comment_token; ?>">
+            <input type="file" id="commentImageInput" name="comment_image" accept="image/*" style="display: none;" onchange="previewCommentImage(event)">
+
+            <!-- 이미지 미리보기 -->
+            <div id="commentImagePreview" style="display: none; margin-bottom: 8px; position: relative;">
+                <img id="commentPreviewImg" style="max-width: 100px; max-height: 100px; border-radius: 8px; object-fit: cover;">
+                <button type="button" onclick="removeCommentImage()" style="position: absolute; top: -8px; right: -8px; background: red; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-times" style="font-size: 12px;"></i>
+                </button>
+            </div>
 
             <div style="display: flex; gap: 12px; align-items: center;">
                 <img src="<?php echo $comment_profile_photo; ?>" style="width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;" alt="프로필">
                 <div style="flex: 1; display: flex; gap: 8px; background: #f3f4f6; border-radius: 9999px; padding: 8px 16px; align-items: center;">
+                    <button type="button" onclick="document.getElementById('commentImageInput').click()" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                        <i class="fa-solid fa-image" style="color: #9333ea; font-size: 18px;"></i>
+                    </button>
                     <input
                         type="text"
                         name="wr_content"
@@ -586,6 +621,25 @@ foreach ($media_files as $idx => $media) {
 </div>
 
 <script>
+// 댓글 이미지 미리보기
+function previewCommentImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('commentPreviewImg').src = e.target.result;
+            document.getElementById('commentImagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// 댓글 이미지 제거
+function removeCommentImage() {
+    document.getElementById('commentImageInput').value = '';
+    document.getElementById('commentImagePreview').style.display = 'none';
+}
+
 // 메뉴 토글
 function toggleMenu() {
     const dropdown = document.getElementById('menuDropdown');
@@ -606,6 +660,13 @@ function confirmDelete(e) {
     e.preventDefault();
     if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
         location.href = '<?php echo $delete_href; ?>';
+    }
+}
+
+// 게시물 삭제
+function deletePost() {
+    if (confirm('정말로 이 게시글을 삭제하시겠습니까?\n삭제된 게시글은 복구할 수 없습니다.')) {
+        location.href = '<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&page=<?php echo $page; ?>';
     }
 }
 
@@ -908,7 +969,11 @@ window.lastCommentId = <?php
         e.stopImmediatePropagation();
         e.stopPropagation();
 
-        if (!input.value.trim()) {
+        const imageInput = document.getElementById('commentImageInput');
+        const hasImage = imageInput && imageInput.files && imageInput.files.length > 0;
+
+        if (!input.value.trim() && !hasImage) {
+            alert('댓글 내용 또는 이미지를 입력해주세요.');
             input.focus();
             return false;
         }
@@ -1002,6 +1067,7 @@ window.lastCommentId = <?php
                 }
 
                 input.value = '';
+                removeCommentImage(); // 이미지 미리보기 초기화
 
             } else {
                 alert(data.message || '댓글 작성 중 오류가 발생했습니다.');

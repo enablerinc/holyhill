@@ -210,7 +210,7 @@ if ($w == '') {
 
 if ($w == '' || $w == 'u') {
     $mb_dir = substr($mb_id, 0, 2);
-    $mb_icon_img = get_mb_icon_name($mb_id) . '.gif';
+    $mb_icon_img = get_mb_icon_name($mb_id) . '.jpg';  // Changed from .gif to .jpg for better quality
 
     // 회원 아이콘 삭제
     if (isset($del_mb_icon) && $del_mb_icon) {

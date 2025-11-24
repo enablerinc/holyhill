@@ -20,7 +20,10 @@ $wr_id = (int)$_POST['wr_id'];
 $wr_content = trim($_POST['wr_content']);
 $parent_comment_id = isset($_POST['parent_comment_id']) ? (int)$_POST['parent_comment_id'] : 0; // 대댓글 부모 ID
 
-if (!$bo_table || !$wr_id || !$wr_content) {
+// 이미지 업로드 확인
+$has_image = isset($_FILES['comment_image']) && $_FILES['comment_image']['size'] > 0;
+
+if (!$bo_table || !$wr_id || (!$wr_content && !$has_image)) {
     echo json_encode(['success' => false, 'message' => '잘못된 접근입니다.']);
     exit;
 }
@@ -91,6 +94,33 @@ sql_query("INSERT INTO {$write_table} SET
 
 $comment_id = sql_insert_id();
 
+// 이미지 업로드 처리
+$uploaded_image_url = '';
+if ($has_image) {
+    $upload_dir = G5_DATA_PATH . '/comment_images';
+    if (!is_dir($upload_dir)) {
+        @mkdir($upload_dir, G5_DIR_PERMISSION, true);
+        @chmod($upload_dir, G5_DIR_PERMISSION);
+    }
+
+    $file_ext = strtolower(pathinfo($_FILES['comment_image']['name'], PATHINFO_EXTENSION));
+    $allowed_exts = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+
+    if (in_array($file_ext, $allowed_exts)) {
+        $new_filename = $comment_id . '_' . time() . '.' . $file_ext;
+        $upload_path = $upload_dir . '/' . $new_filename;
+
+        if (move_uploaded_file($_FILES['comment_image']['tmp_name'], $upload_path)) {
+            @chmod($upload_path, G5_FILE_PERMISSION);
+            $uploaded_image_url = G5_DATA_URL . '/comment_images/' . $new_filename;
+
+            // 댓글 내용에 이미지 URL 추가
+            $updated_content = trim($wr_content) . "\n" . $uploaded_image_url;
+            sql_query("UPDATE {$write_table} SET wr_content = '" . addslashes($updated_content) . "' WHERE wr_id = '{$comment_id}'");
+        }
+    }
+}
+
 sql_query("UPDATE {$write_table} SET wr_comment = wr_comment + 1 WHERE wr_id = '{$wr_id}'");
 
 // 댓글 포인트 지급 (각 댓글마다 고유한 comment_id 사용)
@@ -106,9 +136,9 @@ set_session('ss_comment_token', $new_token);
 // 방금 작성한 댓글 정보 반환
 $c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 if ($member['mb_id']) {
-    $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (file_exists($c_profile_path)) {
-        $c_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
+    $c_profile_img = get_member_profile_img($member['mb_id'], true);
+    if ($c_profile_img) {
+        $c_photo = $c_profile_img;
     }
 }
 

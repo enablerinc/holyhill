@@ -3531,8 +3531,30 @@ function member_delete($mb_id)
 
     // 프로필 이미지 삭제
     @unlink(G5_DATA_PATH.'/member_image/'.substr($mb_id,0,2).'/'.$mb_id.'.gif');
+    @unlink(G5_DATA_PATH.'/member_image/'.substr($mb_id,0,2).'/'.$mb_id.'.jpg');
 
     run_event('member_delete_after', $mb_id);
+}
+
+// 회원 프로필 이미지 경로 가져오기 (jpg 우선, 없으면 gif)
+function get_member_profile_img($mb_id, $return_url = false) {
+    if (!$mb_id) return '';
+
+    $mb_dir = substr($mb_id, 0, 2);
+
+    // .jpg 파일 먼저 확인 (신규 업로드)
+    $jpg_path = G5_DATA_PATH . '/member_image/' . $mb_dir . '/' . $mb_id . '.jpg';
+    if (file_exists($jpg_path)) {
+        return $return_url ? G5_DATA_URL . '/member_image/' . $mb_dir . '/' . $mb_id . '.jpg' : $jpg_path;
+    }
+
+    // .gif 파일 확인 (기존 업로드)
+    $gif_path = G5_DATA_PATH . '/member_image/' . $mb_dir . '/' . $mb_id . '.gif';
+    if (file_exists($gif_path)) {
+        return $return_url ? G5_DATA_URL . '/member_image/' . $mb_dir . '/' . $mb_id . '.gif' : $gif_path;
+    }
+
+    return '';
 }
 
 // 이메일 주소 추출

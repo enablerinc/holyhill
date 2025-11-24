@@ -36,8 +36,10 @@ if ($po_result) {
 }
 
 // 프로필 이미지 경로
-$profile_img = G5_DATA_URL.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$mb['mb_id'].'.gif';
-if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$mb['mb_id'].'.gif')) {
+$profile_img_path = get_member_profile_img($mb['mb_id'], true);
+if ($profile_img_path) {
+    $profile_img = $profile_img_path;
+} else {
     $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 }
 
@@ -305,9 +307,9 @@ $my_comments_result = sql_query($my_comments_sql);
                     // 댓글 작성자 프로필 이미지
                     $comment_author_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
                     if ($comment['comment_author_id']) {
-                        $author_profile_path = G5_DATA_PATH.'/member_image/'.substr($comment['comment_author_id'], 0, 2).'/'.$comment['comment_author_id'].'.gif';
-                        if (file_exists($author_profile_path)) {
-                            $comment_author_photo = G5_DATA_URL.'/member_image/'.substr($comment['comment_author_id'], 0, 2).'/'.$comment['comment_author_id'].'.gif';
+                        $author_profile_img = get_member_profile_img($comment['comment_author_id'], true);
+                        if ($author_profile_img) {
+                            $comment_author_photo = $author_profile_img;
                         }
                     }
                     ?>

@@ -542,7 +542,7 @@ function thumbnail($filename, $source_path, $target_path, $thumb_width, $thumb_h
         imagepng($dst, $thumb_file, $png_compress);
     } else if ($file_ext === 'jpg') {
         if(!defined('G5_THUMB_JPG_QUALITY'))
-            $jpg_quality = 90;
+            $jpg_quality = 95;  // Increased from 90 to 95 for better image quality
         else
             $jpg_quality = G5_THUMB_JPG_QUALITY;
 
