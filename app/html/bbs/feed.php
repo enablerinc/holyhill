@@ -22,31 +22,27 @@ if ($member['mb_level'] < $board['bo_list_level']) {
 // 페이지당 게시물 수 설정
 $page_rows = 30;
 
-// 기간 필터 파라미터 (기본값: 1주)
-$filter = isset($_GET['filter']) ? $_GET['filter'] : '1week';
-$date_condition = '';
+// 정렬 파라미터 (기본값: 최신순)
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'recent';
 
-switch($filter) {
-    case '1week':
-        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
-        break;
-    case '1month':
-        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
-        break;
-    case '3month':
-        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
-        break;
-    case 'all':
-    default:
-        $date_condition = '';
-        break;
+// 검색 파라미터
+$search_type = isset($_GET['search_type']) ? $_GET['search_type'] : 'subject';
+$search_keyword = isset($_GET['search']) ? trim($_GET['search']) : '';
+$search_condition = '';
+
+if ($search_keyword) {
+    $search_keyword_escaped = sql_real_escape_string($search_keyword);
+    if ($search_type === 'name') {
+        $search_condition = " AND wr_name LIKE '%{$search_keyword_escaped}%'";
+    } else {
+        $search_condition = " AND wr_subject LIKE '%{$search_keyword_escaped}%'";
+    }
 }
 
-// 좋아요 많은 순으로 게시글 가져오기
-$write_table = $g5['write_prefix'] . $bo_table;
-
-// 기간 필터 조건 (테이블 별칭 없는 버전)
+// 기간 필터 파라미터 (기본값: 전체)
+$filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
 $date_cond_simple = '';
+
 switch($filter) {
     case '1week':
         $date_cond_simple = " AND wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
@@ -63,7 +59,13 @@ switch($filter) {
         break;
 }
 
-$sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} ORDER BY wr_good DESC, wr_num DESC LIMIT {$page_rows}";
+// 게시글 가져오기
+$write_table = $g5['write_prefix'] . $bo_table;
+
+// 정렬 조건
+$order_by = ($sort === 'popular') ? 'wr_good DESC, wr_num DESC' : 'wr_num DESC';
+
+$sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} {$search_condition} ORDER BY {$order_by} LIMIT {$page_rows}";
 
 $result = sql_query($sql);
 $list = array();
@@ -72,7 +74,7 @@ while ($row = sql_fetch_array($result)) {
 }
 
 // 전체 게시글 수 (페이징용)
-$total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple}";
+$total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} {$search_condition}";
 $total_count_result = sql_fetch($total_count_sql);
 $total_count = isset($total_count_result['cnt']) ? $total_count_result['cnt'] : 0;
 
@@ -146,48 +148,57 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
 <main id="main-content" class="pt-16 pb-20 max-w-2xl mx-auto">
 
-    <!-- 기간 필터 탭 -->
+    <!-- 검색 및 정렬 -->
     <section class="bg-white px-4 py-3 border-b border-soft-lavender">
-        <div class="flex gap-2 overflow-x-auto">
+        <!-- 검색창 -->
+        <form action="<?php echo G5_BBS_URL; ?>/feed.php" method="get" class="mb-3">
+            <input type="hidden" name="sort" value="<?php echo $sort; ?>">
+            <div class="flex gap-2">
+                <select name="search_type" class="px-3 py-2 bg-warm-beige border-0 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-lilac">
+                    <option value="subject" <?php echo $search_type === 'subject' ? 'selected' : ''; ?>>제목</option>
+                    <option value="name" <?php echo $search_type === 'name' ? 'selected' : ''; ?>>작성자</option>
+                </select>
+                <div class="flex-1 relative">
+                    <input type="text" name="search" value="<?php echo htmlspecialchars($search_keyword); ?>"
+                           placeholder="검색어를 입력하세요"
+                           class="w-full px-4 py-2 bg-warm-beige border-0 rounded-lg text-sm focus:ring-2 focus:ring-lilac">
+                    <?php if ($search_keyword) { ?>
+                    <a href="<?php echo G5_BBS_URL; ?>/feed.php?sort=<?php echo $sort; ?>" class="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                    <?php } ?>
+                </div>
+                <button type="submit" class="px-4 py-2 bg-lilac text-white rounded-lg text-sm font-medium hover:bg-deep-purple transition-colors">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+        </form>
+
+        <!-- 정렬 버튼 -->
+        <div class="flex gap-2">
             <?php
             $base_url = G5_BBS_URL.'/feed.php';
-            $filters = array(
-                '1week' => '1주',
-                '1month' => '1개월',
-                '3month' => '3개월',
-                'all' => '전체'
-            );
-
-            foreach($filters as $key => $label) {
-                $active_class = ($filter === $key)
-                    ? 'bg-lilac text-white'
-                    : 'bg-warm-beige text-grace-green hover:bg-soft-lavender';
+            $query_params = $search_keyword ? '&search_type='.$search_type.'&search='.urlencode($search_keyword) : '';
             ?>
-            <a href="<?php echo $base_url; ?>?filter=<?php echo $key; ?>"
-               class="px-4 py-2 <?php echo $active_class; ?> rounded-full text-sm font-medium whitespace-nowrap transition-colors">
-                <?php echo $label; ?>
+            <a href="<?php echo $base_url; ?>?sort=recent<?php echo $query_params; ?>"
+               class="px-4 py-2 <?php echo $sort === 'recent' ? 'bg-lilac text-white' : 'bg-warm-beige text-grace-green hover:bg-soft-lavender'; ?> rounded-full text-sm font-medium whitespace-nowrap transition-colors">
+                <i class="fa-solid fa-clock mr-1"></i>최신순
             </a>
-            <?php } ?>
+            <a href="<?php echo $base_url; ?>?sort=popular<?php echo $query_params; ?>"
+               class="px-4 py-2 <?php echo $sort === 'popular' ? 'bg-lilac text-white' : 'bg-warm-beige text-grace-green hover:bg-soft-lavender'; ?> rounded-full text-sm font-medium whitespace-nowrap transition-colors">
+                <i class="fa-solid fa-fire mr-1"></i>인기순
+            </a>
         </div>
     </section>
 
-    <!-- 인기 게시물 섹션 -->
+    <!-- 게시물 목록 -->
     <section class="px-4 py-4">
         <div class="flex items-center justify-between mb-4">
             <?php
-            $filter_labels = array(
-                '1week' => '이번 주 인기 게시물',
-                '1month' => '이번 달 인기 게시물',
-                '3month' => '최근 3개월 인기 게시물',
-                'all' => '전체 인기 게시물'
-            );
-            $section_title = isset($filter_labels[$filter]) ? $filter_labels[$filter] : '인기 게시물';
+            $section_title = $search_keyword ? '"'.htmlspecialchars($search_keyword).'" 검색 결과' : ($sort === 'popular' ? '인기 게시물' : '최신 게시물');
             ?>
             <h2 class="text-lg font-semibold text-grace-green"><?php echo $section_title; ?></h2>
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-fire text-orange-500"></i>
-                <span class="text-sm text-gray-500"><?php echo number_format($total_count); ?>개</span>
-            </div>
+            <span class="text-sm text-gray-500"><?php echo number_format($total_count); ?>개</span>
         </div>
 
         <?php
@@ -378,7 +389,9 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
     let currentPage = 1;
     let isLoading = false;
     let hasMore = true;
-    const filter = '<?php echo $filter; ?>';
+    const sort = '<?php echo $sort; ?>';
+    const searchType = '<?php echo $search_type; ?>';
+    const searchKeyword = '<?php echo addslashes($search_keyword); ?>';
     const boTable = '<?php echo $bo_table; ?>';
     const totalCount = <?php echo $total_count; ?>;
     const pageRows = <?php echo $page_rows; ?>;
@@ -410,7 +423,9 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
         document.getElementById('loading').classList.remove('hidden');
 
         const url = '<?php echo G5_BBS_URL; ?>/feed_ajax.php?bo_table=' + boTable +
-                    '&filter=' + filter +
+                    '&sort=' + sort +
+                    '&search_type=' + searchType +
+                    '&search=' + encodeURIComponent(searchKeyword) +
                     '&page=' + currentPage +
                     '&page_rows=' + pageRows;
 
