@@ -206,8 +206,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             <p><strong>DEBUG:</strong></p>
             <p>total_count: <?php echo $total_count; ?></p>
             <p>page_rows: <?php echo $page_rows; ?></p>
-            <p>list count: <?php echo count($list); ?></p>
-            <p>SQL: <?php echo htmlspecialchars($sql); ?></p>
+            <p>total_count > page_rows: <?php echo ($total_count > $page_rows) ? 'TRUE (버튼 보여야함)' : 'FALSE'; ?></p>
+            <p>totalPages: <?php echo ceil($total_count / $page_rows); ?></p>
             <?php if (count($list) > 0) { ?>
             <p>첫 번째 글 날짜: <?php echo $list[0]['wr_datetime']; ?></p>
             <p>마지막 글 날짜: <?php echo $list[count($list)-1]['wr_datetime']; ?></p>
@@ -380,11 +380,17 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
     </section>
 
     <!-- 더 보기 버튼 -->
+    <!-- DEBUG: total_count=<?php echo $total_count; ?>, page_rows=<?php echo $page_rows; ?>, condition=<?php echo ($total_count > $page_rows) ? 'TRUE' : 'FALSE'; ?> -->
     <?php if ($total_count > $page_rows) { ?>
-    <div id="load-more-btn" class="text-center py-4">
+    <div id="load-more-btn" class="text-center py-4 bg-green-100">
+        <p class="text-xs text-gray-500 mb-2">(버튼 영역 - 104 > 30 이므로 보여야 함)</p>
         <button onclick="loadMorePosts()" class="px-6 py-3 bg-lilac text-white rounded-full text-sm font-medium hover:bg-deep-purple transition-colors">
             <i class="fa-solid fa-plus mr-2"></i>더 보기
         </button>
+    </div>
+    <?php } else { ?>
+    <div class="text-center py-4 bg-red-100">
+        <p class="text-xs">조건 불만족: <?php echo $total_count; ?> <= <?php echo $page_rows; ?></p>
     </div>
     <?php } ?>
 
