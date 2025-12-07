@@ -412,6 +412,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
 <!-- 무한 스크롤 스크립트 -->
 <script>
+console.log('=== 피드 스크립트 시작 ===');
+
 // 전역 변수
 let currentPage = 1;
 let isLoading = false;
@@ -421,7 +423,9 @@ const searchType = '<?php echo $search_type; ?>';
 const searchKeyword = '<?php echo addslashes($search_keyword); ?>';
 const boTable = '<?php echo $bo_table; ?>';
 const totalCount = <?php echo $total_count; ?>;
-const pageRows = <?php echo $page_rows; ?>;
+const pageRows = <?php echo $page_rows; ?>
+
+console.log('totalCount:', totalCount, 'pageRows:', pageRows, 'totalPages:', Math.ceil(totalCount / pageRows));;
 const totalPages = Math.ceil(totalCount / pageRows);
 
 // 초기화: 1페이지만 있으면 더 보기 버튼 숨김
@@ -451,7 +455,10 @@ window.addEventListener('scroll', function() {
 });
 
 function loadMore() {
+    console.log('loadMore 호출됨 - currentPage:', currentPage, 'totalPages:', totalPages);
+
     if (currentPage >= totalPages) {
+        console.log('마지막 페이지 도달 - 종료');
         hasMore = false;
         const loadMoreBtn = document.getElementById('load-more-btn');
         if (loadMoreBtn) loadMoreBtn.style.display = 'none';
@@ -459,23 +466,28 @@ function loadMore() {
         return;
     }
 
-        isLoading = true;
-        currentPage++;
+    isLoading = true;
+    currentPage++;
+    console.log('페이지 증가 - 새 currentPage:', currentPage);
 
-        document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('loading').classList.remove('hidden');
 
-        const url = '<?php echo G5_BBS_URL; ?>/feed_ajax.php?bo_table=' + boTable +
-                    '&sort=' + sort +
-                    '&search_type=' + searchType +
-                    '&search=' + encodeURIComponent(searchKeyword) +
-                    '&page=' + currentPage +
-                    '&page_rows=' + pageRows;
+    const url = '<?php echo G5_BBS_URL; ?>/feed_ajax.php?bo_table=' + boTable +
+                '&sort=' + sort +
+                '&search_type=' + searchType +
+                '&search=' + encodeURIComponent(searchKeyword) +
+                '&page=' + currentPage +
+                '&page_rows=' + pageRows;
 
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.items.length > 0) {
-                    const feedList = document.getElementById('feed-list');
+    console.log('AJAX URL:', url);
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log('AJAX 응답:', data);
+            if (data.success && data.items.length > 0) {
+                console.log('성공 - 아이템 수:', data.items.length);
+                const feedList = document.getElementById('feed-list');
 
                     data.items.forEach(item => {
                         // 썸네일 결정
@@ -552,19 +564,20 @@ function loadMore() {
                         document.getElementById('no-more').classList.remove('hidden');
                     }
 
-                } else {
-                    hasMore = false;
-                    const loadMoreBtn = document.getElementById('load-more-btn');
-                    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-                    document.getElementById('loading').classList.add('hidden');
-                    document.getElementById('no-more').classList.remove('hidden');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                isLoading = false;
+            } else {
+                console.log('실패 또는 빈 응답 - data:', data);
+                hasMore = false;
+                const loadMoreBtn = document.getElementById('load-more-btn');
+                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
                 document.getElementById('loading').classList.add('hidden');
-            });
+                document.getElementById('no-more').classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('AJAX 에러:', error);
+            isLoading = false;
+            document.getElementById('loading').classList.add('hidden');
+        });
 }
 </script>
 
