@@ -62,8 +62,8 @@ switch($filter) {
 // 게시글 가져오기
 $write_table = $g5['write_prefix'] . $bo_table;
 
-// 정렬 조건 (wr_num은 음수이므로 ASC가 최신순)
-$order_by = ($sort === 'popular') ? 'wr_good DESC, wr_num ASC' : 'wr_num ASC';
+// 정렬 조건 (wr_datetime 기준 최신순)
+$order_by = ($sort === 'popular') ? 'wr_good DESC, wr_datetime DESC' : 'wr_datetime DESC';
 
 $sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} {$search_condition} ORDER BY {$order_by} LIMIT {$page_rows}";
 
