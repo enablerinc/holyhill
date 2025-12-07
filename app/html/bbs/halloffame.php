@@ -376,7 +376,7 @@ usort($consecutive_members, function($a, $b) {
 });
 $consecutive_members = array_slice($consecutive_members, 0, 5);
 
-// 5-5. 새벽 기도왕 (오전 5~7시 출석)
+// 5-5. 새벽 기도왕 (04:30 ~ 05:00 출석)
 $dawn_login_sql = "
     SELECT
         p.mb_id,
@@ -388,8 +388,8 @@ $dawn_login_sql = "
     WHERE p.po_content LIKE '%첫로그인%'
     AND p.po_datetime >= '{$start_date}'
     AND p.po_datetime <= '{$end_date}'
-    AND HOUR(p.po_datetime) >= 5
-    AND HOUR(p.po_datetime) < 7
+    AND TIME(p.po_datetime) >= '04:30:00'
+    AND TIME(p.po_datetime) < '05:00:00'
     GROUP BY p.mb_id
     ORDER BY dawn_count DESC
     LIMIT 5
@@ -803,7 +803,7 @@ function getProfileImage($mb_id) {
                         <i class="fa-solid fa-sun text-indigo-500 text-sm"></i>
                     </div>
                     <h4 class="font-semibold text-grace-green">새벽 기도왕</h4>
-                    <span class="text-xs text-gray-400 ml-auto">오전 5~7시 출석</span>
+                    <span class="text-xs text-gray-400 ml-auto">04:30 ~ 05:00 출석</span>
                 </div>
                 <?php if (count($dawn_members) > 0): ?>
                 <div class="space-y-2">
