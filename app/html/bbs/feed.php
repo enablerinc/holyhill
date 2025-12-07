@@ -28,13 +28,13 @@ $date_condition = '';
 
 switch($filter) {
     case '1week':
-        $date_condition = " AND wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
         break;
     case '1month':
-        $date_condition = " AND wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
         break;
     case '3month':
-        $date_condition = " AND wr_datetime >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
+        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
         break;
     case 'all':
     default:
