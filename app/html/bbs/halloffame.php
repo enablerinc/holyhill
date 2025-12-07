@@ -376,7 +376,7 @@ usort($consecutive_members, function($a, $b) {
 });
 $consecutive_members = array_slice($consecutive_members, 0, 5);
 
-// 5-5. 새벽 기도왕 (04:30 ~ 05:00 출석)
+// 5-5. 새벽 출석자 (04:30 ~ 05:00 출석)
 $dawn_login_sql = "
     SELECT
         p.mb_id,
@@ -796,13 +796,13 @@ function getProfileImage($mb_id) {
                 <?php endif; ?>
             </div>
 
-            <!-- 새벽 기도왕 -->
+            <!-- 새벽 출석자 -->
             <div class="bg-white rounded-xl p-4 shadow-warm">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
                         <i class="fa-solid fa-sun text-indigo-500 text-sm"></i>
                     </div>
-                    <h4 class="font-semibold text-grace-green">새벽 기도왕</h4>
+                    <h4 class="font-semibold text-grace-green">새벽 출석자</h4>
                     <span class="text-xs text-gray-400 ml-auto">04:30 ~ 05:00 출석</span>
                 </div>
                 <?php if (count($dawn_members) > 0): ?>
