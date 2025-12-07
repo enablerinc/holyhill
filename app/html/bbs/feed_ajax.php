@@ -27,44 +27,36 @@ $search_condition = '';
 if ($search_keyword) {
     $search_keyword_escaped = sql_real_escape_string($search_keyword);
     if ($search_type === 'name') {
-        $search_condition = " AND w.wr_name LIKE '%{$search_keyword_escaped}%'";
+        $search_condition = " AND wr_name LIKE '%{$search_keyword_escaped}%'";
     } else {
-        $search_condition = " AND w.wr_subject LIKE '%{$search_keyword_escaped}%'";
+        $search_condition = " AND wr_subject LIKE '%{$search_keyword_escaped}%'";
     }
 }
 
 $write_table = $g5['write_prefix'] . $bo_table;
 
 // 정렬 조건 (wr_datetime 기준 최신순)
-$order_by = ($sort === 'popular') ? 'w.wr_good DESC, w.wr_datetime DESC' : 'w.wr_datetime DESC';
+$order_by = ($sort === 'popular') ? 'wr_good DESC, wr_datetime DESC' : 'wr_datetime DESC';
 
-// 게시글 가져오기
+// 게시글 가져오기 (단순 쿼리 사용)
 $offset = ($page - 1) * $page_rows;
-$sql = "SELECT w.*, m.mb_nick as member_nick, m.mb_photo as member_photo,
-        (SELECT COUNT(*) FROM {$write_table} c WHERE c.wr_parent = w.wr_id AND c.wr_is_comment = 1) as comment_count
-        FROM {$write_table} w
-        LEFT JOIN {$g5['member_table']} m ON w.mb_id = m.mb_id
-        WHERE w.wr_is_comment = 0 {$search_condition}
-        ORDER BY {$order_by}
-        LIMIT {$offset}, {$page_rows}";
-
-// 디버그: 전체 개수 확인
-$count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0";
-$count_result = sql_fetch($count_sql);
-$debug_total = $count_result['cnt'];
-
-// 디버그: 단순 쿼리로 테스트
-$simple_sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 ORDER BY wr_datetime DESC LIMIT {$offset}, {$page_rows}";
-$simple_result = sql_query($simple_sql);
-$simple_count = 0;
-while ($simple_row = sql_fetch_array($simple_result)) {
-    $simple_count++;
-}
+$sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 {$search_condition} ORDER BY {$order_by} LIMIT {$offset}, {$page_rows}";
 
 $result = sql_query($sql);
 $items = array();
 
 while ($row = sql_fetch_array($result)) {
+    // 회원 정보 별도 조회
+    $member = null;
+    if ($row['mb_id']) {
+        $member = sql_fetch("SELECT mb_nick, mb_photo FROM {$g5['member_table']} WHERE mb_id = '{$row['mb_id']}'");
+    }
+
+    // 댓글 수 별도 조회
+    $comment_result = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_parent = '{$row['wr_id']}' AND wr_is_comment = 1");
+    $row['comment_count'] = $comment_result['cnt'];
+    $row['member_nick'] = $member ? $member['mb_nick'] : '';
+    $row['member_photo'] = $member ? $member['mb_photo'] : '';
     $wr_id = $row['wr_id'];
 
     // 작성자 정보
@@ -149,13 +141,6 @@ echo json_encode([
     'success' => true,
     'items' => $items,
     'page' => $page,
-    'count' => count($items),
-    'debug' => [
-        'offset' => $offset,
-        'page_rows' => $page_rows,
-        'total_in_db' => $debug_total,
-        'simple_query_count' => $simple_count,
-        'sql' => $sql
-    ]
+    'count' => count($items)
 ], JSON_UNESCAPED_UNICODE);
 ?>
