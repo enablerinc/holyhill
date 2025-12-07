@@ -60,17 +60,21 @@ while ($row = sql_fetch_array($member_points_result)) {
         $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
         if (!sql_num_rows($table_check)) continue;
 
-        // 게시글 수 (댓글 제외)
+        // 게시글 수 (댓글 제외) - 해당 월만
         $post_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
-                     WHERE mb_id = '{$mb_id}' AND wr_is_comment = 0";
+                     WHERE mb_id = '{$mb_id}' AND wr_is_comment = 0
+                     AND wr_datetime >= '{$start_date}'
+                     AND wr_datetime <= '{$end_date}'";
         $post_result = sql_fetch($post_sql);
         if ($post_result) {
             $post_count += (int)$post_result['cnt'];
         }
 
-        // 댓글 수
+        // 댓글 수 - 해당 월만
         $comment_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
-                        WHERE mb_id = '{$mb_id}' AND wr_is_comment = 1";
+                        WHERE mb_id = '{$mb_id}' AND wr_is_comment = 1
+                        AND wr_datetime >= '{$start_date}'
+                        AND wr_datetime <= '{$end_date}'";
         $comment_result = sql_fetch($comment_sql);
         if ($comment_result) {
             $comment_count += (int)$comment_result['cnt'];
