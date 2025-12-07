@@ -44,9 +44,12 @@ switch($filter) {
 
 // 좋아요 많은 순으로 게시글 가져오기
 $write_table = $g5['write_prefix'] . $bo_table;
-$sql = "SELECT * FROM {$write_table}
-        WHERE wr_is_comment = 0 {$date_condition}
-        ORDER BY wr_good DESC, wr_num DESC
+$sql = "SELECT w.*, m.mb_nick, m.mb_id, m.mb_photo,
+        (SELECT COUNT(*) FROM {$write_table} c WHERE c.wr_parent = w.wr_id AND c.wr_is_comment = 1) as comment_count
+        FROM {$write_table} w
+        LEFT JOIN {$g5['member_table']} m ON w.mb_id = m.mb_id
+        WHERE w.wr_is_comment = 0 {$date_condition}
+        ORDER BY w.wr_good DESC, w.wr_num DESC
         LIMIT {$page_rows}";
 
 $result = sql_query($sql);
@@ -84,6 +87,9 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             background-color: #EEF3F8;
         }
         .shadow-warm { box-shadow: 0 4px 20px rgba(177, 156, 217, 0.15); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .image-slider { -webkit-overflow-scrolling: touch; }
     </style>
     <script>
         tailwind.config = {
@@ -175,19 +181,42 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
         // 게시글이 있는 경우
         if (count($list) > 0) {
         ?>
-        <div class="grid grid-cols-3 gap-1">
+        <div class="space-y-4" id="feed-list">
             <?php
             for ($i=0; $i<count($list); $i++) {
                 $wr_id = $list[$i]['wr_id'];
+                $wr_subject = strip_tags($list[$i]['wr_subject']);
+                $comment_count = isset($list[$i]['comment_count']) ? $list[$i]['comment_count'] : 0;
+                $good_count = isset($list[$i]['wr_good']) ? $list[$i]['wr_good'] : 0;
+
+                // 작성자 정보
+                $writer_nick = $list[$i]['mb_nick'] ? $list[$i]['mb_nick'] : $list[$i]['wr_name'];
+                $writer_id = $list[$i]['mb_id'];
+                $writer_photo = '';
+                if ($writer_id && $list[$i]['mb_photo']) {
+                    $writer_photo = G5_DATA_URL.'/member/'.substr($writer_id, 0, 2).'/'.$list[$i]['mb_photo'];
+                }
+
+                // 날짜 포맷
+                $wr_datetime = $list[$i]['wr_datetime'];
+                $date_diff = time() - strtotime($wr_datetime);
+                if ($date_diff < 60) {
+                    $display_date = '방금 전';
+                } elseif ($date_diff < 3600) {
+                    $display_date = floor($date_diff / 60) . '분 전';
+                } elseif ($date_diff < 86400) {
+                    $display_date = floor($date_diff / 3600) . '시간 전';
+                } elseif ($date_diff < 604800) {
+                    $display_date = floor($date_diff / 86400) . '일 전';
+                } else {
+                    $display_date = date('Y.m.d', strtotime($wr_datetime));
+                }
 
                 // 게시글 내용에서 YouTube URL 추출 및 섬네일 생성
                 $video_thumbnail = '';
                 $video_id = '';
-
-                // wr_link1 또는 wr_content에서 YouTube URL 찾기
                 $search_content = $list[$i]['wr_link1'] . ' ' . $list[$i]['wr_content'];
 
-                // YouTube URL 패턴
                 $patterns = array(
                     '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
                     '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
@@ -201,111 +230,126 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                     }
                 }
 
-                // 비디오 ID가 있으면 섬네일 생성
                 if ($video_id) {
                     $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
                 }
 
-                // 첫 번째 이미지 가져오기
-                $first_image = '';
-                $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
-                if ($img_result && $img = sql_fetch_array($img_result)) {
-                    $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
+                // 모든 이미지 가져오기
+                $images = array();
+                $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no");
+                while ($img = sql_fetch_array($img_result)) {
+                    $images[] = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
                 }
+                $image_count = count($images);
+                $first_image = $image_count > 0 ? $images[0] : '';
 
                 $view_href = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
-                $good_count = isset($list[$i]['wr_good']) ? $list[$i]['wr_good'] : 0;
 
-                // 텍스트 콘텐츠 추출 (이미지/영상이 없을 때 사용)
+                // 텍스트 콘텐츠 추출
                 $text_content = strip_tags($list[$i]['wr_content']);
                 $text_content = preg_replace('/\[이미지\d+\]/', '', $text_content);
+                $text_content = preg_replace('/https?:\/\/[^\s]+/', '', $text_content);
                 $text_content = trim($text_content);
             ?>
 
-            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative group">
-                <?php if ($video_thumbnail && $video_id) { ?>
-                    <!-- YouTube 영상 자동 재생 -->
-                    <div class="relative w-full h-full video-container" data-video-id="<?php echo $video_id; ?>">
-                        <!-- 로딩 중 섬네일 -->
-                        <img class="w-full h-full object-cover video-thumbnail"
-                             src="<?php echo $video_thumbnail; ?>"
-                             alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
-
-                        <!-- YouTube iframe -->
-                        <div class="absolute inset-0 video-iframe-container" style="display: none;">
-                            <iframe
-                                class="w-full h-full"
-                                data-src="https://www.youtube.com/embed/<?php echo $video_id; ?>?autoplay=1&mute=1&loop=1&playlist=<?php echo $video_id; ?>&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&start=0&end=15"
-                                frameborder="0"
-                                allow="autoplay; encrypted-media"
-                                allowfullscreen>
-                            </iframe>
-                        </div>
-
-                        <!-- 클릭 시 상세 페이지로 이동 -->
-                        <a href="<?php echo $view_href; ?>" class="absolute inset-0 z-10"></a>
+            <!-- 블로그 스타일 카드 -->
+            <article class="bg-white rounded-xl shadow-warm overflow-hidden">
+                <!-- 작성자 정보 -->
+                <div class="flex items-center gap-3 p-4">
+                    <?php if ($writer_photo) { ?>
+                    <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-10 h-10 rounded-full object-cover">
+                    <?php } else { ?>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
+                        <span class="text-white text-sm font-semibold"><?php echo mb_substr($writer_nick, 0, 1); ?></span>
                     </div>
-                <?php } elseif ($first_image) { ?>
-                    <a href="<?php echo $view_href; ?>" class="block w-full h-full">
-                        <!-- 이미지 표시 -->
-                        <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
-                             src="<?php echo $first_image; ?>"
-                             alt="<?php echo strip_tags($list[$i]['wr_subject']); ?>">
+                    <?php } ?>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-gray-900 text-sm truncate"><?php echo $writer_nick; ?></p>
+                        <p class="text-xs text-gray-500"><?php echo $display_date; ?></p>
+                    </div>
+                </div>
 
-                        <!-- 제목 오버레이 (호버 시 표시) -->
-                        <?php if (!empty($list[$i]['wr_subject'])) { ?>
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
-                                <?php echo strip_tags($list[$i]['wr_subject']); ?>
-                            </p>
+                <!-- 미디어 영역 -->
+                <?php if ($video_id && $video_thumbnail) { ?>
+                <!-- YouTube 동영상 -->
+                <a href="<?php echo $view_href; ?>" class="block relative">
+                    <div class="relative aspect-video bg-gray-100">
+                        <img src="<?php echo $video_thumbnail; ?>" alt="<?php echo $wr_subject; ?>" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                <i class="fa-solid fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                <?php } elseif ($image_count > 0) { ?>
+                <!-- 이미지 슬라이더 -->
+                <a href="<?php echo $view_href; ?>" class="block relative">
+                    <?php if ($image_count == 1) { ?>
+                    <img src="<?php echo $images[0]; ?>" alt="<?php echo $wr_subject; ?>" class="w-full aspect-[4/3] object-cover">
+                    <?php } else { ?>
+                    <div class="relative overflow-hidden">
+                        <div class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide image-slider" style="scroll-behavior: smooth;">
+                            <?php foreach ($images as $idx => $img_url) { ?>
+                            <div class="flex-shrink-0 w-full snap-center">
+                                <img src="<?php echo $img_url; ?>" alt="<?php echo $wr_subject; ?>" class="w-full aspect-[4/3] object-cover">
+                            </div>
+                            <?php } ?>
+                        </div>
+                        <div class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                            <i class="fa-regular fa-images mr-1"></i><?php echo $image_count; ?>
+                        </div>
+                        <!-- 슬라이더 인디케이터 -->
+                        <?php if ($image_count > 1) { ?>
+                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                            <?php for ($j = 0; $j < min($image_count, 5); $j++) { ?>
+                            <span class="w-1.5 h-1.5 rounded-full <?php echo $j === 0 ? 'bg-white' : 'bg-white/50'; ?>"></span>
+                            <?php } ?>
+                            <?php if ($image_count > 5) { ?>
+                            <span class="text-white text-xs">+<?php echo $image_count - 5; ?></span>
+                            <?php } ?>
                         </div>
                         <?php } ?>
-                    </a>
-                    <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity z-20">
-                        <i class="fa-solid fa-heart text-red-400 text-xs"></i>
-                        <?php echo number_format($good_count); ?>
                     </div>
-                <?php } else { ?>
-                    <a href="<?php echo $view_href; ?>" class="block w-full h-full">
-                        <!-- 텍스트 표시 -->
-                        <div class="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex items-center justify-center hover:opacity-95 transition-opacity">
-                            <p class="text-xs text-gray-700 leading-relaxed line-clamp-6 break-words">
-                                <?php echo $text_content ? cut_str($text_content, 80) : '내용 없음'; ?>
-                            </p>
-                        </div>
+                    <?php } ?>
+                </a>
+                <?php } ?>
 
-                        <!-- 제목 오버레이 (호버 시 표시) -->
-                        <?php if (!empty($list[$i]['wr_subject'])) { ?>
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
-                                <?php echo strip_tags($list[$i]['wr_subject']); ?>
-                            </p>
-                        </div>
-                        <?php } ?>
+                <!-- 콘텐츠 영역 -->
+                <div class="p-4">
+                    <!-- 제목 -->
+                    <a href="<?php echo $view_href; ?>" class="block">
+                        <h3 class="font-bold text-gray-900 text-base mb-2 line-clamp-2 hover:text-lilac transition-colors">
+                            <?php echo $wr_subject; ?>
+                        </h3>
                     </a>
-                    <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity z-20">
-                        <i class="fa-solid fa-heart text-red-400 text-xs"></i>
-                        <?php echo number_format($good_count); ?>
+
+                    <!-- 본문 미리보기 -->
+                    <?php if ($text_content) { ?>
+                    <a href="<?php echo $view_href; ?>" class="block">
+                        <p class="text-gray-600 text-sm line-clamp-3 mb-3 leading-relaxed">
+                            <?php echo cut_str($text_content, 150); ?>
+                        </p>
+                    </a>
+                    <?php } ?>
+
+                    <!-- 좋아요, 댓글 버튼 -->
+                    <div class="flex items-center gap-4 pt-3 border-t border-gray-100">
+                        <div class="flex items-center gap-1.5 text-gray-500">
+                            <i class="fa-solid fa-heart text-red-400"></i>
+                            <span class="text-sm"><?php echo number_format($good_count); ?></span>
+                        </div>
+                        <a href="<?php echo $view_href; ?>#comment" class="flex items-center gap-1.5 text-gray-500 hover:text-lilac transition-colors">
+                            <i class="fa-regular fa-comment"></i>
+                            <span class="text-sm"><?php echo number_format($comment_count); ?></span>
+                        </a>
+                        <div class="flex-1"></div>
+                        <a href="<?php echo $view_href; ?>" class="text-sm text-lilac font-medium hover:text-deep-purple transition-colors">
+                            더보기
+                        </a>
                     </div>
-                <?php } ?>
-
-                <!-- 제목 오버레이 (영상용) -->
-                <?php if ($video_thumbnail && $video_id && !empty($list[$i]['wr_subject'])) { ?>
-                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                    <p class="text-white text-xs font-semibold line-clamp-2 leading-tight">
-                        <?php echo strip_tags($list[$i]['wr_subject']); ?>
-                    </p>
                 </div>
-                <?php } ?>
-
-                <!-- 좋아요 수 (영상용) -->
-                <?php if ($video_thumbnail && $video_id) { ?>
-                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1 group-hover:opacity-0 transition-opacity z-20">
-                    <i class="fa-solid fa-heart text-red-400 text-xs"></i>
-                    <?php echo number_format($good_count); ?>
-                </div>
-                <?php } ?>
-            </div>
+            </article>
 
             <?php } ?>
         </div>
@@ -341,46 +385,23 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
 <?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
 
-<!-- YouTube 영상 자동 재생 스크립트 -->
+<!-- 무한 스크롤 및 이미지 슬라이더 스크립트 -->
 <script>
-// Intersection Observer로 화면에 보이는 영상만 로드 및 재생
-(function() {
-    const videoContainers = document.querySelectorAll('.video-container');
+// 이미지 슬라이더 인디케이터 업데이트
+document.querySelectorAll('.image-slider').forEach(slider => {
+    slider.addEventListener('scroll', function() {
+        const indicators = this.closest('.relative').querySelectorAll('.flex.gap-1\\.5 span');
+        const scrollLeft = this.scrollLeft;
+        const itemWidth = this.offsetWidth;
+        const currentIndex = Math.round(scrollLeft / itemWidth);
 
-    const observerOptions = {
-        root: null,
-        rootMargin: '50px',
-        threshold: 0.5 // 50% 이상 보일 때
-    };
-
-    const videoObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const container = entry.target;
-            const iframeContainer = container.querySelector('.video-iframe-container');
-            const iframe = iframeContainer.querySelector('iframe');
-            const thumbnail = container.querySelector('.video-thumbnail');
-
-            if (entry.isIntersecting) {
-                // 화면에 보이면 iframe 로드 및 재생
-                if (!iframe.src && iframe.dataset.src) {
-                    iframe.src = iframe.dataset.src;
-
-                    // iframe 로드 후 섬네일 숨기기
-                    iframe.onload = function() {
-                        setTimeout(() => {
-                            thumbnail.style.display = 'none';
-                            iframeContainer.style.display = 'block';
-                        }, 500);
-                    };
-                }
+        indicators.forEach((dot, idx) => {
+            if (idx < 5) {
+                dot.className = `w-1.5 h-1.5 rounded-full ${idx === currentIndex ? 'bg-white' : 'bg-white/50'}`;
             }
         });
-    }, observerOptions);
-
-    videoContainers.forEach(container => {
-        videoObserver.observe(container);
     });
-})();
+});
 
 // 무한 스크롤 JavaScript
 (function() {
@@ -397,7 +418,6 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
     window.addEventListener('scroll', function() {
         if (isLoading || !hasMore) return;
 
-        // 스크롤이 하단에 도달했는지 확인 (300px 여유)
         const scrollHeight = document.documentElement.scrollHeight;
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
         const clientHeight = document.documentElement.clientHeight;
@@ -417,11 +437,9 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
         isLoading = true;
         currentPage++;
 
-        // 로딩 표시
         document.getElementById('loading').classList.remove('hidden');
 
-        // AJAX 요청
-        const url = '<?php echo G5_BBS_URL; ?>/board_ajax.php?bo_table=' + boTable +
+        const url = '<?php echo G5_BBS_URL; ?>/feed_ajax.php?bo_table=' + boTable +
                     '&filter=' + filter +
                     '&page=' + currentPage +
                     '&page_rows=' + pageRows;
@@ -430,39 +448,113 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.items.length > 0) {
-                    const grid = document.querySelector('.grid.grid-cols-3');
+                    const feedList = document.getElementById('feed-list');
 
                     data.items.forEach(item => {
-                        let contentHTML = '';
-                        if (item.has_image) {
-                            contentHTML = `
-                                <img class="w-full h-full object-cover hover:opacity-95 transition-opacity"
-                                     src="${item.image}"
-                                     alt="${item.subject}">
+                        // 미디어 영역 생성
+                        let mediaHTML = '';
+                        if (item.video_id && item.video_thumbnail) {
+                            mediaHTML = `
+                                <a href="${item.view_href}" class="block relative">
+                                    <div class="relative aspect-video bg-gray-100">
+                                        <img src="${item.video_thumbnail}" alt="${item.subject}" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                                            <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                                <i class="fa-solid fa-play text-white text-xl ml-1"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
                             `;
-                        } else {
-                            const textContent = item.text_content || '내용 없음';
-                            contentHTML = `
-                                <div class="w-full h-full bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex items-center justify-center hover:opacity-95 transition-opacity">
-                                    <p class="text-xs text-gray-700 leading-relaxed line-clamp-6 break-words">
-                                        ${textContent}
-                                    </p>
-                                </div>
-                            `;
+                        } else if (item.images && item.images.length > 0) {
+                            if (item.images.length === 1) {
+                                mediaHTML = `
+                                    <a href="${item.view_href}" class="block relative">
+                                        <img src="${item.images[0]}" alt="${item.subject}" class="w-full aspect-[4/3] object-cover">
+                                    </a>
+                                `;
+                            } else {
+                                let imagesSlider = item.images.map(img =>
+                                    `<div class="flex-shrink-0 w-full snap-center">
+                                        <img src="${img}" alt="${item.subject}" class="w-full aspect-[4/3] object-cover">
+                                    </div>`
+                                ).join('');
+
+                                let dots = '';
+                                for (let i = 0; i < Math.min(item.images.length, 5); i++) {
+                                    dots += `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/50'}"></span>`;
+                                }
+                                if (item.images.length > 5) {
+                                    dots += `<span class="text-white text-xs">+${item.images.length - 5}</span>`;
+                                }
+
+                                mediaHTML = `
+                                    <a href="${item.view_href}" class="block relative">
+                                        <div class="relative overflow-hidden">
+                                            <div class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide image-slider" style="scroll-behavior: smooth;">
+                                                ${imagesSlider}
+                                            </div>
+                                            <div class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                                                <i class="fa-regular fa-images mr-1"></i>${item.images.length}
+                                            </div>
+                                            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                                ${dots}
+                                            </div>
+                                        </div>
+                                    </a>
+                                `;
+                            }
                         }
 
+                        // 작성자 프로필 이미지
+                        let profileHTML = item.writer_photo
+                            ? `<img src="${item.writer_photo}" alt="${item.writer_nick}" class="w-10 h-10 rounded-full object-cover">`
+                            : `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
+                                <span class="text-white text-sm font-semibold">${item.writer_nick.charAt(0)}</span>
+                               </div>`;
+
+                        // 본문 미리보기
+                        let textHTML = item.text_content
+                            ? `<a href="${item.view_href}" class="block">
+                                <p class="text-gray-600 text-sm line-clamp-3 mb-3 leading-relaxed">${item.text_content}</p>
+                               </a>`
+                            : '';
+
                         const itemHTML = `
-                            <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-warm relative">
-                                <a href="${item.view_href}" class="block w-full h-full">
-                                    ${contentHTML}
-                                </a>
-                                <div class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1 rounded flex items-center gap-1">
-                                    <i class="fa-solid fa-heart text-red-400 text-xs"></i>
-                                    ${item.good_count}
+                            <article class="bg-white rounded-xl shadow-warm overflow-hidden">
+                                <div class="flex items-center gap-3 p-4">
+                                    ${profileHTML}
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-semibold text-gray-900 text-sm truncate">${item.writer_nick}</p>
+                                        <p class="text-xs text-gray-500">${item.display_date}</p>
+                                    </div>
                                 </div>
-                            </div>
+                                ${mediaHTML}
+                                <div class="p-4">
+                                    <a href="${item.view_href}" class="block">
+                                        <h3 class="font-bold text-gray-900 text-base mb-2 line-clamp-2 hover:text-lilac transition-colors">
+                                            ${item.subject}
+                                        </h3>
+                                    </a>
+                                    ${textHTML}
+                                    <div class="flex items-center gap-4 pt-3 border-t border-gray-100">
+                                        <div class="flex items-center gap-1.5 text-gray-500">
+                                            <i class="fa-solid fa-heart text-red-400"></i>
+                                            <span class="text-sm">${item.good_count}</span>
+                                        </div>
+                                        <a href="${item.view_href}#comment" class="flex items-center gap-1.5 text-gray-500 hover:text-lilac transition-colors">
+                                            <i class="fa-regular fa-comment"></i>
+                                            <span class="text-sm">${item.comment_count}</span>
+                                        </a>
+                                        <div class="flex-1"></div>
+                                        <a href="${item.view_href}" class="text-sm text-lilac font-medium hover:text-deep-purple transition-colors">
+                                            더보기
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
                         `;
-                        grid.insertAdjacentHTML('beforeend', itemHTML);
+                        feedList.insertAdjacentHTML('beforeend', itemHTML);
                     });
 
                     isLoading = false;
@@ -478,7 +570,6 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 console.error('Error:', error);
                 isLoading = false;
                 document.getElementById('loading').classList.add('hidden');
-                alert('게시물을 불러오는 중 오류가 발생했습니다.');
             });
     }
 })();
