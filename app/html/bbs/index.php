@@ -116,7 +116,7 @@ function convert_youtube_to_iframe_index($content) {
     <div id="main-container" class="max-w-2xl mx-auto">
 
         <!-- 현재 활동중인 사용자 섹션 -->
-        <section id="online-users" class="bg-white px-4 py-2 mb-2 sticky top-16 z-40 border-b border-gray-100">
+        <section id="online-users" class="bg-white px-4 py-2 mb-2 border-b border-gray-100">
             <?php
             // 오늘 출석(로그인)한 모든 회원을 최근 활동 순으로 표시
             $today_login_sql = "
