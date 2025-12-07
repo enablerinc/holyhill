@@ -4,7 +4,9 @@ include_once('./_common.php');
 header('Content-Type: application/json; charset=utf-8');
 
 $bo_table = isset($_GET['bo_table']) ? clean_xss_tags($_GET['bo_table']) : '';
-$filter = isset($_GET['filter']) ? $_GET['filter'] : 'all';
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'recent';
+$search_type = isset($_GET['search_type']) ? $_GET['search_type'] : 'subject';
+$search_keyword = isset($_GET['search']) ? trim($_GET['search']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $page_rows = isset($_GET['page_rows']) ? (int)$_GET['page_rows'] : 30;
 
@@ -20,34 +22,30 @@ if (!$board) {
     exit;
 }
 
-// 기간 필터 조건
-$date_condition = '';
-switch($filter) {
-    case '1week':
-        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
-        break;
-    case '1month':
-        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
-        break;
-    case '3month':
-        $date_condition = " AND w.wr_datetime >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
-        break;
-    case 'all':
-    default:
-        $date_condition = '';
-        break;
+// 검색 조건
+$search_condition = '';
+if ($search_keyword) {
+    $search_keyword_escaped = sql_real_escape_string($search_keyword);
+    if ($search_type === 'name') {
+        $search_condition = " AND w.wr_name LIKE '%{$search_keyword_escaped}%'";
+    } else {
+        $search_condition = " AND w.wr_subject LIKE '%{$search_keyword_escaped}%'";
+    }
 }
 
 $write_table = $g5['write_prefix'] . $bo_table;
 
-// 게시글 가져오기 (작성자 정보, 댓글 수 포함)
+// 정렬 조건
+$order_by = ($sort === 'popular') ? 'w.wr_good DESC, w.wr_num DESC' : 'w.wr_num DESC';
+
+// 게시글 가져오기
 $offset = ($page - 1) * $page_rows;
 $sql = "SELECT w.*, m.mb_nick as member_nick, m.mb_photo as member_photo,
         (SELECT COUNT(*) FROM {$write_table} c WHERE c.wr_parent = w.wr_id AND c.wr_is_comment = 1) as comment_count
         FROM {$write_table} w
         LEFT JOIN {$g5['member_table']} m ON w.mb_id = m.mb_id
-        WHERE w.wr_is_comment = 0 {$date_condition}
-        ORDER BY w.wr_good DESC, w.wr_num DESC
+        WHERE w.wr_is_comment = 0 {$search_condition}
+        ORDER BY {$order_by}
         LIMIT {$offset}, {$page_rows}";
 
 $result = sql_query($sql);
