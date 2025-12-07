@@ -35,8 +35,8 @@ if ($search_keyword) {
 
 $write_table = $g5['write_prefix'] . $bo_table;
 
-// 정렬 조건 (wr_num은 음수이므로 ASC가 최신순)
-$order_by = ($sort === 'popular') ? 'w.wr_good DESC, w.wr_num ASC' : 'w.wr_num ASC';
+// 정렬 조건 (wr_datetime 기준 최신순)
+$order_by = ($sort === 'popular') ? 'w.wr_good DESC, w.wr_datetime DESC' : 'w.wr_datetime DESC';
 
 // 게시글 가져오기
 $offset = ($page - 1) * $page_rows;
