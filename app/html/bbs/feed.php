@@ -201,6 +201,19 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             <span class="text-sm text-gray-500"><?php echo number_format($total_count); ?>개</span>
         </div>
 
+        <!-- 디버그 정보 (문제 해결 후 삭제) -->
+        <div class="bg-yellow-100 p-3 rounded-lg mb-4 text-xs text-gray-700">
+            <p><strong>DEBUG:</strong></p>
+            <p>total_count: <?php echo $total_count; ?></p>
+            <p>page_rows: <?php echo $page_rows; ?></p>
+            <p>list count: <?php echo count($list); ?></p>
+            <p>SQL: <?php echo htmlspecialchars($sql); ?></p>
+            <?php if (count($list) > 0) { ?>
+            <p>첫 번째 글 날짜: <?php echo $list[0]['wr_datetime']; ?></p>
+            <p>마지막 글 날짜: <?php echo $list[count($list)-1]['wr_datetime']; ?></p>
+            <?php } ?>
+        </div>
+
         <?php
         // 게시글이 있는 경우
         if (count($list) > 0) {
