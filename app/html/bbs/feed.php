@@ -59,9 +59,9 @@ while ($row = sql_fetch_array($result)) {
 }
 
 // 전체 게시글 수 (페이징용)
-$total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 {$date_condition}";
+$total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} w WHERE w.wr_is_comment = 0 {$date_condition}";
 $total_count_result = sql_fetch($total_count_sql);
-$total_count = $total_count_result['cnt'];
+$total_count = isset($total_count_result['cnt']) ? $total_count_result['cnt'] : 0;
 
 // 글쓰기 권한 체크
 $write_href = '';
