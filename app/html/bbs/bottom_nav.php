@@ -25,14 +25,10 @@ if ($is_member && isset($_SESSION['ss_mb_id'])) {
             <span class="text-xs text-gray-600">성산샘터</span>
         </a>
 
-        <?php if ($is_member) { ?>
-        <a href="<?php echo G5_BBS_URL; ?>/write_post.php" class="flex flex-col items-center gap-1">
-            <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-plus text-white text-sm"></i>
-            </div>
-            <span class="text-xs text-gray-600">나눔</span>
+        <a href="<?php echo G5_BBS_URL; ?>/word_feed.php" class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-book-bible text-gray-600 text-lg"></i>
+            <span class="text-xs text-gray-600">말씀</span>
         </a>
-        <?php } ?>
 
         <a href="<?php echo G5_BBS_URL; ?>/halloffame.php" class="flex flex-col items-center gap-1">
             <i class="fa-solid fa-trophy text-lilac text-lg"></i>
