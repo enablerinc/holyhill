@@ -42,7 +42,7 @@ $write_table = $g5['write_prefix'] . $bo_table;
 
 // 게시글 가져오기 (작성자 정보, 댓글 수 포함)
 $offset = ($page - 1) * $page_rows;
-$sql = "SELECT w.*, m.mb_nick, m.mb_id, m.mb_photo,
+$sql = "SELECT w.*, m.mb_nick as member_nick, m.mb_photo as member_photo,
         (SELECT COUNT(*) FROM {$write_table} c WHERE c.wr_parent = w.wr_id AND c.wr_is_comment = 1) as comment_count
         FROM {$write_table} w
         LEFT JOIN {$g5['member_table']} m ON w.mb_id = m.mb_id
@@ -57,11 +57,11 @@ while ($row = sql_fetch_array($result)) {
     $wr_id = $row['wr_id'];
 
     // 작성자 정보
-    $writer_nick = $row['mb_nick'] ? $row['mb_nick'] : $row['wr_name'];
+    $writer_nick = $row['member_nick'] ? $row['member_nick'] : $row['wr_name'];
     $writer_id = $row['mb_id'];
     $writer_photo = '';
-    if ($writer_id && $row['mb_photo']) {
-        $writer_photo = G5_DATA_URL.'/member/'.substr($writer_id, 0, 2).'/'.$row['mb_photo'];
+    if ($writer_id && $row['member_photo']) {
+        $writer_photo = G5_DATA_URL.'/member/'.substr($writer_id, 0, 2).'/'.$row['member_photo'];
     }
 
     // 날짜 포맷

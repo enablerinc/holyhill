@@ -44,7 +44,7 @@ switch($filter) {
 
 // 좋아요 많은 순으로 게시글 가져오기
 $write_table = $g5['write_prefix'] . $bo_table;
-$sql = "SELECT w.*, m.mb_nick, m.mb_id, m.mb_photo,
+$sql = "SELECT w.*, m.mb_nick as member_nick, m.mb_photo as member_photo,
         (SELECT COUNT(*) FROM {$write_table} c WHERE c.wr_parent = w.wr_id AND c.wr_is_comment = 1) as comment_count
         FROM {$write_table} w
         LEFT JOIN {$g5['member_table']} m ON w.mb_id = m.mb_id
@@ -190,11 +190,11 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 $good_count = isset($list[$i]['wr_good']) ? $list[$i]['wr_good'] : 0;
 
                 // 작성자 정보
-                $writer_nick = $list[$i]['mb_nick'] ? $list[$i]['mb_nick'] : $list[$i]['wr_name'];
+                $writer_nick = $list[$i]['member_nick'] ? $list[$i]['member_nick'] : $list[$i]['wr_name'];
                 $writer_id = $list[$i]['mb_id'];
                 $writer_photo = '';
-                if ($writer_id && $list[$i]['mb_photo']) {
-                    $writer_photo = G5_DATA_URL.'/member/'.substr($writer_id, 0, 2).'/'.$list[$i]['mb_photo'];
+                if ($writer_id && $list[$i]['member_photo']) {
+                    $writer_photo = G5_DATA_URL.'/member/'.substr($writer_id, 0, 2).'/'.$list[$i]['member_photo'];
                 }
 
                 // 날짜 포맷
