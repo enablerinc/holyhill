@@ -366,6 +366,15 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
         <?php } ?>
     </section>
 
+    <!-- 더 보기 버튼 -->
+    <?php if ($total_count > $page_rows) { ?>
+    <div id="load-more-btn" class="text-center py-4">
+        <button onclick="loadMorePosts()" class="px-6 py-3 bg-lilac text-white rounded-full text-sm font-medium hover:bg-deep-purple transition-colors">
+            <i class="fa-solid fa-plus mr-2"></i>더 보기
+        </button>
+    </div>
+    <?php } ?>
+
     <!-- 로딩 인디케이터 -->
     <div id="loading" class="hidden text-center py-8">
         <i class="fa-solid fa-spinner fa-spin text-3xl text-lilac"></i>
@@ -373,7 +382,7 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
     </div>
 
     <!-- 더 이상 게시물이 없을 때 -->
-    <div id="no-more" class="hidden text-center py-8 text-gray-500">
+    <div id="no-more" class="<?php echo $total_count <= $page_rows ? '' : 'hidden'; ?> text-center py-8 text-gray-500">
         <i class="fa-solid fa-check-circle text-2xl text-lilac mb-2"></i>
         <p class="text-sm">모든 게시물을 확인했습니다</p>
     </div>
@@ -384,38 +393,52 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
 <!-- 무한 스크롤 스크립트 -->
 <script>
-// 무한 스크롤 JavaScript
-(function() {
-    let currentPage = 1;
-    let isLoading = false;
-    let hasMore = true;
-    const sort = '<?php echo $sort; ?>';
-    const searchType = '<?php echo $search_type; ?>';
-    const searchKeyword = '<?php echo addslashes($search_keyword); ?>';
-    const boTable = '<?php echo $bo_table; ?>';
-    const totalCount = <?php echo $total_count; ?>;
-    const pageRows = <?php echo $page_rows; ?>;
-    const totalPages = Math.ceil(totalCount / pageRows);
+// 전역 변수
+let currentPage = 1;
+let isLoading = false;
+let hasMore = true;
+const sort = '<?php echo $sort; ?>';
+const searchType = '<?php echo $search_type; ?>';
+const searchKeyword = '<?php echo addslashes($search_keyword); ?>';
+const boTable = '<?php echo $bo_table; ?>';
+const totalCount = <?php echo $total_count; ?>;
+const pageRows = <?php echo $page_rows; ?>;
+const totalPages = Math.ceil(totalCount / pageRows);
 
-    // 스크롤 이벤트
-    window.addEventListener('scroll', function() {
-        if (isLoading || !hasMore) return;
+// 초기화: 1페이지만 있으면 더 보기 버튼 숨김
+if (totalPages <= 1) {
+    hasMore = false;
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+}
 
-        const scrollHeight = document.documentElement.scrollHeight;
-        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-        const clientHeight = document.documentElement.clientHeight;
+// 버튼 클릭으로 더 보기
+function loadMorePosts() {
+    if (isLoading || !hasMore) return;
+    loadMore();
+}
 
-        if (scrollTop + clientHeight >= scrollHeight - 300) {
-            loadMore();
-        }
-    });
+// 스크롤 이벤트
+window.addEventListener('scroll', function() {
+    if (isLoading || !hasMore) return;
 
-    function loadMore() {
-        if (currentPage >= totalPages) {
-            hasMore = false;
-            document.getElementById('no-more').classList.remove('hidden');
-            return;
-        }
+    const scrollHeight = document.documentElement.scrollHeight;
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const clientHeight = document.documentElement.clientHeight;
+
+    if (scrollTop + clientHeight >= scrollHeight - 300) {
+        loadMore();
+    }
+});
+
+function loadMore() {
+    if (currentPage >= totalPages) {
+        hasMore = false;
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        document.getElementById('no-more').classList.remove('hidden');
+        return;
+    }
 
         isLoading = true;
         currentPage++;
@@ -502,8 +525,18 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                     isLoading = false;
                     document.getElementById('loading').classList.add('hidden');
 
+                    // 마지막 페이지면 더 보기 버튼 숨김
+                    if (currentPage >= totalPages) {
+                        hasMore = false;
+                        const loadMoreBtn = document.getElementById('load-more-btn');
+                        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+                        document.getElementById('no-more').classList.remove('hidden');
+                    }
+
                 } else {
                     hasMore = false;
+                    const loadMoreBtn = document.getElementById('load-more-btn');
+                    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('no-more').classList.remove('hidden');
                 }
@@ -513,8 +546,7 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 isLoading = false;
                 document.getElementById('loading').classList.add('hidden');
             });
-    }
-})();
+}
 </script>
 
 <!-- 알림 위젯 -->
