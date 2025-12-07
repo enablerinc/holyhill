@@ -256,14 +256,16 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                     $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
                 }
 
-                // 모든 이미지 가져오기
-                $images = array();
-                $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no");
-                while ($img = sql_fetch_array($img_result)) {
-                    $images[] = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
+                // 첫 번째 이미지 가져오기
+                $first_image = '';
+                $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
+                if ($img = sql_fetch_array($img_result)) {
+                    $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
                 }
-                $image_count = count($images);
-                $first_image = $image_count > 0 ? $images[0] : '';
+
+                // 썸네일 결정 (영상 > 이미지)
+                $thumbnail = $video_thumbnail ? $video_thumbnail : $first_image;
+                $has_video = !empty($video_id);
 
                 $view_href = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
 
@@ -274,104 +276,66 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 $text_content = trim($text_content);
             ?>
 
-            <!-- 블로그 스타일 카드 -->
-            <article class="bg-white rounded-xl shadow-warm overflow-hidden">
-                <!-- 작성자 정보 -->
-                <div class="flex items-center gap-3 p-4">
-                    <?php if ($writer_photo) { ?>
-                    <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-10 h-10 rounded-full object-cover">
-                    <?php } else { ?>
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
-                        <span class="text-white text-sm font-semibold"><?php echo mb_substr($writer_nick, 0, 1); ?></span>
-                    </div>
-                    <?php } ?>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-gray-900 text-sm truncate"><?php echo $writer_nick; ?></p>
-                        <p class="text-xs text-gray-500"><?php echo $display_date; ?></p>
-                    </div>
-                </div>
+            <!-- 텍스트 기반 리스트 스타일 -->
+            <a href="<?php echo $view_href; ?>" class="block">
+                <article class="bg-white rounded-lg shadow-warm p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex gap-4">
+                        <!-- 왼쪽: 텍스트 콘텐츠 -->
+                        <div class="flex-1 min-w-0">
+                            <!-- 제목 -->
+                            <h3 class="font-bold text-gray-900 text-base mb-2 line-clamp-1">
+                                <?php echo $wr_subject; ?>
+                            </h3>
 
-                <!-- 미디어 영역 -->
-                <?php if ($video_id && $video_thumbnail) { ?>
-                <!-- YouTube 동영상 -->
-                <a href="<?php echo $view_href; ?>" class="block relative">
-                    <div class="relative aspect-video bg-gray-100">
-                        <img src="<?php echo $video_thumbnail; ?>" alt="<?php echo $wr_subject; ?>" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                            <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
-                                <i class="fa-solid fa-play text-white text-xl ml-1"></i>
+                            <!-- 작성자 정보 -->
+                            <div class="flex items-center gap-2 mb-2">
+                                <?php if ($writer_photo) { ?>
+                                <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-5 h-5 rounded-full object-cover">
+                                <?php } else { ?>
+                                <div class="w-5 h-5 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
+                                    <span class="text-white text-xs font-semibold"><?php echo mb_substr($writer_nick, 0, 1); ?></span>
+                                </div>
+                                <?php } ?>
+                                <span class="text-sm text-gray-700"><?php echo $writer_nick; ?></span>
+                                <span class="text-xs text-gray-400"><?php echo $display_date; ?></span>
+                            </div>
+
+                            <!-- 본문 미리보기 -->
+                            <?php if ($text_content) { ?>
+                            <p class="text-gray-500 text-sm line-clamp-2 mb-3 leading-relaxed">
+                                <?php echo cut_str($text_content, 100); ?>
+                            </p>
+                            <?php } ?>
+
+                            <!-- 공감, 댓글 -->
+                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-solid fa-heart text-red-400"></i>
+                                    <?php echo number_format($good_count); ?>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-regular fa-comment"></i>
+                                    <?php echo number_format($comment_count); ?>
+                                </span>
                             </div>
                         </div>
-                    </div>
-                </a>
-                <?php } elseif ($image_count > 0) { ?>
-                <!-- 이미지 슬라이더 -->
-                <a href="<?php echo $view_href; ?>" class="block relative">
-                    <?php if ($image_count == 1) { ?>
-                    <img src="<?php echo $images[0]; ?>" alt="<?php echo $wr_subject; ?>" class="w-full aspect-[4/3] object-cover">
-                    <?php } else { ?>
-                    <div class="relative overflow-hidden">
-                        <div class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide image-slider" style="scroll-behavior: smooth;">
-                            <?php foreach ($images as $idx => $img_url) { ?>
-                            <div class="flex-shrink-0 w-full snap-center">
-                                <img src="<?php echo $img_url; ?>" alt="<?php echo $wr_subject; ?>" class="w-full aspect-[4/3] object-cover">
+
+                        <!-- 오른쪽: 썸네일 -->
+                        <?php if ($thumbnail) { ?>
+                        <div class="flex-shrink-0 relative">
+                            <img src="<?php echo $thumbnail; ?>" alt="<?php echo $wr_subject; ?>" class="w-24 h-24 rounded-lg object-cover">
+                            <?php if ($has_video) { ?>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center">
+                                    <i class="fa-solid fa-play text-white text-xs ml-0.5"></i>
+                                </div>
                             </div>
-                            <?php } ?>
-                        </div>
-                        <div class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                            <i class="fa-regular fa-images mr-1"></i><?php echo $image_count; ?>
-                        </div>
-                        <!-- 슬라이더 인디케이터 -->
-                        <?php if ($image_count > 1) { ?>
-                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                            <?php for ($j = 0; $j < min($image_count, 5); $j++) { ?>
-                            <span class="w-1.5 h-1.5 rounded-full <?php echo $j === 0 ? 'bg-white' : 'bg-white/50'; ?>"></span>
-                            <?php } ?>
-                            <?php if ($image_count > 5) { ?>
-                            <span class="text-white text-xs">+<?php echo $image_count - 5; ?></span>
                             <?php } ?>
                         </div>
                         <?php } ?>
                     </div>
-                    <?php } ?>
-                </a>
-                <?php } ?>
-
-                <!-- 콘텐츠 영역 -->
-                <div class="p-4">
-                    <!-- 제목 -->
-                    <a href="<?php echo $view_href; ?>" class="block">
-                        <h3 class="font-bold text-gray-900 text-base mb-2 line-clamp-2 hover:text-lilac transition-colors">
-                            <?php echo $wr_subject; ?>
-                        </h3>
-                    </a>
-
-                    <!-- 본문 미리보기 -->
-                    <?php if ($text_content) { ?>
-                    <a href="<?php echo $view_href; ?>" class="block">
-                        <p class="text-gray-600 text-sm line-clamp-3 mb-3 leading-relaxed">
-                            <?php echo cut_str($text_content, 150); ?>
-                        </p>
-                    </a>
-                    <?php } ?>
-
-                    <!-- 좋아요, 댓글 버튼 -->
-                    <div class="flex items-center gap-4 pt-3 border-t border-gray-100">
-                        <div class="flex items-center gap-1.5 text-gray-500">
-                            <i class="fa-solid fa-heart text-red-400"></i>
-                            <span class="text-sm"><?php echo number_format($good_count); ?></span>
-                        </div>
-                        <a href="<?php echo $view_href; ?>#comment" class="flex items-center gap-1.5 text-gray-500 hover:text-lilac transition-colors">
-                            <i class="fa-regular fa-comment"></i>
-                            <span class="text-sm"><?php echo number_format($comment_count); ?></span>
-                        </a>
-                        <div class="flex-1"></div>
-                        <a href="<?php echo $view_href; ?>" class="text-sm text-lilac font-medium hover:text-deep-purple transition-colors">
-                            더보기
-                        </a>
-                    </div>
-                </div>
-            </article>
+                </article>
+            </a>
 
             <?php } ?>
         </div>
@@ -407,24 +371,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
 <?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
 
-<!-- 무한 스크롤 및 이미지 슬라이더 스크립트 -->
+<!-- 무한 스크롤 스크립트 -->
 <script>
-// 이미지 슬라이더 인디케이터 업데이트
-document.querySelectorAll('.image-slider').forEach(slider => {
-    slider.addEventListener('scroll', function() {
-        const indicators = this.closest('.relative').querySelectorAll('.flex.gap-1\\.5 span');
-        const scrollLeft = this.scrollLeft;
-        const itemWidth = this.offsetWidth;
-        const currentIndex = Math.round(scrollLeft / itemWidth);
-
-        indicators.forEach((dot, idx) => {
-            if (idx < 5) {
-                dot.className = `w-1.5 h-1.5 rounded-full ${idx === currentIndex ? 'bg-white' : 'bg-white/50'}`;
-            }
-        });
-    });
-});
-
 // 무한 스크롤 JavaScript
 (function() {
     let currentPage = 1;
@@ -473,108 +421,65 @@ document.querySelectorAll('.image-slider').forEach(slider => {
                     const feedList = document.getElementById('feed-list');
 
                     data.items.forEach(item => {
-                        // 미디어 영역 생성
-                        let mediaHTML = '';
-                        if (item.video_id && item.video_thumbnail) {
-                            mediaHTML = `
-                                <a href="${item.view_href}" class="block relative">
-                                    <div class="relative aspect-video bg-gray-100">
-                                        <img src="${item.video_thumbnail}" alt="${item.subject}" class="w-full h-full object-cover">
-                                        <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                                            <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
-                                                <i class="fa-solid fa-play text-white text-xl ml-1"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            `;
-                        } else if (item.images && item.images.length > 0) {
-                            if (item.images.length === 1) {
-                                mediaHTML = `
-                                    <a href="${item.view_href}" class="block relative">
-                                        <img src="${item.images[0]}" alt="${item.subject}" class="w-full aspect-[4/3] object-cover">
-                                    </a>
-                                `;
-                            } else {
-                                let imagesSlider = item.images.map(img =>
-                                    `<div class="flex-shrink-0 w-full snap-center">
-                                        <img src="${img}" alt="${item.subject}" class="w-full aspect-[4/3] object-cover">
-                                    </div>`
-                                ).join('');
-
-                                let dots = '';
-                                for (let i = 0; i < Math.min(item.images.length, 5); i++) {
-                                    dots += `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/50'}"></span>`;
-                                }
-                                if (item.images.length > 5) {
-                                    dots += `<span class="text-white text-xs">+${item.images.length - 5}</span>`;
-                                }
-
-                                mediaHTML = `
-                                    <a href="${item.view_href}" class="block relative">
-                                        <div class="relative overflow-hidden">
-                                            <div class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide image-slider" style="scroll-behavior: smooth;">
-                                                ${imagesSlider}
-                                            </div>
-                                            <div class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                                                <i class="fa-regular fa-images mr-1"></i>${item.images.length}
-                                            </div>
-                                            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                                                ${dots}
-                                            </div>
-                                        </div>
-                                    </a>
-                                `;
-                            }
-                        }
+                        // 썸네일 결정
+                        const thumbnail = item.video_thumbnail || (item.images && item.images.length > 0 ? item.images[0] : '');
+                        const hasVideo = item.video_id && item.video_thumbnail;
 
                         // 작성자 프로필 이미지
                         let profileHTML = item.writer_photo
-                            ? `<img src="${item.writer_photo}" alt="${item.writer_nick}" class="w-10 h-10 rounded-full object-cover">`
-                            : `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
-                                <span class="text-white text-sm font-semibold">${item.writer_nick.charAt(0)}</span>
+                            ? `<img src="${item.writer_photo}" alt="${item.writer_nick}" class="w-5 h-5 rounded-full object-cover">`
+                            : `<div class="w-5 h-5 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
+                                <span class="text-white text-xs font-semibold">${item.writer_nick.charAt(0)}</span>
                                </div>`;
 
                         // 본문 미리보기
                         let textHTML = item.text_content
-                            ? `<a href="${item.view_href}" class="block">
-                                <p class="text-gray-600 text-sm line-clamp-3 mb-3 leading-relaxed">${item.text_content}</p>
-                               </a>`
+                            ? `<p class="text-gray-500 text-sm line-clamp-2 mb-3 leading-relaxed">${item.text_content}</p>`
                             : '';
 
-                        const itemHTML = `
-                            <article class="bg-white rounded-xl shadow-warm overflow-hidden">
-                                <div class="flex items-center gap-3 p-4">
-                                    ${profileHTML}
-                                    <div class="flex-1 min-w-0">
-                                        <p class="font-semibold text-gray-900 text-sm truncate">${item.writer_nick}</p>
-                                        <p class="text-xs text-gray-500">${item.display_date}</p>
-                                    </div>
-                                </div>
-                                ${mediaHTML}
-                                <div class="p-4">
-                                    <a href="${item.view_href}" class="block">
-                                        <h3 class="font-bold text-gray-900 text-base mb-2 line-clamp-2 hover:text-lilac transition-colors">
-                                            ${item.subject}
-                                        </h3>
-                                    </a>
-                                    ${textHTML}
-                                    <div class="flex items-center gap-4 pt-3 border-t border-gray-100">
-                                        <div class="flex items-center gap-1.5 text-gray-500">
-                                            <i class="fa-solid fa-heart text-red-400"></i>
-                                            <span class="text-sm">${item.good_count}</span>
+                        // 썸네일 HTML
+                        let thumbnailHTML = '';
+                        if (thumbnail) {
+                            thumbnailHTML = `
+                                <div class="flex-shrink-0 relative">
+                                    <img src="${thumbnail}" alt="${item.subject}" class="w-24 h-24 rounded-lg object-cover">
+                                    ${hasVideo ? `
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center">
+                                            <i class="fa-solid fa-play text-white text-xs ml-0.5"></i>
                                         </div>
-                                        <a href="${item.view_href}#comment" class="flex items-center gap-1.5 text-gray-500 hover:text-lilac transition-colors">
-                                            <i class="fa-regular fa-comment"></i>
-                                            <span class="text-sm">${item.comment_count}</span>
-                                        </a>
-                                        <div class="flex-1"></div>
-                                        <a href="${item.view_href}" class="text-sm text-lilac font-medium hover:text-deep-purple transition-colors">
-                                            더보기
-                                        </a>
-                                    </div>
+                                    </div>` : ''}
                                 </div>
-                            </article>
+                            `;
+                        }
+
+                        const itemHTML = `
+                            <a href="${item.view_href}" class="block">
+                                <article class="bg-white rounded-lg shadow-warm p-4 hover:bg-gray-50 transition-colors">
+                                    <div class="flex gap-4">
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="font-bold text-gray-900 text-base mb-2 line-clamp-1">${item.subject}</h3>
+                                            <div class="flex items-center gap-2 mb-2">
+                                                ${profileHTML}
+                                                <span class="text-sm text-gray-700">${item.writer_nick}</span>
+                                                <span class="text-xs text-gray-400">${item.display_date}</span>
+                                            </div>
+                                            ${textHTML}
+                                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                                                <span class="flex items-center gap-1">
+                                                    <i class="fa-solid fa-heart text-red-400"></i>
+                                                    ${item.good_count}
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <i class="fa-regular fa-comment"></i>
+                                                    ${item.comment_count}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        ${thumbnailHTML}
+                                    </div>
+                                </article>
+                            </a>
                         `;
                         feedList.insertAdjacentHTML('beforeend', itemHTML);
                     });
