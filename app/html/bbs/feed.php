@@ -44,13 +44,26 @@ switch($filter) {
 
 // 좋아요 많은 순으로 게시글 가져오기
 $write_table = $g5['write_prefix'] . $bo_table;
-$sql = "SELECT w.*, m.mb_nick as member_nick, m.mb_photo as member_photo,
-        (SELECT COUNT(*) FROM {$write_table} c WHERE c.wr_parent = w.wr_id AND c.wr_is_comment = 1) as comment_count
-        FROM {$write_table} w
-        LEFT JOIN {$g5['member_table']} m ON w.mb_id = m.mb_id
-        WHERE w.wr_is_comment = 0 {$date_condition}
-        ORDER BY w.wr_good DESC, w.wr_num DESC
-        LIMIT {$page_rows}";
+
+// 기간 필터 조건 (테이블 별칭 없는 버전)
+$date_cond_simple = '';
+switch($filter) {
+    case '1week':
+        $date_cond_simple = " AND wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+        break;
+    case '1month':
+        $date_cond_simple = " AND wr_datetime >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+        break;
+    case '3month':
+        $date_cond_simple = " AND wr_datetime >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
+        break;
+    case 'all':
+    default:
+        $date_cond_simple = '';
+        break;
+}
+
+$sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} ORDER BY wr_good DESC, wr_num DESC LIMIT {$page_rows}";
 
 $result = sql_query($sql);
 $list = array();
@@ -59,7 +72,7 @@ while ($row = sql_fetch_array($result)) {
 }
 
 // 전체 게시글 수 (페이징용)
-$total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} w WHERE w.wr_is_comment = 0 {$date_condition}";
+$total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple}";
 $total_count_result = sql_fetch($total_count_sql);
 $total_count = isset($total_count_result['cnt']) ? $total_count_result['cnt'] : 0;
 
@@ -186,16 +199,25 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             for ($i=0; $i<count($list); $i++) {
                 $wr_id = $list[$i]['wr_id'];
                 $wr_subject = strip_tags($list[$i]['wr_subject']);
-                $comment_count = isset($list[$i]['comment_count']) ? $list[$i]['comment_count'] : 0;
                 $good_count = isset($list[$i]['wr_good']) ? $list[$i]['wr_good'] : 0;
 
                 // 작성자 정보
-                $writer_nick = $list[$i]['member_nick'] ? $list[$i]['member_nick'] : $list[$i]['wr_name'];
                 $writer_id = $list[$i]['mb_id'];
+                $writer_nick = $list[$i]['wr_name'];
                 $writer_photo = '';
-                if ($writer_id && $list[$i]['member_photo']) {
-                    $writer_photo = G5_DATA_URL.'/member/'.substr($writer_id, 0, 2).'/'.$list[$i]['member_photo'];
+                if ($writer_id) {
+                    $member_info = sql_fetch("SELECT mb_nick, mb_photo FROM {$g5['member_table']} WHERE mb_id = '{$writer_id}'");
+                    if ($member_info) {
+                        $writer_nick = $member_info['mb_nick'] ? $member_info['mb_nick'] : $list[$i]['wr_name'];
+                        if ($member_info['mb_photo']) {
+                            $writer_photo = G5_DATA_URL.'/member/'.substr($writer_id, 0, 2).'/'.$member_info['mb_photo'];
+                        }
+                    }
                 }
+
+                // 댓글 수 조회
+                $comment_result = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1");
+                $comment_count = isset($comment_result['cnt']) ? $comment_result['cnt'] : 0;
 
                 // 날짜 포맷
                 $wr_datetime = $list[$i]['wr_datetime'];
