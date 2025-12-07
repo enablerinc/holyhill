@@ -419,11 +419,71 @@ function convert_youtube_to_iframe_index($content) {
 
 </main>
 
+<!-- 출석 버튼 (로그인한 회원만 표시) -->
+<?php if ($is_member) { ?>
 <div id="floating-attendance"
-     onclick="alert('출석 체크 기능은 추후 구현됩니다')"
-     class="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-transform z-40">
-    <i class="fa-solid fa-check text-white text-lg"></i>
+     onclick="handleAttendanceClick()"
+     class="fixed bottom-24 right-4 w-14 h-14 rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-all z-40 attendance-btn"
+     data-status="loading">
+    <i class="fa-solid fa-spinner fa-spin text-white text-lg"></i>
 </div>
+
+<!-- 출석 결과 패널 -->
+<div id="attendance-panel" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+        <div id="attendance-result" class="p-6">
+            <!-- 출석 결과가 여기에 동적으로 추가됩니다 -->
+        </div>
+        <div class="border-t border-gray-100 p-4">
+            <button onclick="closeAttendancePanel()" class="w-full py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-colors">
+                확인
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 오늘의 출석 현황 패널 -->
+<div id="attendance-list-panel" class="fixed top-16 right-0 w-full max-w-md h-screen bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
+        <div class="flex items-center justify-between mb-2">
+            <h2 class="text-xl font-bold text-gray-800">오늘의 출석 현황</h2>
+            <i id="close-attendance-list" onclick="closeAttendanceListPanel()" class="fa-solid fa-times text-gray-600 text-xl cursor-pointer hover:text-gray-800"></i>
+        </div>
+        <p id="attendance-list-count" class="text-sm text-purple-600">오늘 0명 출석</p>
+    </div>
+    <div id="attendance-list-content" class="divide-y divide-gray-100">
+        <!-- 출석자 목록이 여기에 동적으로 추가됩니다 -->
+    </div>
+</div>
+
+<!-- 오늘의 출석 현황 미니 위젯 (버튼 위) -->
+<div id="attendance-mini-widget"
+     onclick="openAttendanceListPanel()"
+     class="fixed bottom-40 right-4 bg-white rounded-xl shadow-lg p-2 cursor-pointer hover:shadow-xl transition-shadow z-39 hidden">
+    <div class="flex items-center gap-2">
+        <div class="flex -space-x-2" id="attendance-avatars">
+            <!-- 최근 출석자 아바타 -->
+        </div>
+        <span id="attendance-count-badge" class="text-xs text-purple-600 font-medium">0명</span>
+    </div>
+</div>
+
+<style>
+.attendance-btn[data-status="available"] {
+    background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+}
+.attendance-btn[data-status="completed"] {
+    background: linear-gradient(135deg, #10B981, #059669);
+}
+.attendance-btn[data-status="unavailable"] {
+    background: #9CA3AF;
+    cursor: not-allowed;
+}
+.attendance-btn[data-status="loading"] {
+    background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+}
+</style>
+<?php } ?>
 
 <?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
 
@@ -616,6 +676,360 @@ function convert_youtube_to_iframe_index($content) {
     setInterval(loadNotificationCount, 30000);
     <?php } ?>
 })();
+
+<?php if ($is_member) { ?>
+// 출석 시스템
+(function() {
+    const attendanceBtn = document.getElementById('floating-attendance');
+    const attendancePanel = document.getElementById('attendance-panel');
+    const attendanceResult = document.getElementById('attendance-result');
+    const attendanceListPanel = document.getElementById('attendance-list-panel');
+    const attendanceListContent = document.getElementById('attendance-list-content');
+    const attendanceListCount = document.getElementById('attendance-list-count');
+    const attendanceMiniWidget = document.getElementById('attendance-mini-widget');
+    const attendanceAvatars = document.getElementById('attendance-avatars');
+    const attendanceCountBadge = document.getElementById('attendance-count-badge');
+
+    let currentStatus = {
+        is_attendance_time: false,
+        has_attended: false,
+        rank: 0,
+        consecutive_days: 0,
+        total_count: 0
+    };
+
+    // 페이지 로드시 출석 상태 확인
+    loadAttendanceStatus();
+
+    // 30초마다 출석 상태 갱신
+    setInterval(loadAttendanceStatus, 30000);
+
+    // 출석 상태 로드
+    function loadAttendanceStatus() {
+        fetch('<?php echo G5_BBS_URL; ?>/ajax.attendance.php?action=status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentStatus = data.data;
+                    updateAttendanceButton();
+                    loadAttendanceMiniWidget();
+                }
+            })
+            .catch(error => console.error('출석 상태 로딩 오류:', error));
+    }
+
+    // 버튼 상태 업데이트
+    function updateAttendanceButton() {
+        let status = 'available';
+        let icon = 'fa-check';
+        let tooltip = '출석하기';
+
+        if (!currentStatus.is_attendance_time) {
+            status = 'unavailable';
+            icon = 'fa-moon';
+            tooltip = '출석 불가 시간\n(04:30 ~ 23:59)';
+            if (currentStatus.time_until_start) {
+                tooltip += '\n' + currentStatus.time_until_start + ' 후 시작';
+            }
+        } else if (currentStatus.has_attended) {
+            status = 'completed';
+            icon = 'fa-check-double';
+            tooltip = currentStatus.rank + '등 출석 완료!';
+        }
+
+        attendanceBtn.dataset.status = status;
+        attendanceBtn.innerHTML = `<i class="fa-solid ${icon} text-white text-lg"></i>`;
+        attendanceBtn.title = tooltip;
+    }
+
+    // 출석 버튼 클릭 처리
+    window.handleAttendanceClick = function() {
+        // 출석 불가 시간
+        if (!currentStatus.is_attendance_time) {
+            showAttendanceResult({
+                success: false,
+                type: 'unavailable',
+                message: '출석 불가 시간입니다',
+                description: '출석 가능 시간: 04:30 ~ 23:59',
+                time_until_start: currentStatus.time_until_start
+            });
+            return;
+        }
+
+        // 이미 출석 완료
+        if (currentStatus.has_attended) {
+            showAttendanceResult({
+                success: true,
+                type: 'already',
+                message: '이미 출석하셨습니다!',
+                rank: currentStatus.rank,
+                consecutive_days: currentStatus.consecutive_days,
+                total_count: currentStatus.total_count
+            });
+            return;
+        }
+
+        // 출석 처리
+        attendanceBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-white text-lg"></i>';
+
+        const formData = new FormData();
+        formData.append('action', 'check');
+
+        fetch('<?php echo G5_BBS_URL; ?>/ajax.attendance.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentStatus.has_attended = true;
+                currentStatus.rank = data.data.rank;
+                currentStatus.consecutive_days = data.data.consecutive_days;
+                currentStatus.total_count = data.data.total_count;
+
+                showAttendanceResult({
+                    success: true,
+                    type: 'new',
+                    message: '출석 완료!',
+                    rank: data.data.rank,
+                    attend_time: data.data.attend_time,
+                    consecutive_days: data.data.consecutive_days,
+                    total_count: data.data.total_count,
+                    point: data.data.point
+                });
+
+                updateAttendanceButton();
+                loadAttendanceMiniWidget();
+            } else {
+                if (data.error === 'already_attended') {
+                    currentStatus.has_attended = true;
+                    currentStatus.rank = data.data.rank;
+                    updateAttendanceButton();
+                }
+                showAttendanceResult({
+                    success: false,
+                    type: data.error,
+                    message: data.message
+                });
+            }
+        })
+        .catch(error => {
+            console.error('출석 처리 오류:', error);
+            updateAttendanceButton();
+        });
+    };
+
+    // 출석 결과 표시
+    function showAttendanceResult(result) {
+        let html = '';
+
+        if (result.type === 'unavailable') {
+            html = `
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-moon text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${result.message}</h3>
+                    <p class="text-gray-600 mb-2">${result.description}</p>
+                    ${result.time_until_start ? `<p class="text-purple-600 font-medium">${result.time_until_start} 후 출석 가능</p>` : ''}
+                </div>
+            `;
+        } else if (result.type === 'already') {
+            html = `
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-check-double text-green-500 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${result.message}</h3>
+                    <div class="bg-gray-50 rounded-xl p-4 mb-4">
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p class="text-2xl font-bold text-purple-600">${result.rank}등</p>
+                                <p class="text-xs text-gray-500">오늘 순위</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-orange-500">${result.consecutive_days}일</p>
+                                <p class="text-xs text-gray-500">연속 출석</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-blue-500">${result.total_count}명</p>
+                                <p class="text-xs text-gray-500">오늘 출석</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (result.type === 'new') {
+            let rankEmoji = '';
+            let rankClass = 'text-purple-600';
+            if (result.rank === 1) {
+                rankEmoji = '🥇';
+                rankClass = 'text-yellow-500';
+            } else if (result.rank === 2) {
+                rankEmoji = '🥈';
+                rankClass = 'text-gray-400';
+            } else if (result.rank === 3) {
+                rankEmoji = '🥉';
+                rankClass = 'text-orange-400';
+            }
+
+            html = `
+                <div class="text-center">
+                    <div class="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                        ${result.rank <= 3 ? `<span class="text-4xl">${rankEmoji}</span>` : '<i class="fa-solid fa-check text-white text-4xl"></i>'}
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">${result.message}</h3>
+                    <p class="text-lg ${rankClass} font-bold mb-1">${result.rank}등으로 출석!</p>
+                    <p class="text-sm text-gray-500 mb-4">${result.attend_time} 출석 · +${result.point}P</p>
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mb-4">
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <p class="text-2xl font-bold text-orange-500">${result.consecutive_days}일</p>
+                                <p class="text-xs text-gray-500">연속 출석</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-blue-500">${result.total_count}명</p>
+                                <p class="text-xs text-gray-500">오늘 출석</p>
+                            </div>
+                        </div>
+                    </div>
+                    ${result.consecutive_days >= 7 ? `
+                    <div class="flex items-center justify-center gap-2 text-orange-500">
+                        <i class="fa-solid fa-fire"></i>
+                        <span class="font-medium">${result.consecutive_days}일 연속 출석 달성!</span>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            html = `
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-exclamation text-red-500 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${result.message}</h3>
+                </div>
+            `;
+        }
+
+        attendanceResult.innerHTML = html;
+        attendancePanel.classList.remove('hidden');
+        attendancePanel.classList.add('flex');
+    }
+
+    // 출석 결과 패널 닫기
+    window.closeAttendancePanel = function() {
+        attendancePanel.classList.add('hidden');
+        attendancePanel.classList.remove('flex');
+    };
+
+    // 출석 현황 패널 열기
+    window.openAttendanceListPanel = function() {
+        loadAttendanceList();
+        attendanceListPanel.classList.remove('translate-x-full');
+    };
+
+    // 출석 현황 패널 닫기
+    window.closeAttendanceListPanel = function() {
+        attendanceListPanel.classList.add('translate-x-full');
+    };
+
+    // 출석자 목록 로드
+    function loadAttendanceList() {
+        fetch('<?php echo G5_BBS_URL; ?>/ajax.attendance.php?action=list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderAttendanceList(data.data.list, data.data.total_count);
+                }
+            })
+            .catch(error => console.error('출석자 목록 로딩 오류:', error));
+    }
+
+    // 출석자 목록 렌더링
+    function renderAttendanceList(list, totalCount) {
+        attendanceListCount.textContent = `오늘 ${totalCount}명 출석`;
+
+        if (list.length === 0) {
+            attendanceListContent.innerHTML = `
+                <div class="flex items-center justify-center py-20">
+                    <div class="text-center">
+                        <i class="fa-regular fa-calendar-check text-gray-300 text-5xl mb-4"></i>
+                        <p class="text-gray-500">아직 출석자가 없습니다</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        list.forEach(item => {
+            let rankBadge = '';
+            if (item.rank === 1) {
+                rankBadge = '<span class="text-lg">🥇</span>';
+            } else if (item.rank === 2) {
+                rankBadge = '<span class="text-lg">🥈</span>';
+            } else if (item.rank === 3) {
+                rankBadge = '<span class="text-lg">🥉</span>';
+            } else {
+                rankBadge = `<span class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs text-gray-600">${item.rank}</span>`;
+            }
+
+            html += `
+                <div class="p-4 hover:bg-gray-50 transition-colors flex items-center gap-3">
+                    <div class="flex-shrink-0">${rankBadge}</div>
+                    <img src="${item.profile_img}" class="w-10 h-10 rounded-full object-cover" alt="${item.mb_name}">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-gray-800">${item.mb_name}</p>
+                        <p class="text-xs text-gray-500">${item.attend_time} 출석</p>
+                    </div>
+                </div>
+            `;
+        });
+
+        attendanceListContent.innerHTML = html;
+    }
+
+    // 미니 위젯 로드
+    function loadAttendanceMiniWidget() {
+        fetch('<?php echo G5_BBS_URL; ?>/ajax.attendance.php?action=list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data.total_count > 0) {
+                    attendanceMiniWidget.classList.remove('hidden');
+
+                    // 상위 3명 아바타 표시
+                    let avatarsHtml = '';
+                    const topThree = data.data.list.slice(0, 3);
+                    topThree.forEach(item => {
+                        avatarsHtml += `<img src="${item.profile_img}" class="w-6 h-6 rounded-full border-2 border-white object-cover" alt="${item.mb_name}">`;
+                    });
+                    attendanceAvatars.innerHTML = avatarsHtml;
+                    attendanceCountBadge.textContent = data.data.total_count + '명';
+                } else {
+                    attendanceMiniWidget.classList.add('hidden');
+                }
+            })
+            .catch(error => console.error('미니 위젯 로딩 오류:', error));
+    }
+
+    // 패널 외부 클릭시 닫기
+    document.addEventListener('click', function(e) {
+        if (!attendanceListPanel.contains(e.target) &&
+            !attendanceMiniWidget.contains(e.target) &&
+            !attendanceListPanel.classList.contains('translate-x-full')) {
+            closeAttendanceListPanel();
+        }
+    });
+
+    // 출석 결과 패널 외부 클릭시 닫기
+    attendancePanel.addEventListener('click', function(e) {
+        if (e.target === attendancePanel) {
+            closeAttendancePanel();
+        }
+    });
+})();
+<?php } ?>
 </script>
 
 </body>
