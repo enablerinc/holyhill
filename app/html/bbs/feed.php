@@ -1,7 +1,7 @@
 <?php
 include_once('./_common.php');
 
-$g5['title'] = '피드';
+$g5['title'] = '성산샘터';
 
 // 게시판 설정 (gallery 게시판)
 $bo_table = 'gallery';
@@ -126,7 +126,7 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
     <div class="flex items-center justify-between px-4 py-3">
         <div class="flex items-center gap-3">
             <img src="../img/logo.png" alt="성산교회 로고" class="w-8 h-8 rounded-lg object-cover">
-            <h1 class="text-lg font-semibold text-grace-green">피드</h1>
+            <h1 class="text-lg font-semibold text-grace-green">성산샘터</h1>
         </div>
         <div class="flex items-center gap-4">
             <?php if ($is_member) { ?>

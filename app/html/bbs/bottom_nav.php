@@ -21,8 +21,8 @@ if ($is_member && isset($_SESSION['ss_mb_id'])) {
         </a>
 
         <a href="<?php echo G5_BBS_URL; ?>/feed.php" class="flex flex-col items-center gap-1">
-            <i class="fa-regular fa-images text-gray-600 text-lg"></i>
-            <span class="text-xs text-gray-600">피드</span>
+            <i class="fa-solid fa-droplet text-gray-600 text-lg"></i>
+            <span class="text-xs text-gray-600">성산샘터</span>
         </a>
 
         <?php if ($is_member) { ?>
