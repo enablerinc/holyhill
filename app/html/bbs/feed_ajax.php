@@ -48,6 +48,19 @@ $sql = "SELECT w.*, m.mb_nick as member_nick, m.mb_photo as member_photo,
         ORDER BY {$order_by}
         LIMIT {$offset}, {$page_rows}";
 
+// 디버그: 전체 개수 확인
+$count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0";
+$count_result = sql_fetch($count_sql);
+$debug_total = $count_result['cnt'];
+
+// 디버그: 단순 쿼리로 테스트
+$simple_sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 ORDER BY wr_datetime DESC LIMIT {$offset}, {$page_rows}";
+$simple_result = sql_query($simple_sql);
+$simple_count = 0;
+while ($simple_row = sql_fetch_array($simple_result)) {
+    $simple_count++;
+}
+
 $result = sql_query($sql);
 $items = array();
 
@@ -136,6 +149,13 @@ echo json_encode([
     'success' => true,
     'items' => $items,
     'page' => $page,
-    'count' => count($items)
+    'count' => count($items),
+    'debug' => [
+        'offset' => $offset,
+        'page_rows' => $page_rows,
+        'total_in_db' => $debug_total,
+        'simple_query_count' => $simple_count,
+        'sql' => $sql
+    ]
 ], JSON_UNESCAPED_UNICODE);
 ?>
