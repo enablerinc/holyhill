@@ -449,7 +449,13 @@ function convert_youtube_to_iframe_index($content) {
             <h2 class="text-xl font-bold text-gray-800">오늘의 출석 현황</h2>
             <i id="close-attendance-list" onclick="closeAttendanceListPanel()" class="fa-solid fa-times text-gray-600 text-xl cursor-pointer hover:text-gray-800"></i>
         </div>
-        <p id="attendance-list-count" class="text-sm text-purple-600">오늘 0명 출석</p>
+        <div class="flex items-center justify-between">
+            <p id="attendance-list-count" class="text-sm text-purple-600">오늘 0명 출석</p>
+            <div id="attendance-time-info" class="flex items-center gap-1 text-xs">
+                <i class="fa-regular fa-clock text-gray-400"></i>
+                <span class="text-gray-500">출석 가능: 04:30 ~ 23:59</span>
+            </div>
+        </div>
     </div>
     <div id="attendance-list-content" class="divide-y divide-gray-100">
         <!-- 출석자 목록이 여기에 동적으로 추가됩니다 -->
