@@ -35,6 +35,266 @@ if ($po_result) {
     $attendance_days = (int)$po_result['cnt'];
 }
 
+// ===========================
+// 명예의 전당 뱃지 조회
+// ===========================
+$current_year = date('Y');
+$current_month = date('n');
+$start_date = sprintf('%04d-%02d-01 00:00:00', $current_year, $current_month);
+$end_date = date('Y-m-t 23:59:59', strtotime($start_date));
+$days_in_month = (int)date('t', strtotime($start_date));
+$today_day = (int)date('j');
+
+// 이번 달 총 일수 계산
+define('EXCELLENT_MEMBER_POINT', 1000);
+
+// 획득한 명예의 전당 뱃지들
+$hof_badges = array();
+
+// 1. 이달의 베스트 성산인 (Top 3) 체크
+$top_member_sql = "
+    SELECT
+        m.mb_id,
+        COALESCE(SUM(p.po_point), 0) as monthly_points
+    FROM {$g5['member_table']} m
+    LEFT JOIN {$g5['point_table']} p ON m.mb_id = p.mb_id
+        AND p.po_datetime >= '{$start_date}'
+        AND p.po_datetime <= '{$end_date}'
+    WHERE m.mb_level > 1
+    GROUP BY m.mb_id
+    HAVING monthly_points > 0
+    ORDER BY monthly_points DESC
+    LIMIT 3
+";
+$top_result = sql_query($top_member_sql);
+$top_rank = 0;
+$rank_idx = 1;
+while ($row = sql_fetch_array($top_result)) {
+    if ($row['mb_id'] == $mb['mb_id']) {
+        $top_rank = $rank_idx;
+        break;
+    }
+    $rank_idx++;
+}
+if ($top_rank > 0) {
+    $hof_badges['best_member'] = $top_rank;
+}
+
+// 2. 우수 성산인 (1000점 이상) 체크
+$my_monthly_points_sql = "
+    SELECT COALESCE(SUM(po_point), 0) as monthly_points
+    FROM {$g5['point_table']}
+    WHERE mb_id = '{$mb['mb_id']}'
+    AND po_datetime >= '{$start_date}'
+    AND po_datetime <= '{$end_date}'
+";
+$my_monthly_result = sql_fetch($my_monthly_points_sql);
+$my_monthly_points = $my_monthly_result ? (int)$my_monthly_result['monthly_points'] : 0;
+if ($my_monthly_points >= EXCELLENT_MEMBER_POINT && $top_rank == 0) {
+    $hof_badges['excellent_member'] = $my_monthly_points;
+}
+
+// 3. 1등 출석왕 (가장 먼저 출석 1위) 체크
+$first_login_sql = "
+    SELECT
+        p.mb_id,
+        COUNT(*) as first_count
+    FROM {$g5['point_table']} p
+    WHERE p.po_content LIKE '%첫로그인%'
+    AND p.po_datetime >= '{$start_date}'
+    AND p.po_datetime <= '{$end_date}'
+    AND p.po_datetime = (
+        SELECT MIN(p2.po_datetime)
+        FROM {$g5['point_table']} p2
+        WHERE p2.po_content LIKE '%첫로그인%'
+        AND DATE(p2.po_datetime) = DATE(p.po_datetime)
+        AND p2.po_datetime >= '{$start_date}'
+        AND p2.po_datetime <= '{$end_date}'
+    )
+    GROUP BY p.mb_id
+    ORDER BY first_count DESC
+    LIMIT 3
+";
+$first_result = sql_query($first_login_sql);
+$first_rank = 0;
+$first_count = 0;
+$rank_idx = 1;
+while ($row = sql_fetch_array($first_result)) {
+    if ($row['mb_id'] == $mb['mb_id']) {
+        $first_rank = $rank_idx;
+        $first_count = $row['first_count'];
+        break;
+    }
+    $rank_idx++;
+}
+if ($first_rank > 0) {
+    $hof_badges['first_login'] = array('rank' => $first_rank, 'count' => $first_count);
+}
+
+// 4. 최다 출석자 (상위 3위) 체크
+$most_attendance_sql = "
+    SELECT
+        p.mb_id,
+        COUNT(DISTINCT DATE(p.po_datetime)) as attend_days
+    FROM {$g5['point_table']} p
+    WHERE p.po_content LIKE '%첫로그인%'
+    AND p.po_datetime >= '{$start_date}'
+    AND p.po_datetime <= '{$end_date}'
+    GROUP BY p.mb_id
+    ORDER BY attend_days DESC
+    LIMIT 3
+";
+$attend_result = sql_query($most_attendance_sql);
+$attend_rank = 0;
+$my_attend_days = 0;
+$rank_idx = 1;
+while ($row = sql_fetch_array($attend_result)) {
+    if ($row['mb_id'] == $mb['mb_id']) {
+        $attend_rank = $rank_idx;
+        $my_attend_days = $row['attend_days'];
+        break;
+    }
+    $rank_idx++;
+}
+if ($attend_rank > 0) {
+    $hof_badges['most_attendance'] = array('rank' => $attend_rank, 'days' => $my_attend_days);
+}
+
+// 5. 연속 출석 챔피언 (상위 3위) 체크
+function getConsecutiveDaysForMember($mb_id, $g5) {
+    $sql = "
+        SELECT DISTINCT DATE(po_datetime) as login_date
+        FROM {$g5['point_table']}
+        WHERE mb_id = '{$mb_id}'
+        AND po_content LIKE '%첫로그인%'
+        ORDER BY login_date DESC
+    ";
+    $result = sql_query($sql);
+    $dates = array();
+    while ($row = sql_fetch_array($result)) {
+        $dates[] = $row['login_date'];
+    }
+
+    if (empty($dates)) return 0;
+
+    $consecutive = 1;
+    $max_consecutive = 1;
+
+    for ($i = 0; $i < count($dates) - 1; $i++) {
+        $current = strtotime($dates[$i]);
+        $next = strtotime($dates[$i + 1]);
+        $diff = ($current - $next) / 86400;
+
+        if ($diff == 1) {
+            $consecutive++;
+            $max_consecutive = max($max_consecutive, $consecutive);
+        } else {
+            $consecutive = 1;
+        }
+    }
+
+    return $max_consecutive;
+}
+
+$my_consecutive = getConsecutiveDaysForMember($mb['mb_id'], $g5);
+
+// 상위 연속 출석자 조회
+$active_members_sql = "
+    SELECT DISTINCT p.mb_id
+    FROM {$g5['point_table']} p
+    WHERE p.po_content LIKE '%첫로그인%'
+    AND p.po_datetime >= DATE_SUB(NOW(), INTERVAL 60 DAY)
+";
+$active_result = sql_query($active_members_sql);
+$consecutive_members = array();
+while ($row = sql_fetch_array($active_result)) {
+    $consecutive_days = getConsecutiveDaysForMember($row['mb_id'], $g5);
+    if ($consecutive_days >= 3) {
+        $consecutive_members[] = array(
+            'mb_id' => $row['mb_id'],
+            'consecutive_days' => $consecutive_days
+        );
+    }
+}
+usort($consecutive_members, function($a, $b) {
+    return $b['consecutive_days'] - $a['consecutive_days'];
+});
+$consecutive_members = array_slice($consecutive_members, 0, 3);
+
+$consecutive_rank = 0;
+foreach ($consecutive_members as $idx => $member) {
+    if ($member['mb_id'] == $mb['mb_id']) {
+        $consecutive_rank = $idx + 1;
+        break;
+    }
+}
+if ($consecutive_rank > 0) {
+    $hof_badges['consecutive'] = array('rank' => $consecutive_rank, 'days' => $my_consecutive);
+}
+
+// 6. 이달의 개근상 체크
+$my_month_attend_sql = "
+    SELECT COUNT(DISTINCT DATE(po_datetime)) as attend_days
+    FROM {$g5['point_table']}
+    WHERE mb_id = '{$mb['mb_id']}'
+    AND po_content LIKE '%첫로그인%'
+    AND po_datetime >= '{$start_date}'
+    AND po_datetime <= '{$end_date}'
+";
+$my_month_attend = sql_fetch($my_month_attend_sql);
+$my_month_attend_days = $my_month_attend ? (int)$my_month_attend['attend_days'] : 0;
+if ($my_month_attend_days >= $today_day) {
+    $hof_badges['perfect_attendance'] = $my_month_attend_days;
+}
+
+// 7. 새벽 출석자 (상위 3위) 체크
+$dawn_sql = "
+    SELECT
+        p.mb_id,
+        COUNT(*) as dawn_count
+    FROM {$g5['point_table']} p
+    WHERE p.po_content LIKE '%첫로그인%'
+    AND p.po_datetime >= '{$start_date}'
+    AND p.po_datetime <= '{$end_date}'
+    AND TIME(p.po_datetime) >= '04:30:00'
+    AND TIME(p.po_datetime) < '05:00:00'
+    GROUP BY p.mb_id
+    ORDER BY dawn_count DESC
+    LIMIT 3
+";
+$dawn_result = sql_query($dawn_sql);
+$dawn_rank = 0;
+$dawn_count = 0;
+$rank_idx = 1;
+while ($row = sql_fetch_array($dawn_result)) {
+    if ($row['mb_id'] == $mb['mb_id']) {
+        $dawn_rank = $rank_idx;
+        $dawn_count = $row['dawn_count'];
+        break;
+    }
+    $rank_idx++;
+}
+if ($dawn_rank > 0) {
+    $hof_badges['dawn'] = array('rank' => $dawn_rank, 'count' => $dawn_count);
+}
+
+// 8. 오늘의 골든타임 (첫 출석자) 체크
+$today_start = date('Y-m-d 00:00:00');
+$today_end = date('Y-m-d 23:59:59');
+$golden_sql = "
+    SELECT mb_id, po_datetime as login_time
+    FROM {$g5['point_table']}
+    WHERE po_content LIKE '%첫로그인%'
+    AND po_datetime >= '{$today_start}'
+    AND po_datetime <= '{$today_end}'
+    ORDER BY po_datetime ASC
+    LIMIT 1
+";
+$golden_result = sql_fetch($golden_sql);
+if ($golden_result && $golden_result['mb_id'] == $mb['mb_id']) {
+    $hof_badges['golden_time'] = date('H:i:s', strtotime($golden_result['login_time']));
+}
+
 // 프로필 이미지 경로
 $profile_img = G5_DATA_URL.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$mb['mb_id'].'.gif';
 if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$mb['mb_id'].'.gif')) {
@@ -86,7 +346,8 @@ $my_comments_result = sql_query($my_comments_sql);
                         'soft-lavender': '#E8E2F7',
                         'grace-green': '#6B705C',
                         'lilac': '#B19CD9',
-                        'deep-purple': '#6B46C1'
+                        'deep-purple': '#6B46C1',
+                        'divine-lilac': '#C4A6E8'
                     }
                 }
             }
@@ -159,9 +420,149 @@ $my_comments_result = sql_query($my_comments_sql);
 
 
     <section id="achievements" class="px-4 mt-6">
-        <h3 class="text-lg font-semibold text-grace-green mb-4">획득한 뱃지</h3>
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-grace-green">획득한 뱃지</h3>
+            <?php if (count($hof_badges) > 0) { ?>
+            <a href="<?php echo G5_BBS_URL; ?>/halloffame.php" class="text-xs text-lilac flex items-center gap-1">
+                명예의 전당 <i class="fa-solid fa-chevron-right text-xs"></i>
+            </a>
+            <?php } ?>
+        </div>
 
+        <?php
+        $has_any_badge = ($attendance_days >= 90) || ($post_count >= 10) || ($mb['mb_point'] >= 1000) || (count($hof_badges) > 0);
+        ?>
+
+        <?php if ($has_any_badge) { ?>
         <div class="grid grid-cols-3 gap-3">
+            <?php // 명예의 전당 뱃지들 ?>
+
+            <?php if (isset($hof_badges['best_member'])) {
+                $rank = $hof_badges['best_member'];
+                $rank_colors = array(
+                    1 => 'from-yellow-400 to-amber-500',
+                    2 => 'from-gray-300 to-gray-400',
+                    3 => 'from-amber-600 to-amber-700'
+                );
+                $rank_names = array(1 => '1등', 2 => '2등', 3 => '3등');
+            ?>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm border-2 border-divine-lilac/30 relative">
+                <div class="absolute -top-2 -right-2 w-6 h-6 bg-divine-lilac rounded-full flex items-center justify-center">
+                    <span class="text-white text-xs font-bold"><?php echo $rank; ?></span>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-r <?php echo $rank_colors[$rank]; ?> rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-trophy text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">베스트 성산인</div>
+                <div class="text-xs text-lilac font-semibold"><?php echo $current_month; ?>월 <?php echo $rank_names[$rank]; ?></div>
+            </div>
+            <?php } ?>
+
+            <?php if (isset($hof_badges['excellent_member'])) { ?>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm border border-lilac/20">
+                <div class="w-12 h-12 bg-gradient-to-r from-purple-400 to-lilac rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-hands-praying text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">우수 성산인</div>
+                <div class="text-xs text-lilac"><?php echo number_format($hof_badges['excellent_member']); ?>점</div>
+            </div>
+            <?php } ?>
+
+            <?php if (isset($hof_badges['golden_time'])) { ?>
+            <div class="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500 rounded-2xl p-4 text-center shadow-warm relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 bg-white/10 rounded-full -mr-4 -mt-4"></div>
+                <div class="w-12 h-12 bg-white/30 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-bolt text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-white">골든타임</div>
+                <div class="text-xs text-white/80"><?php echo $hof_badges['golden_time']; ?></div>
+            </div>
+            <?php } ?>
+
+            <?php if (isset($hof_badges['first_login'])) {
+                $rank = $hof_badges['first_login']['rank'];
+                $count = $hof_badges['first_login']['count'];
+            ?>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm relative">
+                <?php if ($rank == 1) { ?>
+                <div class="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                    <span class="text-white text-xs font-bold"><?php echo $rank; ?></span>
+                </div>
+                <?php } ?>
+                <div class="w-12 h-12 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-clock text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">1등 출석왕</div>
+                <div class="text-xs text-amber-600"><?php echo $count; ?>회 1등</div>
+            </div>
+            <?php } ?>
+
+            <?php if (isset($hof_badges['most_attendance'])) {
+                $rank = $hof_badges['most_attendance']['rank'];
+                $days = $hof_badges['most_attendance']['days'];
+            ?>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm relative">
+                <?php if ($rank == 1) { ?>
+                <div class="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <span class="text-white text-xs font-bold"><?php echo $rank; ?></span>
+                </div>
+                <?php } ?>
+                <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-check-double text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">최다 출석</div>
+                <div class="text-xs text-green-600"><?php echo $days; ?>일 출석</div>
+            </div>
+            <?php } ?>
+
+            <?php if (isset($hof_badges['consecutive'])) {
+                $rank = $hof_badges['consecutive']['rank'];
+                $days = $hof_badges['consecutive']['days'];
+            ?>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm relative">
+                <?php if ($rank == 1) { ?>
+                <div class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                    <span class="text-white text-xs font-bold"><?php echo $rank; ?></span>
+                </div>
+                <?php } ?>
+                <div class="w-12 h-12 bg-gradient-to-r from-red-400 to-red-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-fire text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">연속 출석</div>
+                <div class="text-xs text-red-600"><?php echo $days; ?>일 연속</div>
+            </div>
+            <?php } ?>
+
+            <?php if (isset($hof_badges['perfect_attendance'])) { ?>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm border border-purple-200">
+                <div class="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-medal text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">개근상</div>
+                <div class="text-xs text-purple-600"><?php echo $current_month; ?>월 개근</div>
+            </div>
+            <?php } ?>
+
+            <?php if (isset($hof_badges['dawn'])) {
+                $rank = $hof_badges['dawn']['rank'];
+                $count = $hof_badges['dawn']['count'];
+            ?>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-warm relative">
+                <?php if ($rank == 1) { ?>
+                <div class="absolute -top-2 -right-2 w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
+                    <span class="text-white text-xs font-bold"><?php echo $rank; ?></span>
+                </div>
+                <?php } ?>
+                <div class="w-12 h-12 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                    <i class="fa-solid fa-sun text-white"></i>
+                </div>
+                <div class="text-xs font-medium text-grace-green">새벽 출석</div>
+                <div class="text-xs text-indigo-600"><?php echo $count; ?>회</div>
+            </div>
+            <?php } ?>
+
+            <?php // 기존 뱃지들 ?>
+
             <?php if ($attendance_days >= 90) { ?>
             <div class="bg-white rounded-2xl p-4 text-center shadow-warm">
                 <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mx-auto mb-2 flex items-center justify-center">
@@ -175,7 +576,7 @@ $my_comments_result = sql_query($my_comments_sql);
             <?php if ($post_count >= 10) { ?>
             <div class="bg-white rounded-2xl p-4 text-center shadow-warm">
                 <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
-                    <i class="fa-solid fa-music text-white"></i>
+                    <i class="fa-solid fa-pen text-white"></i>
                 </div>
                 <div class="text-xs font-medium text-grace-green">활동적인</div>
                 <div class="text-xs text-gray-500">활발한 참여</div>
@@ -185,13 +586,20 @@ $my_comments_result = sql_query($my_comments_sql);
             <?php if ($mb['mb_point'] >= 1000) { ?>
             <div class="bg-white rounded-2xl p-4 text-center shadow-warm">
                 <div class="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full mx-auto mb-2 flex items-center justify-center">
-                    <i class="fa-solid fa-heart text-white"></i>
+                    <i class="fa-solid fa-coins text-white"></i>
                 </div>
                 <div class="text-xs font-medium text-grace-green">포인트왕</div>
                 <div class="text-xs text-gray-500">포인트 우수자</div>
             </div>
             <?php } ?>
         </div>
+        <?php } else { ?>
+        <div class="bg-white rounded-2xl p-8 shadow-warm text-center">
+            <i class="fa-solid fa-award text-gray-300 text-4xl mb-3"></i>
+            <p class="text-sm text-gray-400">아직 획득한 뱃지가 없습니다.</p>
+            <p class="text-xs text-gray-400 mt-1">활발하게 활동하면 뱃지를 획득할 수 있어요!</p>
+        </div>
+        <?php } ?>
     </section>
 
     <section id="recent-activity" class="px-4 mt-6">
