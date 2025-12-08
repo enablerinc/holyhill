@@ -321,7 +321,7 @@ foreach ($media_files as $idx => $media) {
     <!-- 헤더 -->
     <header class="fixed top-0 left-0 right-0 bg-white border-b z-50" style="max-width: 640px; margin: 0 auto;">
         <div class="flex items-center justify-between px-4 py-3">
-            <button onclick="location.href='<?php echo G5_BBS_URL; ?>/index.php'"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+            <button onclick="history.back()"><i class="fa-solid fa-arrow-left text-xl"></i></button>
             <?php if ($delete_href) { ?>
             <div class="relative">
                 <button onclick="toggleMenu()" id="menuBtn"><i class="fa-solid fa-ellipsis-vertical text-xl"></i></button>
