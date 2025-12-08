@@ -201,19 +201,6 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             <span class="text-sm text-gray-500"><?php echo number_format($total_count); ?>개</span>
         </div>
 
-        <!-- 디버그 정보 (문제 해결 후 삭제) -->
-        <div class="bg-yellow-100 p-3 rounded-lg mb-4 text-xs text-gray-700">
-            <p><strong>DEBUG:</strong></p>
-            <p>total_count: <?php echo $total_count; ?></p>
-            <p>page_rows: <?php echo $page_rows; ?></p>
-            <p>total_count > page_rows: <?php echo ($total_count > $page_rows) ? 'TRUE (버튼 보여야함)' : 'FALSE'; ?></p>
-            <p>totalPages: <?php echo ceil($total_count / $page_rows); ?></p>
-            <?php if (count($list) > 0) { ?>
-            <p>첫 번째 글 날짜: <?php echo $list[0]['wr_datetime']; ?></p>
-            <p>마지막 글 날짜: <?php echo $list[count($list)-1]['wr_datetime']; ?></p>
-            <?php } ?>
-        </div>
-
         <?php
         // 게시글이 있는 경우
         if (count($list) > 0) {
@@ -380,17 +367,11 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
     </section>
 
     <!-- 더 보기 버튼 -->
-    <!-- DEBUG: total_count=<?php echo $total_count; ?>, page_rows=<?php echo $page_rows; ?>, condition=<?php echo ($total_count > $page_rows) ? 'TRUE' : 'FALSE'; ?> -->
     <?php if ($total_count > $page_rows) { ?>
-    <div id="load-more-btn" class="text-center py-4 bg-green-100">
-        <p class="text-xs text-gray-500 mb-2">(버튼 영역 - 104 > 30 이므로 보여야 함)</p>
+    <div id="load-more-btn" class="text-center py-4">
         <button onclick="loadMorePosts()" class="px-6 py-3 bg-lilac text-white rounded-full text-sm font-medium hover:bg-deep-purple transition-colors">
             <i class="fa-solid fa-plus mr-2"></i>더 보기
         </button>
-    </div>
-    <?php } else { ?>
-    <div class="text-center py-4 bg-red-100">
-        <p class="text-xs">조건 불만족: <?php echo $total_count; ?> <= <?php echo $page_rows; ?></p>
     </div>
     <?php } ?>
 
@@ -412,8 +393,6 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
 <!-- 무한 스크롤 스크립트 -->
 <script>
-console.log('=== 피드 스크립트 시작 ===');
-
 // 전역 변수
 let currentPage = 1;
 let isLoading = false;
@@ -423,9 +402,7 @@ const searchType = '<?php echo $search_type; ?>';
 const searchKeyword = '<?php echo addslashes($search_keyword); ?>';
 const boTable = '<?php echo $bo_table; ?>';
 const totalCount = <?php echo $total_count; ?>;
-const pageRows = <?php echo $page_rows; ?>
-
-console.log('totalCount:', totalCount, 'pageRows:', pageRows, 'totalPages:', Math.ceil(totalCount / pageRows));;
+const pageRows = <?php echo $page_rows; ?>;
 const totalPages = Math.ceil(totalCount / pageRows);
 
 // 초기화: 1페이지만 있으면 더 보기 버튼 숨김
@@ -455,10 +432,7 @@ window.addEventListener('scroll', function() {
 });
 
 function loadMore() {
-    console.log('loadMore 호출됨 - currentPage:', currentPage, 'totalPages:', totalPages);
-
     if (currentPage >= totalPages) {
-        console.log('마지막 페이지 도달 - 종료');
         hasMore = false;
         const loadMoreBtn = document.getElementById('load-more-btn');
         if (loadMoreBtn) loadMoreBtn.style.display = 'none';
@@ -468,7 +442,6 @@ function loadMore() {
 
     isLoading = true;
     currentPage++;
-    console.log('페이지 증가 - 새 currentPage:', currentPage);
 
     document.getElementById('loading').classList.remove('hidden');
 
@@ -479,14 +452,10 @@ function loadMore() {
                 '&page=' + currentPage +
                 '&page_rows=' + pageRows;
 
-    console.log('AJAX URL:', url);
-
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            console.log('AJAX 응답:', data);
             if (data.success && data.items.length > 0) {
-                console.log('성공 - 아이템 수:', data.items.length);
                 const feedList = document.getElementById('feed-list');
 
                     data.items.forEach(item => {
@@ -565,7 +534,6 @@ function loadMore() {
                     }
 
             } else {
-                console.log('실패 또는 빈 응답 - data:', data);
                 hasMore = false;
                 const loadMoreBtn = document.getElementById('load-more-btn');
                 if (loadMoreBtn) loadMoreBtn.style.display = 'none';
@@ -574,7 +542,7 @@ function loadMore() {
             }
         })
         .catch(error => {
-            console.error('AJAX 에러:', error);
+            console.error('Error:', error);
             isLoading = false;
             document.getElementById('loading').classList.add('hidden');
         });
