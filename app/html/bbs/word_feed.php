@@ -81,7 +81,7 @@ $total_count = isset($total_count_result['cnt']) ? $total_count_result['cnt'] : 
 // 글쓰기 권한 체크
 $write_href = '';
 if ($member['mb_level'] >= $board['bo_write_level']) {
-    $write_href = G5_BBS_URL.'/word_write.php';
+    $write_href = G5_BBS_URL.'/write_word.php';
 }
 ?>
 
