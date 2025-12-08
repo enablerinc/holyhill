@@ -152,7 +152,7 @@ if ($is_member) {
 <!-- 헤더 -->
 <header id="header" class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
     <div class="flex items-center justify-between px-4 py-3">
-        <a href="<?php echo G5_BBS_URL; ?>/word_list.php" class="text-grace-green hover:text-gray-900">
+        <a href="javascript:history.back()" class="text-grace-green hover:text-gray-900">
             <i class="fa-solid fa-arrow-left text-xl"></i>
         </a>
         <h1 class="text-base font-semibold text-grace-green">오늘의 말씀</h1>
