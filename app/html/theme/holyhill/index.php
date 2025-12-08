@@ -57,6 +57,54 @@ include_once(G5_THEME_PATH.'/head.php');
         </div>
     </section>
 
+    <?php
+    // 공지사항 조회 (gallery 게시판)
+    $notice_board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = 'gallery'");
+    $notice_list = array();
+    if ($notice_board && $notice_board['bo_notice']) {
+        $notice_ids = explode(',', $notice_board['bo_notice']);
+        $notice_ids = array_filter(array_map('intval', $notice_ids));
+        if (!empty($notice_ids)) {
+            $notice_ids_str = implode(',', $notice_ids);
+            $notice_sql = "SELECT * FROM {$g5['write_prefix']}gallery WHERE wr_id IN ({$notice_ids_str}) ORDER BY FIELD(wr_id, {$notice_ids_str})";
+            $notice_result = sql_query($notice_sql);
+            while ($notice_row = sql_fetch_array($notice_result)) {
+                $notice_list[] = $notice_row;
+            }
+        }
+    }
+    ?>
+
+    <?php if (!empty($notice_list)) { ?>
+    <!-- 공지사항 섹션 -->
+    <section id="announcements" class="mx-4 mb-4">
+        <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+            <div class="flex items-center gap-2 px-4 py-3 bg-amber-50 border-b border-amber-100">
+                <i class="fa-solid fa-bullhorn text-amber-500"></i>
+                <h2 class="text-sm font-semibold text-gray-800">공지사항</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                <?php foreach ($notice_list as $notice) {
+                    $notice_href = G5_BBS_URL.'/post.php?bo_table=gallery&amp;wr_id='.$notice['wr_id'];
+                    $notice_date = date('m.d', strtotime($notice['wr_datetime']));
+                ?>
+                <a href="<?php echo $notice_href; ?>" class="block px-4 py-3 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-amber-500 text-white flex-shrink-0">
+                            공지
+                        </span>
+                        <h3 class="flex-1 text-sm text-gray-800 line-clamp-1">
+                            <?php echo get_text($notice['wr_subject']); ?>
+                        </h3>
+                        <span class="text-xs text-gray-400 flex-shrink-0"><?php echo $notice_date; ?></span>
+                    </div>
+                </a>
+                <?php } ?>
+            </div>
+        </div>
+    </section>
+    <?php } ?>
+
     <!-- 오늘의 말씀 위젯 -->
     <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
         <?php

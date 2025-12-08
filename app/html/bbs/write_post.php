@@ -25,6 +25,7 @@ $wr_id = 0;
 $subject = '';
 $content = '';
 $file = array();
+$is_notice = false;
 
 if (isset($_GET['w']) && $_GET['w'] == 'u' && isset($_GET['wr_id'])) {
     $w = 'u';
@@ -44,6 +45,10 @@ if (isset($_GET['w']) && $_GET['w'] == 'u' && isset($_GET['wr_id'])) {
 
     $subject = get_text($write['wr_subject']);
     $content = $write['wr_content'];
+
+    // 공지사항 여부 체크
+    $notice_array = explode(',', $board['bo_notice']);
+    $is_notice = in_array($wr_id, $notice_array);
 
     // 첨부파일 정보 가져오기
     $file_sql = "SELECT * FROM {$g5['board_file_table']}
@@ -148,6 +153,21 @@ if ($is_member) {
                         placeholder="제목을 입력하세요..."
                         maxlength="255">
                 </div>
+
+                <?php if ($is_admin) { ?>
+                <!-- 공지사항 설정 (관리자 전용) -->
+                <div class="px-4 py-3 border-b border-gray-100 bg-amber-50">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="notice" value="1" <?php echo $is_notice ? 'checked' : ''; ?>
+                               class="w-5 h-5 text-amber-500 border-gray-300 rounded focus:ring-amber-500">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-bullhorn text-amber-500"></i>
+                            <span class="text-sm font-medium text-gray-700">공지사항으로 등록</span>
+                            <span class="text-xs text-gray-500">(모든 사용자에게 상단에 고정 표시됩니다)</span>
+                        </span>
+                    </label>
+                </div>
+                <?php } ?>
 
                 <!-- 문구/내용 입력 -->
                 <div class="px-4 py-4 border-b border-gray-100">

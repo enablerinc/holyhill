@@ -191,6 +191,53 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
         </div>
     </section>
 
+    <?php
+    // 공지사항 조회
+    $notice_list = array();
+    if ($board['bo_notice']) {
+        $notice_ids = explode(',', $board['bo_notice']);
+        $notice_ids = array_filter(array_map('intval', $notice_ids));
+        if (!empty($notice_ids)) {
+            $notice_ids_str = implode(',', $notice_ids);
+            $notice_sql = "SELECT * FROM {$write_table} WHERE wr_id IN ({$notice_ids_str}) ORDER BY FIELD(wr_id, {$notice_ids_str})";
+            $notice_result = sql_query($notice_sql);
+            while ($notice_row = sql_fetch_array($notice_result)) {
+                $notice_list[] = $notice_row;
+            }
+        }
+    }
+    ?>
+
+    <?php if (!empty($notice_list)) { ?>
+    <!-- 공지사항 섹션 -->
+    <section class="px-4 py-4 border-b border-gray-200">
+        <div class="flex items-center gap-2 mb-3">
+            <i class="fa-solid fa-bullhorn text-amber-500"></i>
+            <h2 class="text-base font-semibold text-gray-800">공지사항</h2>
+        </div>
+        <div class="space-y-2">
+            <?php foreach ($notice_list as $notice) {
+                $notice_href = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$notice['wr_id'];
+                $notice_date = date('Y.m.d', strtotime($notice['wr_datetime']));
+            ?>
+            <a href="<?php echo $notice_href; ?>" class="block">
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 hover:bg-amber-100 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500 text-white">
+                            공지
+                        </span>
+                        <h3 class="flex-1 font-medium text-gray-900 text-sm line-clamp-1">
+                            <?php echo get_text($notice['wr_subject']); ?>
+                        </h3>
+                        <span class="text-xs text-gray-500 flex-shrink-0"><?php echo $notice_date; ?></span>
+                    </div>
+                </div>
+            </a>
+            <?php } ?>
+        </div>
+    </section>
+    <?php } ?>
+
     <!-- 게시물 목록 -->
     <section class="px-4 py-4">
         <div class="flex items-center justify-between mb-4">
