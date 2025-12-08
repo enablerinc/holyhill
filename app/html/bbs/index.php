@@ -316,6 +316,21 @@ function convert_youtube_to_iframe_index($content) {
         <!-- 피드 섹션 -->
         <section id="feed" class="space-y-4 pb-20">
             <?php
+            // 회원 전용: 로그인하지 않은 사용자는 피드를 볼 수 없음
+            if (!$is_member) {
+            ?>
+            <div class="mx-4 p-8 bg-white rounded-2xl shadow-md text-center">
+                <i class="fa-solid fa-lock text-gray-300 text-5xl mb-4"></i>
+                <p class="text-gray-600 mb-2">회원 전용 콘텐츠입니다</p>
+                <p class="text-sm text-gray-500 mb-4">로그인하시면 성산샘터의 모든 게시물을 확인하실 수 있습니다.</p>
+                <a href="<?php echo G5_BBS_URL; ?>/login.php?url=<?php echo urlencode(G5_BBS_URL.'/index.php'); ?>"
+                   class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    로그인하기
+                </a>
+            </div>
+            <?php
+            } else {
+            // 로그인한 회원에게만 피드 표시
             $feed_sql = "SELECT * FROM {$g5['write_prefix']}gallery
                          WHERE wr_is_comment = 0
                          ORDER BY wr_id DESC
@@ -344,15 +359,25 @@ function convert_youtube_to_iframe_index($content) {
                     // YouTube URL이 있는지 확인
                     $has_youtube_feed = preg_match('/(youtube\.com|youtu\.be)/', $feed['wr_content']);
 
-                    // 첨부 이미지
-                    $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']}
-                                            WHERE bo_table = 'gallery'
-                                            AND wr_id = '{$feed['wr_id']}'
-                                            AND bf_type BETWEEN 1 AND 3
-                                            ORDER BY bf_no
-                                            LIMIT 1");
-                    $img = sql_fetch_array($img_result);
-                    $feed_img = $img ? G5_DATA_URL.'/file/gallery/'.$img['bf_file'] : '';
+                    // 첨부 이미지 (본문 이미지 우선)
+                    $feed_img = '';
+
+                    // 1. 먼저 본문(wr_content)에서 첫 번째 이미지 찾기
+                    if (preg_match('/<img[^>]+src=["\']?([^"\'>\s]+)["\']?[^>]*>/i', $feed['wr_content'], $img_match)) {
+                        $feed_img = $img_match[1];
+                    }
+
+                    // 2. 본문에 이미지가 없으면 첨부파일에서 찾기
+                    if (!$feed_img) {
+                        $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']}
+                                                WHERE bo_table = 'gallery'
+                                                AND wr_id = '{$feed['wr_id']}'
+                                                AND bf_type BETWEEN 1 AND 3
+                                                ORDER BY bf_no
+                                                LIMIT 1");
+                        $img = sql_fetch_array($img_result);
+                        $feed_img = $img ? G5_DATA_URL.'/file/gallery/'.$img['bf_file'] : '';
+                    }
 
                     $comment_cnt = $feed['wr_comment'];
                     $good_cnt = $feed['wr_good'];
@@ -460,6 +485,7 @@ function convert_youtube_to_iframe_index($content) {
                 </div>
                 <?php
             }
+            } // end if ($is_member) - 회원 전용 피드
             ?>
         </section>
 
