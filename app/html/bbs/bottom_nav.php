@@ -20,10 +20,10 @@ if ($current_script == 'index.php' && strpos($_SERVER['REQUEST_URI'], '/bbs/inde
 }
 
 // 활성/비활성 스타일 정의
-$active_icon_class = 'text-lilac text-xl';
-$active_text_class = 'text-xs text-lilac font-semibold';
-$inactive_icon_class = 'text-gray-400 text-lg';
-$inactive_text_class = 'text-xs text-gray-400';
+$active_icon_class = 'text-purple-600 text-xl';
+$active_text_class = 'text-xs text-purple-600 font-semibold';
+$inactive_icon_class = 'text-lilac text-lg';
+$inactive_text_class = 'text-xs text-lilac';
 
 // 프로필 이미지 경로 (로그인한 경우에만)
 $nav_profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
@@ -66,7 +66,7 @@ if ($is_member && isset($_SESSION['ss_mb_id'])) {
         <!-- 내 정보 / 로그인 -->
         <?php if ($is_member) { ?>
         <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="flex flex-col items-center gap-1">
-            <img src="<?php echo $nav_profile_img; ?>" class="w-6 h-6 rounded-full object-cover border-2 <?php echo ($current_page == 'mypage') ? 'border-lilac' : 'border-gray-300'; ?>">
+            <img src="<?php echo $nav_profile_img; ?>" class="w-6 h-6 rounded-full object-cover border-2 <?php echo ($current_page == 'mypage') ? 'border-purple-600' : 'border-lilac'; ?>">
             <span class="<?php echo ($current_page == 'mypage') ? $active_text_class : $inactive_text_class; ?>">내 정보</span>
         </a>
         <?php } else { ?>
