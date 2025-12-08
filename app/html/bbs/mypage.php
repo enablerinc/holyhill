@@ -63,7 +63,7 @@ $top_member_sql = "
     WHERE m.mb_level > 1
     GROUP BY m.mb_id
     HAVING monthly_points > 0
-    ORDER BY monthly_points DESC
+    ORDER BY monthly_points DESC, m.mb_id ASC
     LIMIT 3
 ";
 $top_result = sql_query($top_member_sql);
@@ -112,7 +112,7 @@ $first_login_sql = "
         AND p2.po_datetime <= '{$end_date}'
     )
     GROUP BY p.mb_id
-    ORDER BY first_count DESC
+    ORDER BY first_count DESC, p.mb_id ASC
     LIMIT 3
 ";
 $first_result = sql_query($first_login_sql);
@@ -141,7 +141,7 @@ $most_attendance_sql = "
     AND p.po_datetime >= '{$start_date}'
     AND p.po_datetime <= '{$end_date}'
     GROUP BY p.mb_id
-    ORDER BY attend_days DESC
+    ORDER BY attend_days DESC, p.mb_id ASC
     LIMIT 3
 ";
 $attend_result = sql_query($most_attendance_sql);
@@ -217,6 +217,9 @@ while ($row = sql_fetch_array($active_result)) {
     }
 }
 usort($consecutive_members, function($a, $b) {
+    if ($b['consecutive_days'] == $a['consecutive_days']) {
+        return strcmp($a['mb_id'], $b['mb_id']); // 동점일 때 mb_id로 정렬
+    }
     return $b['consecutive_days'] - $a['consecutive_days'];
 });
 $consecutive_members = array_slice($consecutive_members, 0, 3);
@@ -259,7 +262,7 @@ $dawn_sql = "
     AND TIME(p.po_datetime) >= '04:30:00'
     AND TIME(p.po_datetime) < '05:00:00'
     GROUP BY p.mb_id
-    ORDER BY dawn_count DESC
+    ORDER BY dawn_count DESC, p.mb_id ASC
     LIMIT 3
 ";
 $dawn_result = sql_query($dawn_sql);
