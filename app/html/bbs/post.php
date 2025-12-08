@@ -409,133 +409,106 @@ foreach ($media_files as $idx => $media) {
                 <h3 class="font-semibold mb-4">댓글 <?php echo $write['wr_comment']; ?>개</h3>
                 <div id="comment-list">
                 <?php
-                // 모든 댓글 가져오기 (wr_comment_parent 필드로 명확한 부모-자식 관계 확인)
-                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_id ASC LIMIT 200");
+                // 모든 댓글 가져오기
+                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_id ASC LIMIT 500");
 
                 // 댓글을 배열로 변환하고 계층 구조 생성
                 $all_comments = array();
-                $parent_comments = array();
-                $reply_comments = array();
+                $children_map = array(); // 부모ID => 자식 댓글 배열
 
                 while ($c = sql_fetch_array($comment_result)) {
                     $all_comments[$c['wr_id']] = $c;
+                    $parent_id = (int)$c['wr_comment_parent'];
 
-                    // wr_comment_parent로 대댓글 여부 확인 (0이면 일반 댓글, 0이 아니면 대댓글)
-                    if ($c['wr_comment_parent'] > 0) {
-                        // 대댓글: wr_comment_parent에 저장된 부모 댓글 ID로 그룹화
-                        if (!isset($reply_comments[$c['wr_comment_parent']])) {
-                            $reply_comments[$c['wr_comment_parent']] = array();
+                    if (!isset($children_map[$parent_id])) {
+                        $children_map[$parent_id] = array();
+                    }
+                    $children_map[$parent_id][] = $c;
+                }
+
+                // 재귀적으로 댓글 렌더링하는 함수
+                function render_comment($comment, $depth, $children_map, $g5, $is_member, $is_admin, $member, $comment_profile_photo) {
+                    // 최대 들여쓰기 깊이 (4단계까지만 들여쓰기)
+                    $max_indent = 4;
+                    $indent_level = min($depth, $max_indent);
+
+                    // 들여쓰기 클래스 계산 (ml-8씩 증가, 최대 ml-32)
+                    $indent_class = $depth > 0 ? 'ml-' . ($indent_level * 8) : '';
+
+                    $c = $comment;
+                    $c_nick = $c['wr_name'] ? $c['wr_name'] : '알 수 없음';
+                    $c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
+
+                    if ($c['mb_id']) {
+                        $c_mb = sql_fetch("SELECT mb_name FROM {$g5['member_table']} WHERE mb_id = '{$c['mb_id']}'");
+                        if ($c_mb) {
+                            $c_nick = $c_mb['mb_name'];
                         }
-                        $reply_comments[$c['wr_comment_parent']][] = $c;
-                    } else {
-                        // 일반 댓글
-                        $parent_comments[] = $c;
+
+                        $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
+                        if (file_exists($c_profile_path)) {
+                            $c_photo = G5_DATA_URL.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
+                        }
+                    }
+                    ?>
+                    <div id="c_<?php echo $c['wr_id']; ?>" class="mb-3 <?php echo $indent_class; ?>" data-depth="<?php echo $depth; ?>">
+                        <div class="flex gap-3">
+                            <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full flex-shrink-0">
+                            <div class="flex-1">
+                                <div class="bg-gray-50 rounded-2xl px-3 py-2">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="font-semibold text-xs"><?php echo $c_nick; ?></div>
+                                        <div class="text-xs text-gray-400"><?php echo get_time_ago($c['wr_datetime']); ?></div>
+                                    </div>
+                                    <div class="text-sm comment-content-<?php echo $c['wr_id']; ?>"><?php echo process_comment_content(nl2br(get_text($c['wr_content']))); ?></div>
+                                </div>
+                                <div class="flex gap-2 mt-1 ml-3">
+                                    <?php if ($is_member) { ?>
+                                    <button onclick="toggleReplyForm(<?php echo $c['wr_id']; ?>)" class="text-xs text-gray-500">답글</button>
+                                    <?php } ?>
+                                    <?php if (($is_member && $member['mb_id'] === $c['mb_id']) || $is_admin) { ?>
+                                    <button onclick="editComment(<?php echo $c['wr_id']; ?>, '<?php echo addslashes(str_replace("\n", "\\n", get_text($c['wr_content']))); ?>')" class="text-xs text-gray-500">수정</button>
+                                    <button onclick="deleteComment(<?php echo $c['wr_id']; ?>)" class="text-xs text-red-500">삭제</button>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 답글 입력창 -->
+                        <?php if ($is_member) { ?>
+                        <div id="reply-form-<?php echo $c['wr_id']; ?>" class="hidden mt-2 ml-11">
+                            <div class="flex gap-2 items-center">
+                                <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
+                                <div class="flex-1 flex gap-2 bg-gray-100 rounded-full px-3 py-2 items-center">
+                                    <input
+                                        type="text"
+                                        class="reply-input flex-1 bg-transparent border-none outline-none text-sm"
+                                        placeholder="답글 입력..."
+                                        data-parent-id="<?php echo $c['wr_id']; ?>"
+                                        onkeypress="if(event.key==='Enter'){submitReply(<?php echo $c['wr_id']; ?>)}">
+                                    <button onclick="submitReply(<?php echo $c['wr_id']; ?>)" class="bg-transparent border-none cursor-pointer p-1">
+                                        <i class="fa-solid fa-paper-plane text-purple-600 text-base"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <?php } ?>
+                    </div>
+                    <?php
+
+                    // 자식 댓글들 재귀적으로 렌더링
+                    if (isset($children_map[$c['wr_id']])) {
+                        foreach ($children_map[$c['wr_id']] as $child) {
+                            render_comment($child, $depth + 1, $children_map, $g5, $is_member, $is_admin, $member, $comment_profile_photo);
+                        }
                     }
                 }
 
-                if (count($parent_comments) > 0 || count($reply_comments) > 0) {
-                    // 부모 댓글을 먼저 출력하고, 각 부모 댓글 아래에 대댓글 출력
-                    foreach ($parent_comments as $c) {
-                        $c_nick = $c['wr_name'] ? $c['wr_name'] : '알 수 없음';
-                        $c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
+                // 최상위 댓글들 (wr_comment_parent = 0)
+                $root_comments = isset($children_map[0]) ? $children_map[0] : array();
 
-                        if ($c['mb_id']) {
-                            $c_mb = sql_fetch("SELECT mb_name FROM {$g5['member_table']} WHERE mb_id = '{$c['mb_id']}'");
-                            if ($c_mb) {
-                                $c_nick = $c_mb['mb_name'];  // 이름 사용
-                            }
-
-                            $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
-                            if (file_exists($c_profile_path)) {
-                                $c_photo = G5_DATA_URL.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
-                            }
-                        }
-                        ?>
-                        <div id="c_<?php echo $c['wr_id']; ?>" class="mb-3">
-                            <div class="flex gap-3">
-                                <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full flex-shrink-0">
-                                <div class="flex-1">
-                                    <div class="bg-gray-50 rounded-2xl px-3 py-2">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <div class="font-semibold text-xs"><?php echo $c_nick; ?></div>
-                                            <div class="text-xs text-gray-400"><?php echo get_time_ago($c['wr_datetime']); ?></div>
-                                        </div>
-                                        <div class="text-sm comment-content-<?php echo $c['wr_id']; ?>"><?php echo process_comment_content(nl2br(get_text($c['wr_content']))); ?></div>
-                                    </div>
-                                    <div class="flex gap-2 mt-1 ml-3">
-                                        <?php if ($is_member) { ?>
-                                        <button onclick="toggleReplyForm(<?php echo $c['wr_id']; ?>)" class="text-xs text-gray-500">답글</button>
-                                        <?php } ?>
-                                        <?php if (($is_member && $member['mb_id'] === $c['mb_id']) || $is_admin) { ?>
-                                        <button onclick="editComment(<?php echo $c['wr_id']; ?>, '<?php echo addslashes(str_replace("\n", "\\n", get_text($c['wr_content']))); ?>')" class="text-xs text-gray-500">수정</button>
-                                        <button onclick="deleteComment(<?php echo $c['wr_id']; ?>)" class="text-xs text-red-500">삭제</button>
-                                        <?php } ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- 답글 입력창 -->
-                            <?php if ($is_member) { ?>
-                            <div id="reply-form-<?php echo $c['wr_id']; ?>" class="hidden mt-2 ml-11">
-                                <div class="flex gap-2 items-center">
-                                    <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
-                                    <div class="flex-1 flex gap-2 bg-gray-100 rounded-full px-3 py-2 items-center">
-                                        <input
-                                            type="text"
-                                            class="reply-input flex-1 bg-transparent border-none outline-none text-sm"
-                                            placeholder="답글 입력..."
-                                            data-parent-id="<?php echo $c['wr_id']; ?>"
-                                            onkeypress="if(event.key==='Enter'){submitReply(<?php echo $c['wr_id']; ?>)}">
-                                        <button onclick="submitReply(<?php echo $c['wr_id']; ?>)" class="bg-transparent border-none cursor-pointer p-1">
-                                            <i class="fa-solid fa-paper-plane text-purple-600 text-base"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php } ?>
-                        </div>
-                        <?php
-
-                        // 이 부모 댓글의 대댓글들 출력
-                        if (isset($reply_comments[$c['wr_id']])) {
-                            foreach ($reply_comments[$c['wr_id']] as $r) {
-                                $r_nick = $r['wr_name'] ? $r['wr_name'] : '알 수 없음';
-                                $r_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-
-                                if ($r['mb_id']) {
-                                    $r_mb = sql_fetch("SELECT mb_name FROM {$g5['member_table']} WHERE mb_id = '{$r['mb_id']}'");
-                                    if ($r_mb) {
-                                        $r_nick = $r_mb['mb_name'];  // 이름 사용
-                                    }
-
-                                    $r_profile_path = G5_DATA_PATH.'/member_image/'.substr($r['mb_id'], 0, 2).'/'.$r['mb_id'].'.gif';
-                                    if (file_exists($r_profile_path)) {
-                                        $r_photo = G5_DATA_URL.'/member_image/'.substr($r['mb_id'], 0, 2).'/'.$r['mb_id'].'.gif';
-                                    }
-                                }
-                                ?>
-                                <div id="c_<?php echo $r['wr_id']; ?>" class="mb-3 ml-11">
-                                    <div class="flex gap-3">
-                                        <img src="<?php echo $r_photo; ?>" class="w-8 h-8 rounded-full flex-shrink-0">
-                                        <div class="flex-1">
-                                            <div class="bg-gray-50 rounded-2xl px-3 py-2">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <div class="font-semibold text-xs"><?php echo $r_nick; ?></div>
-                                                    <div class="text-xs text-gray-400"><?php echo get_time_ago($r['wr_datetime']); ?></div>
-                                                </div>
-                                                <div class="text-sm comment-content-<?php echo $r['wr_id']; ?>"><?php echo process_comment_content(nl2br(get_text($r['wr_content']))); ?></div>
-                                            </div>
-                                            <?php if (($is_member && $member['mb_id'] === $r['mb_id']) || $is_admin) { ?>
-                                            <div class="flex gap-2 mt-1 ml-3">
-                                                <button onclick="editComment(<?php echo $r['wr_id']; ?>, '<?php echo addslashes(str_replace("\n", "\\n", get_text($r['wr_content']))); ?>')" class="text-xs text-gray-500">수정</button>
-                                                <button onclick="deleteComment(<?php echo $r['wr_id']; ?>)" class="text-xs text-red-500">삭제</button>
-                                            </div>
-                                            <?php } ?>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php
-                            }
-                        }
+                if (count($root_comments) > 0) {
+                    foreach ($root_comments as $comment) {
+                        render_comment($comment, 0, $children_map, $g5, $is_member, $is_admin, $member, $comment_profile_photo);
                     }
                 } else {
                     echo '<div class="text-center text-gray-500 py-4">첫 댓글을 남겨보세요!</div>';
@@ -680,29 +653,49 @@ function submitReply(parentCommentId) {
             // 답글을 부모 댓글 아래에 추가
             const parentComment = document.getElementById('c_' + parentCommentId);
             if (parentComment) {
+                // 부모 댓글의 깊이 확인
+                const parentDepth = parseInt(parentComment.dataset.depth || 0);
+                const newDepth = parentDepth + 1;
+                // 최대 4단계까지만 들여쓰기
+                const indentLevel = Math.min(newDepth, 4);
+                const indentClass = newDepth > 0 ? 'ml-' + (indentLevel * 8) : '';
+
                 const newReplyHTML = `
-                    <div id="c_${data.comment.id}" class="mb-3 ml-11" style="animation: slideIn 0.3s ease-out;">
+                    <div id="c_${data.comment.id}" class="mb-3 ${indentClass}" data-depth="${newDepth}" style="animation: slideIn 0.3s ease-out;">
                         <div class="flex gap-3">
                             <img src="${data.comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
                             <div class="flex-1">
                                 <div class="bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
                                     <div class="font-semibold text-xs mb-1">${data.comment.nick}</div>
-                                    <div class="text-sm">${data.comment.content}</div>
+                                    <div class="text-sm comment-content-${data.comment.id}">${data.comment.content}</div>
+                                </div>
+                                <div class="flex gap-2 mt-1 ml-3">
+                                    <button onclick="toggleReplyForm(${data.comment.id})" class="text-xs text-gray-500">답글</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 답글 입력창 -->
+                        <div id="reply-form-${data.comment.id}" class="hidden mt-2 ml-11">
+                            <div class="flex gap-2 items-center">
+                                <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
+                                <div class="flex-1 flex gap-2 bg-gray-100 rounded-full px-3 py-2 items-center">
+                                    <input
+                                        type="text"
+                                        class="reply-input flex-1 bg-transparent border-none outline-none text-sm"
+                                        placeholder="답글 입력..."
+                                        data-parent-id="${data.comment.id}"
+                                        onkeypress="if(event.key==='Enter'){submitReply(${data.comment.id})}">
+                                    <button onclick="submitReply(${data.comment.id})" class="bg-transparent border-none cursor-pointer p-1">
+                                        <i class="fa-solid fa-paper-plane text-purple-600 text-base"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
 
-                // 부모 댓글의 다음 형제 요소들 중에서 마지막 대댓글 찾기
-                let insertAfter = parentComment;
-                let nextElement = parentComment.nextElementSibling;
-                while (nextElement && nextElement.classList.contains('ml-11')) {
-                    insertAfter = nextElement;
-                    nextElement = nextElement.nextElementSibling;
-                }
-
-                insertAfter.insertAdjacentHTML('afterend', newReplyHTML);
+                // 부모 댓글 바로 아래에 삽입
+                parentComment.insertAdjacentHTML('afterend', newReplyHTML);
 
                 // 하이라이트 제거
                 setTimeout(() => {
@@ -941,16 +934,18 @@ window.lastCommentId = <?php
                 }
 
                 const newCommentHTML = `
-                    <div id="c_${data.comment.id}" class="mb-3" style="animation: slideIn 0.3s ease-out;">
+                    <div id="c_${data.comment.id}" class="mb-3" data-depth="0" style="animation: slideIn 0.3s ease-out;">
                         <div class="flex gap-3">
                             <img src="${data.comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
                             <div class="flex-1">
                                 <div class="bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
                                     <div class="font-semibold text-xs mb-1">${data.comment.nick}</div>
-                                    <div class="text-sm">${data.comment.content}</div>
+                                    <div class="text-sm comment-content-${data.comment.id}">${data.comment.content}</div>
                                 </div>
                                 <?php if ($is_member) { ?>
-                                <button onclick="toggleReplyForm(${data.comment.id})" class="text-xs text-gray-500 mt-1 ml-3">답글</button>
+                                <div class="flex gap-2 mt-1 ml-3">
+                                    <button onclick="toggleReplyForm(${data.comment.id})" class="text-xs text-gray-500">답글</button>
+                                </div>
                                 <?php } ?>
                             </div>
                         </div>
@@ -1033,43 +1028,52 @@ window.lastCommentId = <?php
             .then(data => {
                 if (data.success && data.has_new) {
                     data.comments.forEach(comment => {
-                        const indentClass = comment.is_reply ? 'ml-11' : '';
+                        // 부모 댓글의 깊이 확인
+                        let depth = 0;
+                        if (comment.is_reply && comment.parent_comment_id) {
+                            const parentComment = document.getElementById('c_' + comment.parent_comment_id);
+                            if (parentComment) {
+                                depth = parseInt(parentComment.dataset.depth || 0) + 1;
+                            } else {
+                                depth = 1;
+                            }
+                        }
+                        const indentLevel = Math.min(depth, 4);
+                        const indentClass = depth > 0 ? 'ml-' + (indentLevel * 8) : '';
 
-                        // 일반 댓글인 경우 답글 버튼 포함
+                        // 모든 댓글에 답글 버튼과 폼 추가
                         let replyButton = '';
                         let replyForm = '';
                         <?php if ($is_member) { ?>
-                        if (!comment.is_reply) {
-                            replyButton = `<button onclick="toggleReplyForm(${comment.wr_id})" class="text-xs text-gray-500 mt-1 ml-3">답글</button>`;
-                            replyForm = `
-                                <div id="reply-form-${comment.wr_id}" class="hidden mt-2 ml-11">
-                                    <div class="flex gap-2 items-center">
-                                        <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
-                                        <div class="flex-1 flex gap-2 bg-gray-100 rounded-full px-3 py-2 items-center">
-                                            <input
-                                                type="text"
-                                                class="reply-input flex-1 bg-transparent border-none outline-none text-sm"
-                                                placeholder="답글 입력..."
-                                                data-parent-id="${comment.wr_id}"
-                                                onkeypress="if(event.key==='Enter'){submitReply(${comment.wr_id})}">
-                                            <button onclick="submitReply(${comment.wr_id})" class="bg-transparent border-none cursor-pointer p-1">
-                                                <i class="fa-solid fa-paper-plane text-purple-600 text-base"></i>
-                                            </button>
-                                        </div>
+                        replyButton = `<div class="flex gap-2 mt-1 ml-3"><button onclick="toggleReplyForm(${comment.wr_id})" class="text-xs text-gray-500">답글</button></div>`;
+                        replyForm = `
+                            <div id="reply-form-${comment.wr_id}" class="hidden mt-2 ml-11">
+                                <div class="flex gap-2 items-center">
+                                    <img src="<?php echo $comment_profile_photo; ?>" class="w-7 h-7 rounded-full flex-shrink-0" alt="프로필">
+                                    <div class="flex-1 flex gap-2 bg-gray-100 rounded-full px-3 py-2 items-center">
+                                        <input
+                                            type="text"
+                                            class="reply-input flex-1 bg-transparent border-none outline-none text-sm"
+                                            placeholder="답글 입력..."
+                                            data-parent-id="${comment.wr_id}"
+                                            onkeypress="if(event.key==='Enter'){submitReply(${comment.wr_id})}">
+                                        <button onclick="submitReply(${comment.wr_id})" class="bg-transparent border-none cursor-pointer p-1">
+                                            <i class="fa-solid fa-paper-plane text-purple-600 text-base"></i>
+                                        </button>
                                     </div>
                                 </div>
-                            `;
-                        }
+                            </div>
+                        `;
                         <?php } ?>
 
                         const newCommentHTML = `
-                            <div id="c_${comment.wr_id}" class="mb-3 ${indentClass}" style="animation: slideIn 0.3s ease-out;">
+                            <div id="c_${comment.wr_id}" class="mb-3 ${indentClass}" data-depth="${depth}" style="animation: slideIn 0.3s ease-out;">
                                 <div class="flex gap-3">
                                     <img src="${comment.photo}" class="w-8 h-8 rounded-full flex-shrink-0">
                                     <div class="flex-1">
                                         <div class="bg-gray-50 rounded-2xl px-3 py-2" style="background: rgba(139, 92, 246, 0.1);">
                                             <div class="font-semibold text-xs mb-1">${comment.name}</div>
-                                            <div class="text-sm">${comment.content}</div>
+                                            <div class="text-sm comment-content-${comment.wr_id}">${comment.content}</div>
                                         </div>
                                         ${replyButton}
                                     </div>
@@ -1081,18 +1085,11 @@ window.lastCommentId = <?php
                         const emptyMessage = commentList.querySelector('.text-center.text-gray-500');
                         if (emptyMessage) emptyMessage.remove();
 
-                        // 대댓글인 경우 부모 댓글 아래에 삽입
+                        // 대댓글인 경우 부모 댓글 바로 아래에 삽입
                         if (comment.is_reply && comment.parent_comment_id) {
                             const parentComment = document.getElementById('c_' + comment.parent_comment_id);
                             if (parentComment) {
-                                // 부모 댓글의 다음 형제 요소들 중에서 마지막 대댓글 찾기
-                                let insertAfter = parentComment;
-                                let nextElement = parentComment.nextElementSibling;
-                                while (nextElement && nextElement.classList.contains('ml-11')) {
-                                    insertAfter = nextElement;
-                                    nextElement = nextElement.nextElementSibling;
-                                }
-                                insertAfter.insertAdjacentHTML('afterend', newCommentHTML);
+                                parentComment.insertAdjacentHTML('afterend', newCommentHTML);
                             } else {
                                 // 부모 댓글을 찾을 수 없으면 맨 아래에 추가
                                 commentList.insertAdjacentHTML('beforeend', newCommentHTML);
