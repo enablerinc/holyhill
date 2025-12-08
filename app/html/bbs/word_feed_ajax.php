@@ -94,11 +94,20 @@ while ($row = sql_fetch_array($result)) {
         $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
     }
 
-    // 모든 이미지 가져오기
+    // 모든 이미지 가져오기 (본문 이미지 우선)
     $images = array();
-    $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no");
-    while ($img = sql_fetch_array($img_result)) {
-        $images[] = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
+
+    // 1. 먼저 본문(wr_content)에서 첫 번째 이미지 찾기
+    if (preg_match('/<img[^>]+src=["\']?([^"\'>\s]+)["\']?[^>]*>/i', $row['wr_content'], $img_match)) {
+        $images[] = $img_match[1];
+    }
+
+    // 2. 첨부파일에서 이미지 가져오기 (본문에서 못 찾은 경우에만)
+    if (empty($images)) {
+        $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no");
+        while ($img = sql_fetch_array($img_result)) {
+            $images[] = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
+        }
     }
 
     // 텍스트 콘텐츠 추출

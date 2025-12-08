@@ -267,11 +267,20 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                     $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
                 }
 
-                // 첫 번째 이미지 가져오기
+                // 첫 번째 이미지 가져오기 (에디터 본문 이미지 우선)
                 $first_image = '';
-                $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
-                if ($img = sql_fetch_array($img_result)) {
-                    $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
+
+                // 1. 먼저 본문(wr_content)에서 첫 번째 이미지 찾기
+                if (preg_match('/<img[^>]+src=["\']?([^"\'>\s]+)["\']?[^>]*>/i', $list[$i]['wr_content'], $img_match)) {
+                    $first_image = $img_match[1];
+                }
+
+                // 2. 본문에 이미지가 없으면 첨부파일에서 찾기
+                if (!$first_image) {
+                    $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
+                    if ($img = sql_fetch_array($img_result)) {
+                        $first_image = G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
+                    }
                 }
 
                 // 썸네일 결정 (영상 > 이미지)
