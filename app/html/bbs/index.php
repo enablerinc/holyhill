@@ -531,7 +531,7 @@ function convert_youtube_to_iframe_index($content) {
             </div>
         </div>
     </div>
-    <div id="attendance-list-content" class="divide-y divide-gray-100">
+    <div id="attendance-list-content" class="divide-y divide-gray-100 pb-20">
         <!-- 출석자 목록이 여기에 동적으로 추가됩니다 -->
     </div>
 </div>
