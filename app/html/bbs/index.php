@@ -1086,12 +1086,20 @@ function convert_youtube_to_iframe_index($content) {
                     });
                     attendanceAvatars.innerHTML = avatarsHtml;
                     attendanceCountBadge.textContent = data.data.total_count + '명';
+
+                    // 출석 패널이 열려있으면 목록도 갱신
+                    if (!attendanceListPanel.classList.contains('translate-x-full')) {
+                        renderAttendanceList(data.data.list, data.data.total_count);
+                    }
                 } else {
                     attendanceMiniWidget.classList.add('hidden');
                 }
             })
             .catch(error => console.error('미니 위젯 로딩 오류:', error));
     }
+
+    // 실시간 출석 현황 갱신 (10초마다)
+    setInterval(loadAttendanceMiniWidget, 10000);
 
     // 패널 외부 클릭시 닫기
     document.addEventListener('click', function(e) {
