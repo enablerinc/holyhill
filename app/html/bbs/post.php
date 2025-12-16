@@ -228,7 +228,7 @@ function replace_image_placeholders($content, $media_files, $bo_table) {
         $index = intval($matches[1]) - 1;
         if (isset($media_files[$index]) && $media_files[$index]['type'] === 'image') {
             $image_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media_files[$index]['file'];
-            return '<div class="my-4"><img src="'.$image_url.'" class="w-full rounded-lg" alt="이미지'.($index+1).'"></div>';
+            return '<div class="my-4"><img src="'.$image_url.'" class="w-full rounded-lg cursor-pointer image-viewable" alt="이미지'.($index+1).'" onclick="openImageViewer(\''.$image_url.'\')"></div>';
         }
         return $matches[0];
     }, $content);
@@ -378,8 +378,9 @@ foreach ($media_files as $idx => $media) {
                             </div>
                         <?php } else { ?>
                             <img src="<?php echo $media_url; ?>"
-                                 class="w-full h-80 object-cover rounded-lg"
-                                 alt="갤러리 이미지">
+                                 class="w-full h-80 object-cover rounded-lg cursor-pointer image-viewable"
+                                 alt="갤러리 이미지"
+                                 onclick="openImageViewer('<?php echo $media_url; ?>')">
                         <?php } ?>
                     </div>
                     <?php } ?>
@@ -1132,6 +1133,45 @@ window.lastCommentId = <?php
 
 <!-- 알림 위젯 -->
 <?php include_once(G5_BBS_PATH.'/notification_widget.php'); ?>
+
+<!-- 이미지 뷰어 모달 -->
+<div id="imageViewerModal" class="fixed inset-0 z-[99999] hidden" style="background: rgba(0,0,0,0.95);">
+    <button onclick="closeImageViewer()" class="absolute top-4 right-4 text-white text-3xl z-10 p-2">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="w-full h-full flex items-center justify-center p-4" onclick="closeImageViewer()">
+        <img id="viewerImage" src="" alt="원본 이미지"
+             class="max-w-full max-h-full object-contain"
+             style="cursor: zoom-out;"
+             onclick="event.stopPropagation();">
+    </div>
+</div>
+
+<script>
+// 이미지 뷰어 열기
+function openImageViewer(imageUrl) {
+    const modal = document.getElementById('imageViewerModal');
+    const img = document.getElementById('viewerImage');
+
+    img.src = imageUrl;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// 이미지 뷰어 닫기
+function closeImageViewer() {
+    const modal = document.getElementById('imageViewerModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// ESC 키로 닫기
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageViewer();
+    }
+});
+</script>
 
 </body>
 </html>
