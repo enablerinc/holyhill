@@ -104,13 +104,13 @@ function getConsecutiveDays($mb_id, $g5) {
 }
 
 // 오늘의 전체 출석자 목록 조회
-function getTodayAttendanceList($g5, $limit = 100) {
+function getTodayAttendanceList($g5, $limit = 50) {
     $today_start = date('Y-m-d 00:00:00');
     $today_end = date('Y-m-d 23:59:59');
 
-    $sql = "SELECT p.mb_id, IFNULL(m.mb_name, '알 수 없음') as mb_name, IFNULL(m.mb_nick, '알 수 없음') as mb_nick, p.po_datetime as attend_time
+    $sql = "SELECT p.mb_id, m.mb_name, m.mb_nick, p.po_datetime as attend_time
             FROM {$g5['point_table']} p
-            LEFT JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
+            JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
             WHERE p.po_content LIKE '%첫로그인%'
             AND p.po_datetime >= '{$today_start}'
             AND p.po_datetime <= '{$today_end}'
@@ -122,9 +122,9 @@ function getTodayAttendanceList($g5, $limit = 100) {
     $rank = 0;
     while ($row = sql_fetch_array($result)) {
         $rank++;
-        $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-        if ($row['mb_id'] && file_exists(G5_DATA_PATH.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif')) {
-            $profile_img = G5_DATA_URL.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif';
+        $profile_img = G5_DATA_URL.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif';
+        if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif')) {
+            $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
         }
 
         $list[] = array(
@@ -140,15 +140,17 @@ function getTodayAttendanceList($g5, $limit = 100) {
     return $list;
 }
 
-// 오늘 총 출석자 수
+// 오늘 총 출석자 수 (회원 테이블과 JOIN하여 탈퇴한 회원 제외)
 function getTodayAttendanceCount($g5) {
     $today_start = date('Y-m-d 00:00:00');
     $today_end = date('Y-m-d 23:59:59');
 
-    $sql = "SELECT COUNT(*) as cnt FROM {$g5['point_table']}
-            WHERE po_content LIKE '%첫로그인%'
-            AND po_datetime >= '{$today_start}'
-            AND po_datetime <= '{$today_end}'";
+    $sql = "SELECT COUNT(*) as cnt
+            FROM {$g5['point_table']} p
+            JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
+            WHERE p.po_content LIKE '%첫로그인%'
+            AND p.po_datetime >= '{$today_start}'
+            AND p.po_datetime <= '{$today_end}'";
     $row = sql_fetch($sql);
     return (int)$row['cnt'];
 }
