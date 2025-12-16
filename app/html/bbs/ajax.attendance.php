@@ -140,15 +140,17 @@ function getTodayAttendanceList($g5, $limit = 50) {
     return $list;
 }
 
-// 오늘 총 출석자 수
+// 오늘 총 출석자 수 (회원 테이블과 JOIN하여 탈퇴한 회원 제외)
 function getTodayAttendanceCount($g5) {
     $today_start = date('Y-m-d 00:00:00');
     $today_end = date('Y-m-d 23:59:59');
 
-    $sql = "SELECT COUNT(*) as cnt FROM {$g5['point_table']}
-            WHERE po_content LIKE '%첫로그인%'
-            AND po_datetime >= '{$today_start}'
-            AND po_datetime <= '{$today_end}'";
+    $sql = "SELECT COUNT(*) as cnt
+            FROM {$g5['point_table']} p
+            JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
+            WHERE p.po_content LIKE '%첫로그인%'
+            AND p.po_datetime >= '{$today_start}'
+            AND p.po_datetime <= '{$today_end}'";
     $row = sql_fetch($sql);
     return (int)$row['cnt'];
 }
