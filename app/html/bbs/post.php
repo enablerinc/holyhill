@@ -362,23 +362,25 @@ foreach ($media_files as $idx => $media) {
 
             <!-- 내용 -->
             <div class="p-4">
-                <!-- 미디어 갤러리 (본문에 삽입되지 않은 이미지와 동영상 표시) -->
+                <!-- 미디어 갤러리 (본문에 삽입되지 않은 이미지와 동영상 표시) - 세로 스크롤 방식 -->
                 <?php if (count($gallery_media) > 0) { ?>
-                <div class="flex overflow-x-auto gap-3 mb-4 -mx-4 px-4 scrollbar-hide" style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
+                <div class="space-y-4 mb-4">
                     <?php foreach ($gallery_media as $media) {
                         $media_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media['file'];
                     ?>
-                    <div class="flex-shrink-0" style="scroll-snap-align: start; width: 85vw; max-width: 500px;">
+                    <div class="w-full">
                         <?php if ($media['type'] === 'video') { ?>
-                            <div class="relative w-full h-80 bg-black rounded-lg overflow-hidden">
+                            <div class="relative w-full bg-black rounded-lg overflow-hidden" style="aspect-ratio: 16/9;">
                                 <video class="w-full h-full object-contain" controls controlsList="nodownload">
                                     <source src="<?php echo $media_url; ?>" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
                             </div>
                         <?php } else { ?>
+                            <!-- 이미지: 원본 비율 유지, 가로/세로 모두 잘리지 않게 -->
                             <img src="<?php echo $media_url; ?>"
-                                 class="w-full h-80 object-cover rounded-lg cursor-pointer image-viewable"
+                                 class="w-full h-auto rounded-lg cursor-pointer image-viewable"
+                                 style="max-height: 80vh; object-fit: contain;"
                                  alt="갤러리 이미지"
                                  onclick="openImageViewer('<?php echo $media_url; ?>')">
                         <?php } ?>

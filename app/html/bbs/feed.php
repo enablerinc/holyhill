@@ -252,7 +252,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
         // 게시글이 있는 경우
         if (count($list) > 0) {
         ?>
-        <div class="space-y-4" id="feed-list">
+        <!-- 타일(그리드) 형식 -->
+        <div class="grid grid-cols-2 gap-3" id="feed-list">
             <?php
             for ($i=0; $i<count($list); $i++) {
                 $wr_id = $list[$i]['wr_id'];
@@ -289,7 +290,7 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 } elseif ($date_diff < 604800) {
                     $display_date = floor($date_diff / 86400) . '일 전';
                 } else {
-                    $display_date = date('Y.m.d', strtotime($wr_datetime));
+                    $display_date = date('m.d', strtotime($wr_datetime));
                 }
 
                 // 게시글 내용에서 YouTube URL 추출 및 섬네일 생성
@@ -333,6 +334,7 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 // 썸네일 결정 (영상 > 이미지)
                 $thumbnail = $video_thumbnail ? $video_thumbnail : $first_image;
                 $has_video = !empty($video_id);
+                $has_image = !empty($thumbnail);
 
                 $view_href = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id;
 
@@ -343,41 +345,25 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 $text_content = trim($text_content);
             ?>
 
-            <!-- 텍스트 기반 리스트 스타일 -->
+            <!-- 타일 카드 -->
             <a href="<?php echo $view_href; ?>" class="block">
-                <article class="bg-white rounded-lg shadow-warm p-4 hover:bg-gray-50 transition-colors">
-                    <div class="flex gap-4">
-                        <!-- 왼쪽: 텍스트 콘텐츠 -->
-                        <div class="flex-1 min-w-0">
-                            <!-- 제목 -->
-                            <h3 class="font-bold text-gray-900 text-base mb-2 line-clamp-1">
-                                <?php echo $wr_subject; ?>
-                            </h3>
-
-                            <!-- 작성자 정보 -->
-                            <div class="flex items-center gap-2 mb-2">
-                                <?php if ($writer_photo) { ?>
-                                <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-5 h-5 rounded-full object-cover">
-                                <?php } else { ?>
-                                <div class="w-5 h-5 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
-                                    <span class="text-white text-xs font-semibold"><?php echo mb_substr($writer_nick, 0, 1); ?></span>
-                                </div>
-                                <?php } ?>
-                                <span class="text-sm text-gray-700"><?php echo $writer_nick; ?></span>
-                                <span class="text-xs text-gray-400"><?php echo $display_date; ?></span>
+                <article class="bg-white rounded-xl shadow-warm overflow-hidden hover:shadow-lg transition-shadow">
+                    <?php if ($has_image) { ?>
+                    <!-- 이미지가 있는 경우: 썸네일 표시 -->
+                    <div class="relative aspect-square">
+                        <img src="<?php echo $thumbnail; ?>" alt="<?php echo $wr_subject; ?>" class="w-full h-full object-cover">
+                        <?php if ($has_video) { ?>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center">
+                                <i class="fa-solid fa-play text-white text-sm ml-0.5"></i>
                             </div>
-
-                            <!-- 본문 미리보기 -->
-                            <?php if ($text_content) { ?>
-                            <p class="text-gray-500 text-sm line-clamp-2 mb-3 leading-relaxed">
-                                <?php echo cut_str($text_content, 100); ?>
-                            </p>
-                            <?php } ?>
-
-                            <!-- 공감, 댓글 -->
-                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                        </div>
+                        <?php } ?>
+                        <!-- 공감/댓글 오버레이 -->
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                            <div class="flex items-center gap-2 text-white text-xs">
                                 <span class="flex items-center gap-1">
-                                    <i class="fa-solid fa-heart text-red-400"></i>
+                                    <i class="fa-solid fa-heart"></i>
                                     <?php echo number_format($good_count); ?>
                                 </span>
                                 <span class="flex items-center gap-1">
@@ -386,20 +372,39 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                                 </span>
                             </div>
                         </div>
-
-                        <!-- 오른쪽: 썸네일 -->
-                        <?php if ($thumbnail) { ?>
-                        <div class="flex-shrink-0 relative">
-                            <img src="<?php echo $thumbnail; ?>" alt="<?php echo $wr_subject; ?>" class="w-24 h-24 rounded-lg object-cover">
-                            <?php if ($has_video) { ?>
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center">
-                                    <i class="fa-solid fa-play text-white text-xs ml-0.5"></i>
-                                </div>
+                    </div>
+                    <?php } else { ?>
+                    <!-- 텍스트만 있는 경우: 텍스트 카드 -->
+                    <div class="aspect-square bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex flex-col justify-center">
+                        <p class="text-gray-800 text-sm leading-relaxed line-clamp-5 text-center">
+                            <?php echo cut_str($text_content, 80); ?>
+                        </p>
+                        <!-- 공감/댓글 -->
+                        <div class="mt-auto pt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
+                            <span class="flex items-center gap-1">
+                                <i class="fa-solid fa-heart text-red-400"></i>
+                                <?php echo number_format($good_count); ?>
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <i class="fa-regular fa-comment"></i>
+                                <?php echo number_format($comment_count); ?>
+                            </span>
+                        </div>
+                    </div>
+                    <?php } ?>
+                    <!-- 하단: 작성자 정보 -->
+                    <div class="p-2">
+                        <div class="flex items-center gap-2">
+                            <?php if ($writer_photo) { ?>
+                            <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-5 h-5 rounded-full object-cover">
+                            <?php } else { ?>
+                            <div class="w-5 h-5 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
+                                <span class="text-white text-xs font-semibold"><?php echo mb_substr($writer_nick, 0, 1); ?></span>
                             </div>
                             <?php } ?>
+                            <span class="text-xs text-gray-700 font-medium truncate flex-1"><?php echo $writer_nick; ?></span>
+                            <span class="text-xs text-gray-400"><?php echo $display_date; ?></span>
                         </div>
-                        <?php } ?>
                     </div>
                 </article>
             </a>
@@ -518,6 +523,7 @@ function loadMore() {
                         // 썸네일 결정
                         const thumbnail = item.video_thumbnail || (item.images && item.images.length > 0 ? item.images[0] : '');
                         const hasVideo = item.video_id && item.video_thumbnail;
+                        const hasImage = !!thumbnail;
 
                         // 작성자 프로필 이미지
                         let profileHTML = item.writer_photo
@@ -526,51 +532,62 @@ function loadMore() {
                                 <span class="text-white text-xs font-semibold">${item.writer_nick.charAt(0)}</span>
                                </div>`;
 
-                        // 본문 미리보기
-                        let textHTML = item.text_content
-                            ? `<p class="text-gray-500 text-sm line-clamp-2 mb-3 leading-relaxed">${item.text_content}</p>`
-                            : '';
-
-                        // 썸네일 HTML
-                        let thumbnailHTML = '';
-                        if (thumbnail) {
-                            thumbnailHTML = `
-                                <div class="flex-shrink-0 relative">
-                                    <img src="${thumbnail}" alt="${item.subject}" class="w-24 h-24 rounded-lg object-cover">
+                        // 타일 카드 HTML
+                        let contentHTML = '';
+                        if (hasImage) {
+                            // 이미지가 있는 경우
+                            contentHTML = `
+                                <div class="relative aspect-square">
+                                    <img src="${thumbnail}" alt="${item.subject}" class="w-full h-full object-cover">
                                     ${hasVideo ? `
                                     <div class="absolute inset-0 flex items-center justify-center">
-                                        <div class="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center">
-                                            <i class="fa-solid fa-play text-white text-xs ml-0.5"></i>
+                                        <div class="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center">
+                                            <i class="fa-solid fa-play text-white text-sm ml-0.5"></i>
                                         </div>
                                     </div>` : ''}
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                                        <div class="flex items-center gap-2 text-white text-xs">
+                                            <span class="flex items-center gap-1">
+                                                <i class="fa-solid fa-heart"></i>
+                                                ${item.good_count}
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <i class="fa-regular fa-comment"></i>
+                                                ${item.comment_count}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // 텍스트만 있는 경우
+                            contentHTML = `
+                                <div class="aspect-square bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex flex-col justify-center">
+                                    <p class="text-gray-800 text-sm leading-relaxed line-clamp-5 text-center">${item.text_content || ''}</p>
+                                    <div class="mt-auto pt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
+                                        <span class="flex items-center gap-1">
+                                            <i class="fa-solid fa-heart text-red-400"></i>
+                                            ${item.good_count}
+                                        </span>
+                                        <span class="flex items-center gap-1">
+                                            <i class="fa-regular fa-comment"></i>
+                                            ${item.comment_count}
+                                        </span>
+                                    </div>
                                 </div>
                             `;
                         }
 
                         const itemHTML = `
                             <a href="${item.view_href}" class="block">
-                                <article class="bg-white rounded-lg shadow-warm p-4 hover:bg-gray-50 transition-colors">
-                                    <div class="flex gap-4">
-                                        <div class="flex-1 min-w-0">
-                                            <h3 class="font-bold text-gray-900 text-base mb-2 line-clamp-1">${item.subject}</h3>
-                                            <div class="flex items-center gap-2 mb-2">
-                                                ${profileHTML}
-                                                <span class="text-sm text-gray-700">${item.writer_nick}</span>
-                                                <span class="text-xs text-gray-400">${item.display_date}</span>
-                                            </div>
-                                            ${textHTML}
-                                            <div class="flex items-center gap-3 text-xs text-gray-400">
-                                                <span class="flex items-center gap-1">
-                                                    <i class="fa-solid fa-heart text-red-400"></i>
-                                                    ${item.good_count}
-                                                </span>
-                                                <span class="flex items-center gap-1">
-                                                    <i class="fa-regular fa-comment"></i>
-                                                    ${item.comment_count}
-                                                </span>
-                                            </div>
+                                <article class="bg-white rounded-xl shadow-warm overflow-hidden hover:shadow-lg transition-shadow">
+                                    ${contentHTML}
+                                    <div class="p-2">
+                                        <div class="flex items-center gap-2">
+                                            ${profileHTML}
+                                            <span class="text-xs text-gray-700 font-medium truncate flex-1">${item.writer_nick}</span>
+                                            <span class="text-xs text-gray-400">${item.display_date}</span>
                                         </div>
-                                        ${thumbnailHTML}
                                     </div>
                                 </article>
                             </a>

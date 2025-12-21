@@ -1,5 +1,6 @@
 <?php
 include_once('./_common.php');
+include_once(G5_BBS_PATH.'/notification.lib.php');
 
 header('Content-Type: application/json');
 
@@ -97,6 +98,20 @@ sql_query("UPDATE {$write_table} SET wr_comment = wr_comment + 1 WHERE wr_id = '
 if ($board['bo_comment_point']) {
     insert_point($member['mb_id'], $board['bo_comment_point'],
                  "{$board['bo_subject']} {$wr_id}-{$comment_id} 댓글쓰기", $bo_table, $comment_id, '댓글');
+}
+
+// 알림 생성
+$from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
+$notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+
+if ($parent_comment_id > 0 && isset($parent_comment) && $parent_comment['mb_id']) {
+    // 대댓글인 경우: 부모 댓글 작성자에게 알림
+    $notification_content = generate_notification_content('reply', $from_nick);
+    create_notification('reply', $member['mb_id'], $parent_comment['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
+} else if ($write['mb_id']) {
+    // 일반 댓글인 경우: 원글 작성자에게 알림
+    $notification_content = generate_notification_content('comment', $from_nick);
+    create_notification('comment', $member['mb_id'], $write['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
 }
 
 // ✅ 새 토큰 생성
