@@ -137,6 +137,19 @@ function convert_youtube_to_iframe_index($content) {
                 <p class="text-sm text-amber-600 mt-2"><?php echo cut_str(strip_tags($slogan['wr_content']), 50); ?></p>
                 <?php } ?>
                 <i class="fa-solid fa-quote-right text-amber-400 text-lg mt-2"></i>
+                <?php if ($is_admin) { ?>
+                <div class="mt-3 flex items-center justify-center gap-3">
+                    <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=slogan&wr_id=<?php echo $slogan['wr_id']; ?>"
+                       class="text-xs text-amber-600 hover:text-amber-800 font-medium">
+                        <i class="fa-solid fa-pen text-xs"></i> 수정
+                    </a>
+                    <span class="text-amber-300">|</span>
+                    <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=slogan"
+                       class="text-xs text-amber-600 hover:text-amber-800 font-medium">
+                        <i class="fa-solid fa-plus text-xs"></i> 새 표어 등록
+                    </a>
+                </div>
+                <?php } ?>
             </div>
         </section>
         <?php } elseif ($is_admin) { ?>
@@ -144,7 +157,11 @@ function convert_youtube_to_iframe_index($content) {
             <div class="text-center">
                 <i class="fa-solid fa-quote-left text-gray-300 text-lg mb-2"></i>
                 <p class="text-base text-gray-500 mb-3">표어를 등록해주세요</p>
-                <p class="text-xs text-gray-400 mb-2">관리자 페이지에서 'slogan' 게시판을 생성하고 표어를 등록하세요</p>
+                <a href="<?php echo G5_BBS_URL; ?>/write.php?bo_table=slogan"
+                   class="inline-block px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 font-medium transition-colors">
+                    <i class="fa-solid fa-plus mr-1"></i> 표어 등록하기
+                </a>
+                <p class="text-xs text-gray-400 mt-2">* 'slogan' 게시판이 없으면 관리자 페이지에서 먼저 생성하세요</p>
             </div>
         </section>
         <?php } ?>
