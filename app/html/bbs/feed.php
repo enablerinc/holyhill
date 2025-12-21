@@ -242,12 +242,14 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 $writer_nick = $list[$i]['wr_name'];
                 $writer_photo = '';
                 if ($writer_id) {
-                    $member_info = sql_fetch("SELECT mb_nick, mb_photo FROM {$g5['member_table']} WHERE mb_id = '{$writer_id}'");
+                    $member_info = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$writer_id}'");
                     if ($member_info) {
                         $writer_nick = $member_info['mb_nick'] ? $member_info['mb_nick'] : $list[$i]['wr_name'];
-                        if ($member_info['mb_photo']) {
-                            $writer_photo = G5_DATA_URL.'/member/'.substr($writer_id, 0, 2).'/'.$member_info['mb_photo'];
-                        }
+                    }
+                    // 프로필 이미지 확인
+                    $profile_path = G5_DATA_PATH.'/member_image/'.substr($writer_id, 0, 2).'/'.$writer_id.'.gif';
+                    if (file_exists($profile_path)) {
+                        $writer_photo = G5_DATA_URL.'/member_image/'.substr($writer_id, 0, 2).'/'.$writer_id.'.gif';
                     }
                 }
 

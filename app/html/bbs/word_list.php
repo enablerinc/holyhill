@@ -144,6 +144,18 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             foreach ($list as $word) {
                 // 작성자 정보
                 $word_nick = $word['wr_name'] ? $word['wr_name'] : '알 수 없음';
+                $writer_photo = '';
+                if ($word['mb_id']) {
+                    $member_info = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$word['mb_id']}'");
+                    if ($member_info && $member_info['mb_nick']) {
+                        $word_nick = $member_info['mb_nick'];
+                    }
+                    // 프로필 이미지 확인
+                    $profile_path = G5_DATA_PATH.'/member_image/'.substr($word['mb_id'], 0, 2).'/'.$word['mb_id'].'.gif';
+                    if (file_exists($profile_path)) {
+                        $writer_photo = G5_DATA_URL.'/member_image/'.substr($word['mb_id'], 0, 2).'/'.$word['mb_id'].'.gif';
+                    }
+                }
 
                 // YouTube URL이 있는지 확인
                 $has_youtube = preg_match('/(youtube\.com|youtu\.be)/', $word['wr_content']);
@@ -166,9 +178,13 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 <div class="px-4 pt-4 pb-3 border-b border-gray-100">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2">
+                            <?php if ($writer_photo) { ?>
+                            <img src="<?php echo $writer_photo; ?>" alt="<?php echo $word_nick; ?>" class="w-8 h-8 rounded-full object-cover">
+                            <?php } else { ?>
                             <div class="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
-                                <i class="fa-solid fa-book-bible text-white text-xs"></i>
+                                <span class="text-white text-xs font-semibold"><?php echo mb_substr($word_nick, 0, 1); ?></span>
                             </div>
+                            <?php } ?>
                             <div>
                                 <h4 class="font-semibold text-gray-800 text-sm"><?php echo $word_nick; ?></h4>
                                 <p class="text-xs text-gray-500"><?php echo date('Y년 m월 d일', strtotime($word['wr_datetime'])); ?></p>
