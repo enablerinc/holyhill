@@ -174,21 +174,6 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             </div>
         </form>
 
-        <!-- 정렬 버튼 -->
-        <div class="flex gap-2">
-            <?php
-            $base_url = G5_BBS_URL.'/feed.php';
-            $query_params = $search_keyword ? '&search_type='.$search_type.'&search='.urlencode($search_keyword) : '';
-            ?>
-            <a href="<?php echo $base_url; ?>?sort=recent<?php echo $query_params; ?>"
-               class="px-4 py-2 <?php echo $sort === 'recent' ? 'bg-lilac text-white' : 'bg-warm-beige text-grace-green hover:bg-soft-lavender'; ?> rounded-full text-sm font-medium whitespace-nowrap transition-colors">
-                <i class="fa-solid fa-clock mr-1"></i>최신순
-            </a>
-            <a href="<?php echo $base_url; ?>?sort=popular<?php echo $query_params; ?>"
-               class="px-4 py-2 <?php echo $sort === 'popular' ? 'bg-lilac text-white' : 'bg-warm-beige text-grace-green hover:bg-soft-lavender'; ?> rounded-full text-sm font-medium whitespace-nowrap transition-colors">
-                <i class="fa-solid fa-fire mr-1"></i>인기순
-            </a>
-        </div>
     </section>
 
     <?php
@@ -240,14 +225,6 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
     <!-- 게시물 목록 -->
     <section class="px-4 py-4">
-        <div class="flex items-center justify-between mb-4">
-            <?php
-            $section_title = $search_keyword ? '"'.htmlspecialchars($search_keyword).'" 검색 결과' : ($sort === 'popular' ? '인기 게시물' : '최신 게시물');
-            ?>
-            <h2 class="text-lg font-semibold text-grace-green"><?php echo $section_title; ?></h2>
-            <span class="text-sm text-gray-500"><?php echo number_format($total_count); ?>개</span>
-        </div>
-
         <?php
         // 게시글이 있는 경우
         if (count($list) > 0) {

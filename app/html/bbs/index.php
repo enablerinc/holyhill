@@ -290,7 +290,7 @@ function convert_youtube_to_iframe_index($content) {
         <section id="recent-posts" class="px-4 py-4">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-images text-purple-500"></i>
+                    <i class="fa-solid fa-droplet text-blue-500"></i>
                     <h2 class="text-base font-semibold text-gray-800">성산 샘터</h2>
                 </div>
                 <a href="<?php echo G5_BBS_URL; ?>/feed.php?bo_table=gallery"
@@ -335,6 +335,7 @@ function convert_youtube_to_iframe_index($content) {
                     // YouTube URL 추출 및 썸네일 생성
                     $video_thumbnail = '';
                     $video_id = '';
+                    $has_uploaded_video = false;
                     $search_content = $feed['wr_link1'] . ' ' . $feed['wr_content'];
                     $patterns = array(
                         '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
@@ -345,6 +346,18 @@ function convert_youtube_to_iframe_index($content) {
                         if (preg_match($pattern, $search_content, $matches)) {
                             $video_id = $matches[1];
                             $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
+                            break;
+                        }
+                    }
+
+                    // 업로드된 동영상 첨부파일 확인
+                    $uploaded_video_thumb = '';
+                    $video_extensions = array('mp4', 'webm', 'mov', 'avi', 'mkv', 'wmv');
+                    $video_file_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = 'gallery' AND wr_id = '{$feed['wr_id']}' ORDER BY bf_no");
+                    while ($vf = sql_fetch_array($video_file_result)) {
+                        $ext = strtolower(pathinfo($vf['bf_file'], PATHINFO_EXTENSION));
+                        if (in_array($ext, $video_extensions)) {
+                            $has_uploaded_video = true;
                             break;
                         }
                     }
@@ -362,7 +375,7 @@ function convert_youtube_to_iframe_index($content) {
 
                     // 최종 썸네일 결정 (YouTube 우선)
                     $thumbnail = $video_thumbnail ? $video_thumbnail : $feed_img;
-                    $has_video = !empty($video_id);
+                    $has_video = !empty($video_id) || $has_uploaded_video;
 
                     // 텍스트 콘텐츠
                     $text_content = strip_tags($feed['wr_content']);
