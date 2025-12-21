@@ -332,6 +332,23 @@ function convert_youtube_to_iframe_index($content) {
                         if ($mb_info) $feed_nick = $mb_info['mb_nick'];
                     }
 
+                    // YouTube URL 추출 및 썸네일 생성
+                    $video_thumbnail = '';
+                    $video_id = '';
+                    $search_content = $feed['wr_link1'] . ' ' . $feed['wr_content'];
+                    $patterns = array(
+                        '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
+                        '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
+                        '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
+                    );
+                    foreach ($patterns as $pattern) {
+                        if (preg_match($pattern, $search_content, $matches)) {
+                            $video_id = $matches[1];
+                            $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
+                            break;
+                        }
+                    }
+
                     // 첨부 이미지
                     $feed_img = '';
                     if (preg_match('/<img[^>]+src=["\']?([^"\'>\s]+)["\']?[^>]*>/i', $feed['wr_content'], $img_match)) {
@@ -343,6 +360,10 @@ function convert_youtube_to_iframe_index($content) {
                         $feed_img = $img ? G5_DATA_URL.'/file/gallery/'.$img['bf_file'] : '';
                     }
 
+                    // 최종 썸네일 결정 (YouTube 우선)
+                    $thumbnail = $video_thumbnail ? $video_thumbnail : $feed_img;
+                    $has_video = !empty($video_id);
+
                     // 텍스트 콘텐츠
                     $text_content = strip_tags($feed['wr_content']);
                     $text_content = preg_replace('/https?:\/\/[^\s]+/', '', $text_content);
@@ -353,9 +374,16 @@ function convert_youtube_to_iframe_index($content) {
                 ?>
                 <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>" class="block">
                     <article class="bg-white rounded-xl shadow-warm overflow-hidden hover:shadow-lg transition-shadow">
-                        <?php if ($feed_img) { ?>
+                        <?php if ($thumbnail) { ?>
                         <div class="relative aspect-square">
-                            <img src="<?php echo $feed_img; ?>" alt="<?php echo $feed['wr_subject']; ?>" class="w-full h-full object-cover">
+                            <img src="<?php echo $thumbnail; ?>" alt="<?php echo $feed['wr_subject']; ?>" class="w-full h-full object-cover">
+                            <?php if ($has_video) { ?>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                    <i class="fa-solid fa-play text-white text-lg ml-1"></i>
+                                </div>
+                            </div>
+                            <?php } ?>
                             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
                                 <div class="flex items-center gap-2 text-white text-xs">
                                     <span class="flex items-center gap-1"><i class="fa-solid fa-heart"></i> <?php echo number_format($good_cnt); ?></span>
