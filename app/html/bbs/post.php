@@ -115,21 +115,27 @@ if ($write['mb_id']) {
     }
 }
 
-// 미디어 파일 (이미지 + 동영상 + 음원)
+// 미디어 파일 (이미지 + 동영상 + 음원 + 문서)
 $media_files = array();
 $images = array();
 $videos = array();
 $audios = array();
+$docs = array();
 
-$file_result = sql_query("SELECT bf_file, bf_type FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' ORDER BY bf_no");
+// 파일 확장자 정의
+$image_exts = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg');
+$video_exts = array('mp4', 'webm', 'mov', 'avi', 'mkv');
+$audio_exts = array('mp3', 'm4a', 'wav', 'flac', 'aac', 'wma');
+
+$file_result = sql_query("SELECT bf_file, bf_type, bf_filesize FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' ORDER BY bf_no");
 while ($file = sql_fetch_array($file_result)) {
     $file_ext = strtolower(pathinfo($file['bf_file'], PATHINFO_EXTENSION));
-    $video_exts = array('mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv');
-    $audio_exts = array('mp3', 'm4a', 'wav', 'ogg', 'flac', 'aac', 'wma');
 
     // 파일 타입 결정
-    $file_type = 'image';
-    if (in_array($file_ext, $video_exts)) {
+    $file_type = 'file'; // 기본값: 일반 파일
+    if (in_array($file_ext, $image_exts)) {
+        $file_type = 'image';
+    } elseif (in_array($file_ext, $video_exts)) {
         $file_type = 'video';
     } elseif (in_array($file_ext, $audio_exts)) {
         $file_type = 'audio';
@@ -137,16 +143,45 @@ while ($file = sql_fetch_array($file_result)) {
 
     $media_files[] = array(
         'file' => $file['bf_file'],
-        'type' => $file_type
+        'type' => $file_type,
+        'size' => isset($file['bf_filesize']) ? $file['bf_filesize'] : 0
     );
 
     if ($file_type === 'video') {
         $videos[] = $file['bf_file'];
     } elseif ($file_type === 'audio') {
         $audios[] = $file['bf_file'];
+    } elseif ($file_type === 'file') {
+        $docs[] = $file['bf_file'];
     } elseif ($file['bf_type'] >= 1 && $file['bf_type'] <= 3) {
         $images[] = $file['bf_file'];
     }
+}
+
+// 파일 크기 포맷 함수
+function format_file_size($bytes) {
+    if ($bytes >= 1073741824) {
+        return number_format($bytes / 1073741824, 2) . ' GB';
+    } elseif ($bytes >= 1048576) {
+        return number_format($bytes / 1048576, 2) . ' MB';
+    } elseif ($bytes >= 1024) {
+        return number_format($bytes / 1024, 2) . ' KB';
+    } else {
+        return $bytes . ' B';
+    }
+}
+
+// 파일 아이콘 결정 함수
+function get_file_icon($ext) {
+    $ext = strtolower($ext);
+    if (in_array($ext, array('pdf'))) return 'fa-file-pdf';
+    if (in_array($ext, array('doc', 'docx'))) return 'fa-file-word';
+    if (in_array($ext, array('xls', 'xlsx'))) return 'fa-file-excel';
+    if (in_array($ext, array('ppt', 'pptx'))) return 'fa-file-powerpoint';
+    if (in_array($ext, array('hwp', 'hwpx'))) return 'fa-file-lines';
+    if (in_array($ext, array('zip', 'rar', '7z', 'tar', 'gz'))) return 'fa-file-zipper';
+    if (in_array($ext, array('txt'))) return 'fa-file-lines';
+    return 'fa-file';
 }
 
 // 좋아요 체크
@@ -194,6 +229,14 @@ if (!empty($matches[1])) {
 
 // 음원 인덱스
 preg_match_all('/\[음원(\d+)\]/', $write['wr_content'], $matches);
+if (!empty($matches[1])) {
+    foreach ($matches[1] as $num) {
+        $used_media_indices[] = intval($num) - 1;
+    }
+}
+
+// 파일(문서) 인덱스
+preg_match_all('/\[파일(\d+)\]/', $write['wr_content'], $matches);
 if (!empty($matches[1])) {
     foreach ($matches[1] as $num) {
         $used_media_indices[] = intval($num) - 1;
@@ -302,6 +345,37 @@ function replace_audio_placeholders($content, $media_files, $bo_table) {
     return $content;
 }
 
+// 본문에서 [파일N]을 문서 다운로드 링크로 변환
+function replace_file_placeholders($content, $media_files, $bo_table) {
+    $content = preg_replace_callback('/\[파일(\d+)\]/', function($matches) use ($media_files, $bo_table) {
+        $index = intval($matches[1]) - 1;
+        if (isset($media_files[$index]) && $media_files[$index]['type'] === 'file') {
+            $file_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media_files[$index]['file'];
+            $file_name = pathinfo($media_files[$index]['file'], PATHINFO_FILENAME);
+            $file_ext = strtolower(pathinfo($media_files[$index]['file'], PATHINFO_EXTENSION));
+            $file_size = isset($media_files[$index]['size']) ? format_file_size($media_files[$index]['size']) : '';
+            $file_icon = get_file_icon($file_ext);
+
+            return '<div class="file-container my-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                <a href="'.$file_url.'" download class="flex items-center gap-3 no-underline">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fa-solid '.$file_icon.' text-white text-lg"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-800 truncate">'.$file_name.'</p>
+                        <p class="text-xs text-blue-600">'.strtoupper($file_ext).' 파일'.($file_size ? ' · '.$file_size : '').'</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="fa-solid fa-download text-blue-500 text-lg"></i>
+                    </div>
+                </a>
+            </div>';
+        }
+        return $matches[0];
+    }, $content);
+    return $content;
+}
+
 // 본문 내용 처리
 $raw_content = $write['wr_content'];
 // 1. YouTube URL을 플레이스홀더로 변환
@@ -314,9 +388,11 @@ $processed_content = replace_image_placeholders($processed_content, $media_files
 $processed_content = replace_video_placeholders($processed_content, $media_files, $bo_table);
 // 5. 음원 변환
 $processed_content = replace_audio_placeholders($processed_content, $media_files, $bo_table);
-// 6. 줄바꿈 처리
+// 6. 파일(문서) 변환
+$processed_content = replace_file_placeholders($processed_content, $media_files, $bo_table);
+// 7. 줄바꿈 처리
 $processed_content = nl2br($processed_content);
-// 7. 플레이스홀더를 실제 iframe으로 복원
+// 8. 플레이스홀더를 실제 iframe으로 복원
 $processed_content = restore_youtube_iframes($processed_content);
 
 // 상단 갤러리용 미디어 (본문에 사용되지 않은 이미지와 동영상)
@@ -478,6 +554,26 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                                     Your browser does not support the audio element.
                                 </audio>
                             </div>
+                        <?php } elseif ($media['type'] === 'file') { ?>
+                            <!-- 문서: 다운로드 링크 -->
+                            <?php
+                            $file_icon = get_file_icon(strtolower($file_ext));
+                            $file_size = isset($media['size']) ? format_file_size($media['size']) : '';
+                            ?>
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                                <a href="<?php echo $media_url; ?>" download class="flex items-center gap-3 no-underline">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <i class="fa-solid <?php echo $file_icon; ?> text-white text-lg"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-800 truncate"><?php echo $file_name; ?></p>
+                                        <p class="text-xs text-blue-600"><?php echo $file_ext; ?> 파일<?php echo $file_size ? ' · '.$file_size : ''; ?></p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <i class="fa-solid fa-download text-blue-500 text-lg"></i>
+                                    </div>
+                                </a>
+                            </div>
                         <?php } else { ?>
                             <!-- 이미지: 원본 비율 유지, 가로/세로 모두 잘리지 않게 -->
                             <img src="<?php echo $media_url; ?>"
@@ -509,55 +605,27 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
             <!-- 구분선 -->
             <hr class="border-gray-200">
 
-            <!-- 이전/다음 게시글 -->
+            <!-- 이전/다음 게시글 (왼쪽=다음/최신, 오른쪽=이전/과거) -->
             <?php if ($prev_post || $next_post) { ?>
             <div class="p-4">
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">
                     <i class="fa-solid fa-arrows-left-right text-purple-500 mr-1"></i> 다른 게시글
                 </h3>
                 <div class="grid grid-cols-2 gap-3">
-                    <?php if ($prev_post) { ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $prev_post['wr_id']; ?>"
-                       class="block bg-gray-50 rounded-xl overflow-hidden hover:bg-gray-100 transition-colors">
-                        <?php if ($prev_thumbnail) { ?>
-                        <div class="aspect-video relative">
-                            <img src="<?php echo $prev_thumbnail; ?>" alt="이전글" class="w-full h-full object-cover">
-                            <div class="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
-                                <i class="fa-solid fa-chevron-left mr-1"></i>이전
-                            </div>
-                        </div>
-                        <?php } else { ?>
-                        <div class="aspect-video bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
-                            <div class="text-center">
-                                <i class="fa-solid fa-chevron-left text-purple-400 text-lg"></i>
-                                <p class="text-xs text-purple-500 mt-1">이전글</p>
-                            </div>
-                        </div>
-                        <?php } ?>
-                        <div class="p-2">
-                            <p class="text-xs text-gray-700 line-clamp-1 font-medium"><?php echo cut_str(get_text($prev_post['wr_subject']), 20); ?></p>
-                        </div>
-                    </a>
-                    <?php } else { ?>
-                    <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-center opacity-50">
-                        <p class="text-xs text-gray-400">이전 글 없음</p>
-                    </div>
-                    <?php } ?>
-
                     <?php if ($next_post) { ?>
                     <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $next_post['wr_id']; ?>"
                        class="block bg-gray-50 rounded-xl overflow-hidden hover:bg-gray-100 transition-colors">
                         <?php if ($next_thumbnail) { ?>
                         <div class="aspect-video relative">
                             <img src="<?php echo $next_thumbnail; ?>" alt="다음글" class="w-full h-full object-cover">
-                            <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
-                                다음<i class="fa-solid fa-chevron-right ml-1"></i>
+                            <div class="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
+                                <i class="fa-solid fa-chevron-left mr-1"></i>다음
                             </div>
                         </div>
                         <?php } else { ?>
                         <div class="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
                             <div class="text-center">
-                                <i class="fa-solid fa-chevron-right text-blue-400 text-lg"></i>
+                                <i class="fa-solid fa-chevron-left text-blue-400 text-lg"></i>
                                 <p class="text-xs text-blue-500 mt-1">다음글</p>
                             </div>
                         </div>
@@ -569,6 +637,34 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                     <?php } else { ?>
                     <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-center opacity-50">
                         <p class="text-xs text-gray-400">다음 글 없음</p>
+                    </div>
+                    <?php } ?>
+
+                    <?php if ($prev_post) { ?>
+                    <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $prev_post['wr_id']; ?>"
+                       class="block bg-gray-50 rounded-xl overflow-hidden hover:bg-gray-100 transition-colors">
+                        <?php if ($prev_thumbnail) { ?>
+                        <div class="aspect-video relative">
+                            <img src="<?php echo $prev_thumbnail; ?>" alt="이전글" class="w-full h-full object-cover">
+                            <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
+                                이전<i class="fa-solid fa-chevron-right ml-1"></i>
+                            </div>
+                        </div>
+                        <?php } else { ?>
+                        <div class="aspect-video bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fa-solid fa-chevron-right text-purple-400 text-lg"></i>
+                                <p class="text-xs text-purple-500 mt-1">이전글</p>
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <div class="p-2">
+                            <p class="text-xs text-gray-700 line-clamp-1 font-medium"><?php echo cut_str(get_text($prev_post['wr_subject']), 20); ?></p>
+                        </div>
+                    </a>
+                    <?php } else { ?>
+                    <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-center opacity-50">
+                        <p class="text-xs text-gray-400">이전 글 없음</p>
                     </div>
                     <?php } ?>
                 </div>
