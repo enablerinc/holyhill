@@ -3482,21 +3482,53 @@ function member_delete($mb_id)
     global $config;
     global $g5;
 
-    $sql = " select mb_name, mb_nick, mb_ip, mb_recommend, mb_memo, mb_level from {$g5['member_table']} where mb_id= '".$mb_id."' ";
+    $mb_id = sql_real_escape_string($mb_id);
+
+    $sql = " select mb_name, mb_nick, mb_ip, mb_recommend, mb_memo, mb_level from {$g5['member_table']} where mb_id= '{$mb_id}' ";
     $mb = sql_fetch($sql);
+
+    // 회원이 존재하지 않으면 종료
+    if (!$mb || !$mb['mb_name']) {
+        return;
+    }
 
     // 이미 삭제된 회원은 제외
     if(preg_match('#^[0-9]{8}.*삭제함#', $mb['mb_memo']))
         return;
 
     if ($mb['mb_recommend']) {
-        $row = sql_fetch(" select count(*) as cnt from {$g5['member_table']} where mb_id = '".addslashes($mb['mb_recommend'])."' ");
+        $row = sql_fetch(" select count(*) as cnt from {$g5['member_table']} where mb_id = '".sql_real_escape_string($mb['mb_recommend'])."' ");
         if ($row['cnt'])
             insert_point($mb['mb_recommend'], $config['cf_recommend_point'] * (-1), $mb_id.'님의 회원자료 삭제로 인한 추천인 포인트 반환', "@member", $mb['mb_recommend'], $mb_id.' 추천인 삭제');
     }
 
     // 회원자료는 정보만 없앤 후 아이디는 보관하여 다른 사람이 사용하지 못하도록 함 : 061025
-    $sql = " update {$g5['member_table']} set mb_password = '', mb_level = 1, mb_email = '', mb_homepage = '', mb_tel = '', mb_hp = '', mb_zip1 = '', mb_zip2 = '', mb_addr1 = '', mb_addr2 = '', mb_addr3 = '', mb_point = 0, mb_profile = '', mb_birth = '', mb_sex = '', mb_signature = '', mb_memo = '".date('Ymd', G5_SERVER_TIME)." 삭제함\n".sql_real_escape_string($mb['mb_memo'])."', mb_certify = '', mb_adult = 0, mb_dupinfo = '' where mb_id = '{$mb_id}' ";
+    $leave_date = date('Ymd', G5_SERVER_TIME);
+    $new_memo = $leave_date." 삭제함\n".sql_real_escape_string($mb['mb_memo']);
+
+    $sql = " update {$g5['member_table']}
+             set mb_password = '',
+                 mb_level = 1,
+                 mb_email = '',
+                 mb_homepage = '',
+                 mb_tel = '',
+                 mb_hp = '',
+                 mb_zip1 = '',
+                 mb_zip2 = '',
+                 mb_addr1 = '',
+                 mb_addr2 = '',
+                 mb_addr3 = '',
+                 mb_point = 0,
+                 mb_profile = '',
+                 mb_birth = '',
+                 mb_sex = '',
+                 mb_signature = '',
+                 mb_memo = '{$new_memo}',
+                 mb_certify = '',
+                 mb_adult = 0,
+                 mb_dupinfo = '',
+                 mb_leave_date = '{$leave_date}'
+             where mb_id = '{$mb_id}' ";
 
     sql_query($sql);
 

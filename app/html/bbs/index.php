@@ -384,15 +384,25 @@ function convert_youtube_to_iframe_index($content) {
                         }
                     }
 
-                    // 업로드된 동영상 첨부파일 확인
-                    $uploaded_video_thumb = '';
+                    // 업로드된 파일 타입 확인 (동영상, 음원, 문서)
                     $video_extensions = array('mp4', 'webm', 'mov', 'avi', 'mkv', 'wmv');
-                    $video_file_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = 'gallery' AND wr_id = '{$feed['wr_id']}' ORDER BY bf_no");
-                    while ($vf = sql_fetch_array($video_file_result)) {
-                        $ext = strtolower(pathinfo($vf['bf_file'], PATHINFO_EXTENSION));
+                    $audio_extensions = array('mp3', 'm4a', 'wav', 'flac', 'aac', 'wma', 'ogg');
+                    $doc_extensions = array('pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'hwp', 'hwpx', 'txt', 'zip', 'rar', '7z');
+
+                    $has_audio = false;
+                    $has_doc = false;
+
+                    $all_files_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = 'gallery' AND wr_id = '{$feed['wr_id']}' ORDER BY bf_no");
+                    while ($af = sql_fetch_array($all_files_result)) {
+                        $ext = strtolower(pathinfo($af['bf_file'], PATHINFO_EXTENSION));
                         if (in_array($ext, $video_extensions)) {
                             $has_uploaded_video = true;
-                            break;
+                        }
+                        if (in_array($ext, $audio_extensions)) {
+                            $has_audio = true;
+                        }
+                        if (in_array($ext, $doc_extensions)) {
+                            $has_doc = true;
                         }
                     }
 
@@ -431,6 +441,21 @@ function convert_youtube_to_iframe_index($content) {
                                 </div>
                             </div>
                             <?php } ?>
+                            <!-- 파일 타입 배지 (우측 상단) -->
+                            <?php if ($has_audio || $has_doc) { ?>
+                            <div class="absolute top-2 right-2 flex gap-1">
+                                <?php if ($has_audio) { ?>
+                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                                    <i class="fa-solid fa-music text-white text-xs"></i>
+                                </div>
+                                <?php } ?>
+                                <?php if ($has_doc) { ?>
+                                <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
+                                    <i class="fa-solid fa-file text-white text-xs"></i>
+                                </div>
+                                <?php } ?>
+                            </div>
+                            <?php } ?>
                             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
                                 <div class="flex items-center gap-2 text-white text-xs">
                                     <span class="flex items-center gap-1"><i class="fa-solid fa-heart"></i> <?php echo number_format($good_cnt); ?></span>
@@ -439,7 +464,27 @@ function convert_youtube_to_iframe_index($content) {
                             </div>
                         </div>
                         <?php } else { ?>
-                        <div class="aspect-square bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex flex-col justify-center">
+                        <div class="aspect-square bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex flex-col justify-center relative">
+                            <!-- 파일 타입 배지 (우측 상단) - 이미지 없을 때도 표시 -->
+                            <?php if ($has_video || $has_audio || $has_doc) { ?>
+                            <div class="absolute top-2 right-2 flex gap-1">
+                                <?php if ($has_video) { ?>
+                                <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-md">
+                                    <i class="fa-solid fa-play text-white text-xs"></i>
+                                </div>
+                                <?php } ?>
+                                <?php if ($has_audio) { ?>
+                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                                    <i class="fa-solid fa-music text-white text-xs"></i>
+                                </div>
+                                <?php } ?>
+                                <?php if ($has_doc) { ?>
+                                <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
+                                    <i class="fa-solid fa-file text-white text-xs"></i>
+                                </div>
+                                <?php } ?>
+                            </div>
+                            <?php } ?>
                             <p class="text-gray-800 text-sm leading-relaxed line-clamp-5 text-center"><?php echo cut_str($text_content, 80); ?></p>
                             <div class="mt-auto pt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
                                 <span class="flex items-center gap-1"><i class="fa-solid fa-heart text-red-400"></i> <?php echo number_format($good_cnt); ?></span>
