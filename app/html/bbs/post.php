@@ -115,24 +115,36 @@ if ($write['mb_id']) {
     }
 }
 
-// 미디어 파일 (이미지 + 동영상)
+// 미디어 파일 (이미지 + 동영상 + 음원)
 $media_files = array();
 $images = array();
 $videos = array();
+$audios = array();
 
 $file_result = sql_query("SELECT bf_file, bf_type FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' ORDER BY bf_no");
 while ($file = sql_fetch_array($file_result)) {
     $file_ext = strtolower(pathinfo($file['bf_file'], PATHINFO_EXTENSION));
     $video_exts = array('mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv');
+    $audio_exts = array('mp3', 'm4a', 'wav', 'ogg', 'flac', 'aac', 'wma');
+
+    // 파일 타입 결정
+    $file_type = 'image';
+    if (in_array($file_ext, $video_exts)) {
+        $file_type = 'video';
+    } elseif (in_array($file_ext, $audio_exts)) {
+        $file_type = 'audio';
+    }
 
     $media_files[] = array(
         'file' => $file['bf_file'],
-        'type' => in_array($file_ext, $video_exts) ? 'video' : 'image'
+        'type' => $file_type
     );
 
-    if (in_array($file_ext, $video_exts)) {
+    if ($file_type === 'video') {
         $videos[] = $file['bf_file'];
-    } else if ($file['bf_type'] >= 1 && $file['bf_type'] <= 3) {
+    } elseif ($file_type === 'audio') {
+        $audios[] = $file['bf_file'];
+    } elseif ($file['bf_type'] >= 1 && $file['bf_type'] <= 3) {
         $images[] = $file['bf_file'];
     }
 }
@@ -161,7 +173,7 @@ if ($is_member) {
     }
 }
 
-// 본문에 사용된 미디어 인덱스 추출 (이미지 + 동영상)
+// 본문에 사용된 미디어 인덱스 추출 (이미지 + 동영상 + 음원)
 $used_media_indices = array();
 
 // 이미지 인덱스
@@ -174,6 +186,14 @@ if (!empty($matches[1])) {
 
 // 동영상 인덱스
 preg_match_all('/\[동영상(\d+)\]/', $write['wr_content'], $matches);
+if (!empty($matches[1])) {
+    foreach ($matches[1] as $num) {
+        $used_media_indices[] = intval($num) - 1;
+    }
+}
+
+// 음원 인덱스
+preg_match_all('/\[음원(\d+)\]/', $write['wr_content'], $matches);
 if (!empty($matches[1])) {
     foreach ($matches[1] as $num) {
         $used_media_indices[] = intval($num) - 1;
@@ -253,6 +273,35 @@ function replace_video_placeholders($content, $media_files, $bo_table) {
     return $content;
 }
 
+// 본문에서 [음원N]을 실제 오디오 플레이어로 변환
+function replace_audio_placeholders($content, $media_files, $bo_table) {
+    $content = preg_replace_callback('/\[음원(\d+)\]/', function($matches) use ($media_files, $bo_table) {
+        $index = intval($matches[1]) - 1;
+        if (isset($media_files[$index]) && $media_files[$index]['type'] === 'audio') {
+            $audio_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media_files[$index]['file'];
+            $file_name = pathinfo($media_files[$index]['file'], PATHINFO_FILENAME);
+            $file_ext = strtoupper(pathinfo($media_files[$index]['file'], PATHINFO_EXTENSION));
+            return '<div class="audio-container my-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-music text-white text-lg"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-800 truncate">'.$file_name.'</p>
+                        <p class="text-xs text-green-600">'.$file_ext.' 오디오</p>
+                    </div>
+                </div>
+                <audio controls class="w-full" style="height: 40px;">
+                    <source src="'.$audio_url.'" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>';
+        }
+        return $matches[0];
+    }, $content);
+    return $content;
+}
+
 // 본문 내용 처리
 $raw_content = $write['wr_content'];
 // 1. YouTube URL을 플레이스홀더로 변환
@@ -263,9 +312,11 @@ $processed_content = get_text($raw_content);
 $processed_content = replace_image_placeholders($processed_content, $media_files, $bo_table);
 // 4. 동영상 변환
 $processed_content = replace_video_placeholders($processed_content, $media_files, $bo_table);
-// 5. 줄바꿈 처리
+// 5. 음원 변환
+$processed_content = replace_audio_placeholders($processed_content, $media_files, $bo_table);
+// 6. 줄바꿈 처리
 $processed_content = nl2br($processed_content);
-// 6. 플레이스홀더를 실제 iframe으로 복원
+// 7. 플레이스홀더를 실제 iframe으로 복원
 $processed_content = restore_youtube_iframes($processed_content);
 
 // 상단 갤러리용 미디어 (본문에 사용되지 않은 이미지와 동영상)
@@ -394,11 +445,13 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
 
             <!-- 내용 -->
             <div class="p-4">
-                <!-- 미디어 갤러리 (본문에 삽입되지 않은 이미지와 동영상 표시) - 세로 스크롤 방식 -->
+                <!-- 미디어 갤러리 (본문에 삽입되지 않은 이미지, 동영상, 음원 표시) - 세로 스크롤 방식 -->
                 <?php if (count($gallery_media) > 0) { ?>
                 <div class="space-y-4 mb-4">
                     <?php foreach ($gallery_media as $media) {
                         $media_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media['file'];
+                        $file_name = pathinfo($media['file'], PATHINFO_FILENAME);
+                        $file_ext = strtoupper(pathinfo($media['file'], PATHINFO_EXTENSION));
                     ?>
                     <div class="w-full">
                         <?php if ($media['type'] === 'video') { ?>
@@ -407,6 +460,23 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                                     <source src="<?php echo $media_url; ?>" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
+                            </div>
+                        <?php } elseif ($media['type'] === 'audio') { ?>
+                            <!-- 음원: 오디오 플레이어 -->
+                            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <i class="fa-solid fa-music text-white text-lg"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-800 truncate"><?php echo $file_name; ?></p>
+                                        <p class="text-xs text-green-600"><?php echo $file_ext; ?> 오디오</p>
+                                    </div>
+                                </div>
+                                <audio controls class="w-full" style="height: 40px;">
+                                    <source src="<?php echo $media_url; ?>" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
                             </div>
                         <?php } else { ?>
                             <!-- 이미지: 원본 비율 유지, 가로/세로 모두 잘리지 않게 -->
@@ -513,7 +583,9 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                 <?php
                 // 댓글 페이지네이션 설정
                 $comments_per_page = 50;
-                $total_comments_count = $write['wr_comment'];
+                // 실제 DB에서 댓글 수 조회 (wr_comment 값이 정확하지 않을 수 있음)
+                $actual_comment_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1");
+                $total_comments_count = $actual_comment_count['cnt'] ? (int)$actual_comment_count['cnt'] : 0;
                 $total_comment_pages = max(1, ceil($total_comments_count / $comments_per_page));
 
                 // 기본값: 마지막 페이지 (최신 댓글)
@@ -531,7 +603,7 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                 }
                 ?>
                 <div class="flex items-center justify-between mb-4" id="comment-header">
-                    <h3 class="font-semibold">댓글 <?php echo $write['wr_comment']; ?>개</h3>
+                    <h3 class="font-semibold">댓글 <?php echo $total_comments_count; ?>개</h3>
                     <?php if ($total_comment_pages > 1) { ?>
                     <span class="text-xs text-gray-500"><?php echo $comment_page; ?> / <?php echo $total_comment_pages; ?> 페이지</span>
                     <?php } ?>

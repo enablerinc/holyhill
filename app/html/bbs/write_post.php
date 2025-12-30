@@ -191,29 +191,34 @@ if ($is_member) {
                 <div class="px-4 py-4">
                     <div id="media-upload-area" class="relative">
                         <!-- 미디어 선택 버튼 그룹 -->
-                        <div class="flex gap-2 mb-4">
-                            <button type="button" onclick="selectFromGallery()" class="flex-1 bg-purple-100 hover:bg-purple-200 text-purple-700 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <div class="grid grid-cols-4 gap-2 mb-4">
+                            <button type="button" onclick="selectFromGallery()" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-medium py-3 px-2 rounded-lg transition-colors flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-images"></i>
-                                <span class="text-sm">갤러리</span>
+                                <span class="text-xs">갤러리</span>
                             </button>
-                            <button type="button" onclick="capturePhoto()" class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <button type="button" onclick="capturePhoto()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-3 px-2 rounded-lg transition-colors flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-camera"></i>
-                                <span class="text-sm">사진 촬영</span>
+                                <span class="text-xs">사진</span>
                             </button>
-                            <button type="button" onclick="selectVideo()" class="flex-1 bg-pink-100 hover:bg-pink-200 text-pink-700 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <button type="button" onclick="selectVideo()" class="bg-pink-100 hover:bg-pink-200 text-pink-700 font-medium py-3 px-2 rounded-lg transition-colors flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-video"></i>
-                                <span class="text-sm">동영상</span>
+                                <span class="text-xs">동영상</span>
+                            </button>
+                            <button type="button" onclick="selectAudio()" class="bg-green-100 hover:bg-green-200 text-green-700 font-medium py-3 px-2 rounded-lg transition-colors flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-music"></i>
+                                <span class="text-xs">음원</span>
                             </button>
                         </div>
 
                         <!-- 드래그 앤 드롭 영역 -->
                         <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-colors">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
-                            <p class="text-gray-600 mb-1 font-medium text-sm">이미지 또는 동영상을 드래그하세요</p>
-                            <p class="text-xs text-gray-400">최대 10개까지 업로드 가능</p>
-                            <input type="file" id="gallery-input" name="bf_file[]" accept="image/*,video/*" multiple style="display: none;">
+                            <p class="text-gray-600 mb-1 font-medium text-sm">미디어 파일을 드래그하세요</p>
+                            <p class="text-xs text-gray-400">이미지, 동영상, 음원 파일 (최대 10개)</p>
+                            <input type="file" id="gallery-input" name="bf_file[]" accept="image/*,video/*,audio/*" multiple style="display: none;">
                             <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
                             <input type="file" id="video-input" accept="video/*" style="display: none;">
+                            <input type="file" id="audio-input" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac,.wma" multiple style="display: none;">
                         </div>
 
                         <!-- 미디어 프리뷰 그리드 -->
@@ -379,6 +384,40 @@ if ($is_member) {
     font-size: 16px;
     pointer-events: none;
 }
+.preview-item.audio-item {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+}
+.preview-item.audio-item .audio-icon {
+    font-size: 24px;
+    color: white;
+    margin-bottom: 4px;
+}
+.preview-item.audio-item .audio-name {
+    font-size: 9px;
+    color: white;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    padding: 0 4px;
+}
+.preview-item.audio-item .audio-type-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #059669;
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
 
 /* 드래그 오버 효과 */
 #drop-zone.drag-over {
@@ -407,6 +446,11 @@ function selectVideo() {
     document.getElementById('video-input').click();
 }
 
+// 음원 선택
+function selectAudio() {
+    document.getElementById('audio-input').click();
+}
+
 // 드롭존 클릭 이벤트
 document.getElementById('drop-zone').addEventListener('click', function(e) {
     if (e.target.id === 'drop-zone' || e.target.closest('#drop-zone')) {
@@ -424,6 +468,10 @@ document.getElementById('camera-input').addEventListener('change', function(e) {
 });
 
 document.getElementById('video-input').addEventListener('change', function(e) {
+    handleFiles(this.files);
+});
+
+document.getElementById('audio-input').addEventListener('change', function(e) {
     handleFiles(this.files);
 });
 
@@ -457,9 +505,9 @@ function handleFiles(files) {
     const mediaCounter = document.getElementById('media-counter');
     const currentCount = document.getElementById('current-count');
 
-    // 이미지 및 동영상 파일 필터링
+    // 이미지, 동영상, 음원 파일 필터링
     let mediaFiles = Array.from(files).filter(file =>
-        file.type.startsWith('image/') || file.type.startsWith('video/')
+        file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/')
     );
 
     // 최대 개수 체크
@@ -489,32 +537,25 @@ function handleFiles(files) {
 // 프리뷰 추가
 function addPreview(file, index) {
     const previewGrid = document.getElementById('preview-grid');
-    const reader = new FileReader();
     const isVideo = file.type.startsWith('video/');
+    const isAudio = file.type.startsWith('audio/');
 
-    reader.onload = function(e) {
-        const div = document.createElement('div');
-        div.className = 'preview-item';
-        div.setAttribute('data-index', index);
+    const div = document.createElement('div');
+    div.setAttribute('data-index', index);
 
-        let mediaElement = '';
-        let typeBadge = '';
-        let playIcon = '';
+    if (isAudio) {
+        // 음원 파일 프리뷰 (DataURL 불필요)
+        div.className = 'preview-item audio-item';
 
-        if (isVideo) {
-            mediaElement = `<video src="${e.target.result}" muted></video>`;
-            typeBadge = '<span class="media-type-badge"><i class="fa-solid fa-video"></i> 동영상</span>';
-            playIcon = '<div class="play-icon"><i class="fa-solid fa-play"></i></div>';
-        } else {
-            mediaElement = `<img src="${e.target.result}" alt="preview">`;
-        }
+        // 파일 확장자 추출
+        const ext = file.name.split('.').pop().toUpperCase();
 
         div.innerHTML = `
-            ${mediaElement}
-            ${typeBadge}
+            <span class="audio-type-badge">${ext}</span>
+            <i class="fa-solid fa-music audio-icon"></i>
+            <span class="audio-name">${file.name}</span>
             <span class="index-badge">${index + 1}</span>
-            ${playIcon}
-            <button type="button" class="insert-content-btn" onclick="insertMediaToContent(${index})" title="본문에 삽입">
+            <button type="button" class="insert-content-btn" onclick="insertMediaToContent(${index})" title="본문에 삽입" style="bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0;">
                 <i class="fa-solid fa-plus"></i>
             </button>
             <button type="button" class="remove-btn" onclick="removeMedia(${index})">
@@ -522,9 +563,40 @@ function addPreview(file, index) {
             </button>
         `;
         previewGrid.appendChild(div);
-    };
+    } else {
+        // 이미지/동영상 프리뷰
+        div.className = 'preview-item';
 
-    reader.readAsDataURL(file);
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            let mediaElement = '';
+            let typeBadge = '';
+            let playIcon = '';
+
+            if (isVideo) {
+                mediaElement = `<video src="${e.target.result}" muted></video>`;
+                typeBadge = '<span class="media-type-badge"><i class="fa-solid fa-video"></i> 동영상</span>';
+                playIcon = '<div class="play-icon"><i class="fa-solid fa-play"></i></div>';
+            } else {
+                mediaElement = `<img src="${e.target.result}" alt="preview">`;
+            }
+
+            div.innerHTML = `
+                ${mediaElement}
+                ${typeBadge}
+                <span class="index-badge">${index + 1}</span>
+                ${playIcon}
+                <button type="button" class="insert-content-btn" onclick="insertMediaToContent(${index})" title="본문에 삽입">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+                <button type="button" class="remove-btn" onclick="removeMedia(${index})">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            previewGrid.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 // 미디어를 본문에 삽입
@@ -537,9 +609,17 @@ function insertMediaToContent(index) {
 
     const file = uploadedFiles[index];
     const isVideo = file.type.startsWith('video/');
+    const isAudio = file.type.startsWith('audio/');
 
     // 미디어 placeholder 생성
-    const mediaPlaceholder = isVideo ? `[동영상${index + 1}]\n\n` : `[이미지${index + 1}]\n\n`;
+    let mediaPlaceholder;
+    if (isAudio) {
+        mediaPlaceholder = `[음원${index + 1}]\n\n`;
+    } else if (isVideo) {
+        mediaPlaceholder = `[동영상${index + 1}]\n\n`;
+    } else {
+        mediaPlaceholder = `[이미지${index + 1}]\n\n`;
+    }
 
     // 커서 위치에 삽입
     const startPos = contentTextarea.selectionStart;

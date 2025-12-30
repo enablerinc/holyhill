@@ -67,7 +67,9 @@ function process_comment_content_ajax($content) {
 
 // 페이지네이션 설정
 $comments_per_page = 50;
-$total_comments_count = $write['wr_comment'];
+// 실제 DB에서 댓글 수 조회
+$actual_comment_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1");
+$total_comments_count = $actual_comment_count['cnt'] ? (int)$actual_comment_count['cnt'] : 0;
 $total_comment_pages = max(1, ceil($total_comments_count / $comments_per_page));
 
 if ($comment_page < 1) $comment_page = 1;
