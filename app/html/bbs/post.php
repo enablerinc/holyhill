@@ -522,46 +522,20 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                 if ($comment_page > $total_comment_pages) $comment_page = $total_comment_pages;
 
                 $comment_offset = ($comment_page - 1) * $comments_per_page;
+
+                // 페이지 번호 계산 (최대 5개 표시)
+                $start_page = max(1, $comment_page - 2);
+                $end_page = min($total_comment_pages, $start_page + 4);
+                if ($end_page - $start_page < 4) {
+                    $start_page = max(1, $end_page - 4);
+                }
                 ?>
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4" id="comment-header">
                     <h3 class="font-semibold">댓글 <?php echo $write['wr_comment']; ?>개</h3>
                     <?php if ($total_comment_pages > 1) { ?>
                     <span class="text-xs text-gray-500"><?php echo $comment_page; ?> / <?php echo $total_comment_pages; ?> 페이지</span>
                     <?php } ?>
                 </div>
-
-                <?php if ($total_comment_pages > 1) { ?>
-                <!-- 댓글 페이지네이션 (상단) -->
-                <div class="flex items-center justify-center gap-1 mb-4 flex-wrap">
-                    <?php if ($comment_page > 1) { ?>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=1"
-                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">«</a>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $comment_page - 1; ?>"
-                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">‹ 이전</a>
-                    <?php } ?>
-
-                    <?php
-                    // 페이지 번호 표시 (최대 5개)
-                    $start_page = max(1, $comment_page - 2);
-                    $end_page = min($total_comment_pages, $start_page + 4);
-                    if ($end_page - $start_page < 4) {
-                        $start_page = max(1, $end_page - 4);
-                    }
-                    for ($p = $start_page; $p <= $end_page; $p++) {
-                        $active_class = ($p == $comment_page) ? 'bg-purple-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700';
-                    ?>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $p; ?>"
-                       class="px-3 py-1 text-xs <?php echo $active_class; ?> rounded"><?php echo $p; ?></a>
-                    <?php } ?>
-
-                    <?php if ($comment_page < $total_comment_pages) { ?>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $comment_page + 1; ?>"
-                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">다음 ›</a>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $total_comment_pages; ?>"
-                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">»</a>
-                    <?php } ?>
-                </div>
-                <?php } ?>
 
                 <div id="comment-list">
                 <?php
@@ -672,32 +646,29 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                 ?>
                 </div>
 
-                <?php if ($total_comment_pages > 1) { ?>
                 <!-- 댓글 페이지네이션 (하단) -->
+                <div id="comment-pagination">
+                <?php if ($total_comment_pages > 1) { ?>
                 <div class="flex items-center justify-center gap-1 mt-4 flex-wrap">
                     <?php if ($comment_page > 1) { ?>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=1"
-                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">«</a>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $comment_page - 1; ?>"
-                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">‹ 이전</a>
+                    <button onclick="loadCommentPage(1)" class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer">«</button>
+                    <button onclick="loadCommentPage(<?php echo $comment_page - 1; ?>)" class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer">‹ 이전</button>
                     <?php } ?>
 
                     <?php
                     for ($p = $start_page; $p <= $end_page; $p++) {
                         $active_class = ($p == $comment_page) ? 'bg-purple-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700';
                     ?>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $p; ?>"
-                       class="px-3 py-1 text-xs <?php echo $active_class; ?> rounded"><?php echo $p; ?></a>
+                    <button onclick="loadCommentPage(<?php echo $p; ?>)" class="px-3 py-1 text-xs <?php echo $active_class; ?> rounded cursor-pointer"><?php echo $p; ?></button>
                     <?php } ?>
 
                     <?php if ($comment_page < $total_comment_pages) { ?>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $comment_page + 1; ?>"
-                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">다음 ›</a>
-                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $total_comment_pages; ?>"
-                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">»</a>
+                    <button onclick="loadCommentPage(<?php echo $comment_page + 1; ?>)" class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer">다음 ›</button>
+                    <button onclick="loadCommentPage(<?php echo $total_comment_pages; ?>)" class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded cursor-pointer">»</button>
                     <?php } ?>
                 </div>
                 <?php } ?>
+                </div>
             </div>
         </article>
     </main>
@@ -763,6 +734,58 @@ function confirmDelete(e) {
     if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
         location.href = '<?php echo $delete_href; ?>';
     }
+}
+
+// 현재 댓글 페이지
+window.currentCommentPage = <?php echo $comment_page; ?>;
+
+// AJAX 댓글 페이지 로드
+function loadCommentPage(page) {
+    const commentList = document.getElementById('comment-list');
+    const pagination = document.getElementById('comment-pagination');
+    const header = document.getElementById('comment-header');
+
+    if (!commentList || !pagination) return;
+
+    // 로딩 표시
+    commentList.innerHTML = '<div class="text-center py-8"><i class="fa-solid fa-spinner fa-spin text-purple-600 text-2xl"></i></div>';
+
+    fetch('<?php echo G5_BBS_URL; ?>/comment_page_ajax.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=' + page)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 댓글 목록 업데이트
+                commentList.innerHTML = data.comments_html;
+
+                // 페이지네이션 업데이트
+                pagination.innerHTML = data.pagination_html;
+
+                // 헤더 페이지 표시 업데이트
+                if (header) {
+                    const pageSpan = header.querySelector('span');
+                    if (pageSpan && data.total_pages > 1) {
+                        pageSpan.textContent = data.current_page + ' / ' + data.total_pages + ' 페이지';
+                    }
+                }
+
+                // 현재 페이지 업데이트
+                window.currentCommentPage = data.current_page;
+
+                // 마지막 댓글 ID 업데이트
+                if (data.last_comment_id) {
+                    window.lastCommentId = Math.max(window.lastCommentId || 0, data.last_comment_id);
+                }
+
+                // 댓글 영역으로 스크롤
+                commentList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                alert(data.message || '댓글을 불러오는데 실패했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('댓글 로드 오류:', error);
+            commentList.innerHTML = '<div class="text-center py-4 text-red-500">댓글을 불러오는데 실패했습니다.</div>';
+        });
 }
 
 // 답글 폼 토글
