@@ -353,9 +353,17 @@ function convert_youtube_to_iframe_index($content) {
                 while ($feed = sql_fetch_array($feed_result)) {
                     // 작성자 정보
                     $feed_nick = $feed['wr_name'] ? $feed['wr_name'] : '알 수 없음';
+                    $feed_photo = ''; // 프로필 사진
                     if ($feed['mb_id']) {
-                        $mb_info = sql_fetch("SELECT mb_nick FROM {$g5['member_table']} WHERE mb_id = '{$feed['mb_id']}'");
-                        if ($mb_info) $feed_nick = $mb_info['mb_nick'];
+                        $mb_info = sql_fetch("SELECT mb_nick, mb_name FROM {$g5['member_table']} WHERE mb_id = '{$feed['mb_id']}'");
+                        if ($mb_info) {
+                            $feed_nick = $mb_info['mb_name'] ? $mb_info['mb_name'] : $mb_info['mb_nick'];
+                        }
+                        // 프로필 사진 경로
+                        $profile_path = G5_DATA_PATH.'/member_image/'.substr($feed['mb_id'], 0, 2).'/'.$feed['mb_id'].'.gif';
+                        if (file_exists($profile_path)) {
+                            $feed_photo = G5_DATA_URL.'/member_image/'.substr($feed['mb_id'], 0, 2).'/'.$feed['mb_id'].'.gif';
+                        }
                     }
 
                     // YouTube URL 추출 및 썸네일 생성
@@ -441,9 +449,13 @@ function convert_youtube_to_iframe_index($content) {
                         <?php } ?>
                         <div class="p-2">
                             <div class="flex items-center gap-2">
+                                <?php if ($feed_photo) { ?>
+                                <img src="<?php echo $feed_photo; ?>" alt="<?php echo $feed_nick; ?>" class="w-5 h-5 rounded-full object-cover">
+                                <?php } else { ?>
                                 <div class="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
                                     <span class="text-white text-xs font-semibold"><?php echo mb_substr($feed_nick, 0, 1); ?></span>
                                 </div>
+                                <?php } ?>
                                 <span class="text-xs text-gray-700 font-medium truncate flex-1"><?php echo $feed_nick; ?></span>
                                 <span class="text-xs text-gray-400"><?php echo date('m.d', strtotime($feed['wr_datetime'])); ?></span>
                             </div>
