@@ -3,8 +3,8 @@ include_once('./_common.php');
 
 $g5['title'] = '명예의 전당';
 
-// 우수 성산인 기준 점수 (여기서 변경 가능)
-define('EXCELLENT_MEMBER_POINT', 1000);
+// 베스트 성산인 기준 점수 (여기서 변경 가능)
+define('BEST_MEMBER_POINT', 30000);
 
 // 현재 년도와 월 설정
 $current_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
@@ -101,17 +101,17 @@ for ($i = 0; $i < min(3, count($all_members)); $i++) {
 }
 
 // ===========================
-// 3. 우수 성산인 (Top 3 제외, 기준 점수 이상)
+// 3. 베스트 성산인 (3만점 이상 - Top 3 포함)
 // ===========================
-$excellent_members = array();
-$rank = 4;
-for ($i = 3; $i < count($all_members); $i++) {
-    if ($all_members[$i]['points'] >= EXCELLENT_MEMBER_POINT) {
-        $excellent_members[] = array_merge($all_members[$i], array('rank' => $rank));
+$best_members = array();
+$rank = 1;
+for ($i = 0; $i < count($all_members); $i++) {
+    if ($all_members[$i]['points'] >= BEST_MEMBER_POINT) {
+        $best_members[] = array_merge($all_members[$i], array('rank' => $rank));
         $rank++;
     }
 }
-$total_excellent = count($excellent_members);
+$total_best = count($best_members);
 
 // ===========================
 // 4. 이달의 활동 통계
@@ -590,50 +590,59 @@ function getProfileImage($mb_id) {
     <section id="hall-of-faith" class="px-4">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-                <i class="fa-solid fa-hands-praying text-lilac text-lg"></i>
-                <h3 class="text-lg font-semibold text-grace-green">우수 성산인</h3>
-                <span class="text-xs bg-lilac/20 text-deep-purple px-2 py-1 rounded-full"><?php echo number_format(EXCELLENT_MEMBER_POINT); ?>점 이상</span>
+                <i class="fa-solid fa-star text-yellow-500 text-lg"></i>
+                <h3 class="text-lg font-semibold text-grace-green">베스트 성산인</h3>
+                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full"><?php echo number_format(BEST_MEMBER_POINT); ?>점 이상</span>
             </div>
-            <span class="text-xs text-gray-500">총 <?php echo $total_excellent; ?>명</span>
+            <span class="text-xs text-gray-500">총 <?php echo $total_best; ?>명</span>
         </div>
 
         <div class="space-y-3">
-            <?php if (count($excellent_members) > 0): ?>
-                <?php foreach ($excellent_members as $member): ?>
-                <div class="bg-white rounded-xl p-4 shadow-warm flex items-center gap-4">
+            <?php if (count($best_members) > 0): ?>
+                <?php foreach ($best_members as $member): ?>
+                <?php
+                    // 메달 결정 (1,2,3등만)
+                    $medal = '';
+                    $badge_color = 'bg-yellow-500';
+                    if ($member['rank'] == 1) $medal = '🥇';
+                    elseif ($member['rank'] == 2) $medal = '🥈';
+                    elseif ($member['rank'] == 3) $medal = '🥉';
+                ?>
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 shadow-warm flex items-center gap-4 border border-purple-100">
                     <div class="relative">
-                        <img src="<?php echo $member['avatar']; ?>" class="w-14 h-14 rounded-full object-cover">
-                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-lilac rounded-full flex items-center justify-center">
+                        <img src="<?php echo $member['avatar']; ?>" class="w-14 h-14 rounded-full object-cover border-2 border-yellow-400">
+                        <?php if ($medal): ?>
+                        <div class="absolute -top-2 -right-2 text-xl"><?php echo $medal; ?></div>
+                        <?php else: ?>
+                        <div class="absolute -bottom-1 -right-1 w-5 h-5 <?php echo $badge_color; ?> rounded-full flex items-center justify-center">
                             <span class="text-white text-xs font-bold"><?php echo $member['rank']; ?></span>
                         </div>
+                        <?php endif; ?>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1">
                             <h4 class="font-semibold text-grace-green"><?php echo $member['name']; ?></h4>
-                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full"><?php echo $member['nick']; ?></span>
+                            <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full"><?php echo $member['nick']; ?></span>
+                            <i class="fa-solid fa-star text-yellow-500 text-xs"></i>
                         </div>
                         <div class="flex items-center gap-1 mb-2">
-                            <i class="fa-solid fa-cross text-lilac text-xs"></i>
-                            <span class="text-sm font-semibold text-lilac"><?php echo number_format($member['points']); ?>점</span>
+                            <i class="fa-solid fa-cross text-yellow-600 text-xs"></i>
+                            <span class="text-sm font-bold text-yellow-600"><?php echo number_format($member['points']); ?>점</span>
                         </div>
                         <div class="flex gap-1">
-                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">글 <?php echo $member['post_count']; ?>개</span>
-                            <span class="text-xs bg-soft-lavender text-deep-purple px-2 py-1 rounded-full">댓글 <?php echo $member['comment_count']; ?>개</span>
+                            <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">글 <?php echo $member['post_count']; ?>개</span>
+                            <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">댓글 <?php echo $member['comment_count']; ?>개</span>
                         </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
                 <div class="bg-white rounded-xl p-8 shadow-warm text-center">
-                    <i class="fa-solid fa-trophy text-gray-300 text-4xl mb-3"></i>
-                    <p class="text-sm text-gray-400">이번 달 <?php echo number_format(EXCELLENT_MEMBER_POINT); ?>점 이상 획득한 회원이 없습니다.</p>
+                    <i class="fa-solid fa-star text-gray-300 text-4xl mb-3"></i>
+                    <p class="text-sm text-gray-400">이번 달 <?php echo number_format(BEST_MEMBER_POINT); ?>점 이상 획득한 회원이 없습니다.</p>
                 </div>
             <?php endif; ?>
         </div>
-
-        <button class="w-full mt-4 py-3 bg-lilac/10 text-deep-purple font-medium rounded-xl border border-lilac/20">
-            모든 우수자 보기 (<?php echo $total_excellent; ?>명)
-        </button>
     </section>
 
     <!-- 출석 우수자 통계 섹션 -->

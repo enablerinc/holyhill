@@ -310,10 +310,19 @@ function convert_youtube_to_iframe_index($content) {
                     <i class="fa-solid fa-droplet text-blue-500"></i>
                     <h2 class="text-base font-semibold text-gray-800">성산 샘터</h2>
                 </div>
-                <a href="<?php echo G5_BBS_URL; ?>/feed.php?bo_table=gallery"
-                   class="text-sm text-purple-600 hover:text-purple-800 font-medium">
-                    전체 보기 →
-                </a>
+                <div class="flex items-center gap-3">
+                    <?php if ($is_member) { ?>
+                    <a href="<?php echo G5_BBS_URL; ?>/write_post.php"
+                       class="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 font-medium">
+                        <i class="fa-solid fa-plus text-xs"></i> 글쓰기
+                    </a>
+                    <span class="text-gray-300">|</span>
+                    <?php } ?>
+                    <a href="<?php echo G5_BBS_URL; ?>/feed.php?bo_table=gallery"
+                       class="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                        전체 보기 →
+                    </a>
+                </div>
             </div>
 
             <?php
@@ -507,6 +516,7 @@ function convert_youtube_to_iframe_index($content) {
                 <div class="space-y-3">
                     <?php
                     $rank = 1;
+                    $best_member_point = 30000; // 베스트 성산인 기준 점수
                     while ($best = sql_fetch_array($best_result)) {
                         // 프로필 이미지
                         $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
@@ -515,7 +525,7 @@ function convert_youtube_to_iframe_index($content) {
                             $profile_img = G5_DATA_URL.'/member_image/'.substr($best['mb_id'], 0, 2).'/'.$best['mb_id'].'.gif';
                         }
 
-                        // 순위 배지
+                        // 순위 배지 (1,2,3등만 메달)
                         $rank_badge = '';
                         $rank_class = '';
                         if ($rank == 1) {
@@ -528,18 +538,28 @@ function convert_youtube_to_iframe_index($content) {
                             $rank_badge = '🥉';
                             $rank_class = 'text-orange-400';
                         }
+
+                        // 3만점 이상이면 하이라이트 적용 (1,2,3등도 포함)
+                        $is_best_member = ($best['monthly_points'] >= $best_member_point);
+                        $highlight_class = ($rank <= 3 || $is_best_member) ? 'bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-2 -mx-2 border border-purple-100' : '';
+                        $point_class = ($rank <= 3 || $is_best_member) ? 'text-purple-600' : 'text-gray-600';
                     ?>
-                    <div class="flex items-center gap-3 <?php echo $rank <= 3 ? 'bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-2 -mx-2' : ''; ?>">
+                    <div class="flex items-center gap-3 <?php echo $highlight_class; ?>">
                         <?php if ($rank <= 3) { ?>
                         <span class="text-lg w-6 text-center"><?php echo $rank_badge; ?></span>
+                        <?php } elseif ($is_best_member) { ?>
+                        <span class="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs text-white font-bold"><?php echo $rank; ?></span>
                         <?php } else { ?>
                         <span class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs text-gray-600 font-medium"><?php echo $rank; ?></span>
                         <?php } ?>
-                        <img src="<?php echo $profile_img; ?>" class="w-8 h-8 rounded-full object-cover" alt="<?php echo $best['mb_name']; ?>">
-                        <div class="flex-1 min-w-0">
-                            <span class="text-sm font-medium text-gray-800 truncate block"><?php echo $best['mb_name']; ?></span>
+                        <img src="<?php echo $profile_img; ?>" class="w-8 h-8 rounded-full object-cover <?php echo $is_best_member ? 'ring-2 ring-yellow-400' : ''; ?>" alt="<?php echo $best['mb_name']; ?>">
+                        <div class="flex-1 min-w-0 flex items-center gap-1">
+                            <span class="text-sm font-medium text-gray-800 truncate"><?php echo $best['mb_name']; ?></span>
+                            <?php if ($is_best_member && $rank > 3) { ?>
+                            <i class="fa-solid fa-star text-yellow-500 text-xs"></i>
+                            <?php } ?>
                         </div>
-                        <span class="text-sm font-bold <?php echo $rank <= 3 ? 'text-purple-600' : 'text-gray-600'; ?>"><?php echo number_format($best['monthly_points']); ?>점</span>
+                        <span class="text-sm font-bold <?php echo $point_class; ?>"><?php echo number_format($best['monthly_points']); ?>점</span>
                     </div>
                     <?php
                         $rank++;

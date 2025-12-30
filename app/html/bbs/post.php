@@ -275,6 +275,31 @@ foreach ($media_files as $idx => $media) {
         $gallery_media[] = $media;
     }
 }
+
+// 이전/다음 게시글 가져오기
+$prev_post = sql_fetch("SELECT wr_id, wr_subject FROM {$write_table} WHERE wr_id < '{$wr_id}' AND wr_is_comment = 0 ORDER BY wr_id DESC LIMIT 1");
+$next_post = sql_fetch("SELECT wr_id, wr_subject FROM {$write_table} WHERE wr_id > '{$wr_id}' AND wr_is_comment = 0 ORDER BY wr_id ASC LIMIT 1");
+
+// 이전/다음 게시글 썸네일 가져오기 함수
+function get_post_thumbnail($wr_id, $bo_table, $g5) {
+    // 첨부파일에서 이미지 찾기
+    $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
+    if ($img = sql_fetch_array($img_result)) {
+        return G5_DATA_URL.'/file/'.$bo_table.'/'.$img['bf_file'];
+    }
+
+    // 본문에서 이미지 찾기
+    $write_table = $g5['write_prefix'] . $bo_table;
+    $content = sql_fetch("SELECT wr_content FROM {$write_table} WHERE wr_id = '{$wr_id}'");
+    if ($content && preg_match('/<img[^>]+src=["\']?([^"\'>\s]+)["\']?[^>]*>/i', $content['wr_content'], $img_match)) {
+        return $img_match[1];
+    }
+
+    return '';
+}
+
+$prev_thumbnail = $prev_post ? get_post_thumbnail($prev_post['wr_id'], $bo_table, $g5) : '';
+$next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table, $g5) : '';
 ?>
 
 <!DOCTYPE html>
@@ -321,9 +346,16 @@ foreach ($media_files as $idx => $media) {
     <!-- 헤더 -->
     <header class="fixed top-0 left-0 right-0 bg-white border-b z-50" style="max-width: 640px; margin: 0 auto;">
         <div class="flex items-center justify-between px-4 py-3">
-            <button onclick="history.back()"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+            <button onclick="history.back()" class="w-8 flex justify-start"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+
+            <!-- 성산교회 로고 (클릭 시 홈으로 이동) -->
+            <a href="<?php echo G5_BBS_URL; ?>/index.php" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <img src="<?php echo G5_URL; ?>/img/logo.png" alt="성산교회" class="w-7 h-7 rounded-lg object-cover">
+                <span class="text-sm font-semibold text-gray-700">성산교회</span>
+            </a>
+
             <?php if ($delete_href) { ?>
-            <div class="relative">
+            <div class="relative w-8 flex justify-end">
                 <button onclick="toggleMenu()" id="menuBtn"><i class="fa-solid fa-ellipsis-vertical text-xl"></i></button>
                 <div id="menuDropdown" class="hidden absolute right-0 top-8 bg-white border rounded-lg shadow-lg py-2 w-32 z-50">
                     <a href="#" onclick="confirmDelete(event)" class="block px-4 py-2 hover:bg-gray-100 text-sm text-red-600">
@@ -332,7 +364,7 @@ foreach ($media_files as $idx => $media) {
                 </div>
             </div>
             <?php } else { ?>
-            <div class="w-6"></div>
+            <div class="w-8"></div>
             <?php } ?>
         </div>
     </header>
@@ -407,13 +439,134 @@ foreach ($media_files as $idx => $media) {
             <!-- 구분선 -->
             <hr class="border-gray-200">
 
+            <!-- 이전/다음 게시글 -->
+            <?php if ($prev_post || $next_post) { ?>
+            <div class="p-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fa-solid fa-arrows-left-right text-purple-500 mr-1"></i> 다른 게시글
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <?php if ($prev_post) { ?>
+                    <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $prev_post['wr_id']; ?>"
+                       class="block bg-gray-50 rounded-xl overflow-hidden hover:bg-gray-100 transition-colors">
+                        <?php if ($prev_thumbnail) { ?>
+                        <div class="aspect-video relative">
+                            <img src="<?php echo $prev_thumbnail; ?>" alt="이전글" class="w-full h-full object-cover">
+                            <div class="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
+                                <i class="fa-solid fa-chevron-left mr-1"></i>이전
+                            </div>
+                        </div>
+                        <?php } else { ?>
+                        <div class="aspect-video bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fa-solid fa-chevron-left text-purple-400 text-lg"></i>
+                                <p class="text-xs text-purple-500 mt-1">이전글</p>
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <div class="p-2">
+                            <p class="text-xs text-gray-700 line-clamp-1 font-medium"><?php echo cut_str(get_text($prev_post['wr_subject']), 20); ?></p>
+                        </div>
+                    </a>
+                    <?php } else { ?>
+                    <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-center opacity-50">
+                        <p class="text-xs text-gray-400">이전 글 없음</p>
+                    </div>
+                    <?php } ?>
+
+                    <?php if ($next_post) { ?>
+                    <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $next_post['wr_id']; ?>"
+                       class="block bg-gray-50 rounded-xl overflow-hidden hover:bg-gray-100 transition-colors">
+                        <?php if ($next_thumbnail) { ?>
+                        <div class="aspect-video relative">
+                            <img src="<?php echo $next_thumbnail; ?>" alt="다음글" class="w-full h-full object-cover">
+                            <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
+                                다음<i class="fa-solid fa-chevron-right ml-1"></i>
+                            </div>
+                        </div>
+                        <?php } else { ?>
+                        <div class="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fa-solid fa-chevron-right text-blue-400 text-lg"></i>
+                                <p class="text-xs text-blue-500 mt-1">다음글</p>
+                            </div>
+                        </div>
+                        <?php } ?>
+                        <div class="p-2">
+                            <p class="text-xs text-gray-700 line-clamp-1 font-medium"><?php echo cut_str(get_text($next_post['wr_subject']), 20); ?></p>
+                        </div>
+                    </a>
+                    <?php } else { ?>
+                    <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-center opacity-50">
+                        <p class="text-xs text-gray-400">다음 글 없음</p>
+                    </div>
+                    <?php } ?>
+                </div>
+            </div>
+
+            <!-- 구분선 -->
+            <hr class="border-gray-200">
+            <?php } ?>
+
             <!-- 댓글 -->
             <div class="p-4">
-                <h3 class="font-semibold mb-4">댓글 <?php echo $write['wr_comment']; ?>개</h3>
+                <?php
+                // 댓글 페이지네이션 설정
+                $comments_per_page = 50;
+                $total_comments_count = $write['wr_comment'];
+                $total_comment_pages = max(1, ceil($total_comments_count / $comments_per_page));
+
+                // 기본값: 마지막 페이지 (최신 댓글)
+                $comment_page = isset($_GET['comment_page']) ? (int)$_GET['comment_page'] : $total_comment_pages;
+                if ($comment_page < 1) $comment_page = 1;
+                if ($comment_page > $total_comment_pages) $comment_page = $total_comment_pages;
+
+                $comment_offset = ($comment_page - 1) * $comments_per_page;
+                ?>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold">댓글 <?php echo $write['wr_comment']; ?>개</h3>
+                    <?php if ($total_comment_pages > 1) { ?>
+                    <span class="text-xs text-gray-500"><?php echo $comment_page; ?> / <?php echo $total_comment_pages; ?> 페이지</span>
+                    <?php } ?>
+                </div>
+
+                <?php if ($total_comment_pages > 1) { ?>
+                <!-- 댓글 페이지네이션 (상단) -->
+                <div class="flex items-center justify-center gap-1 mb-4 flex-wrap">
+                    <?php if ($comment_page > 1) { ?>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=1"
+                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">«</a>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $comment_page - 1; ?>"
+                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">‹ 이전</a>
+                    <?php } ?>
+
+                    <?php
+                    // 페이지 번호 표시 (최대 5개)
+                    $start_page = max(1, $comment_page - 2);
+                    $end_page = min($total_comment_pages, $start_page + 4);
+                    if ($end_page - $start_page < 4) {
+                        $start_page = max(1, $end_page - 4);
+                    }
+                    for ($p = $start_page; $p <= $end_page; $p++) {
+                        $active_class = ($p == $comment_page) ? 'bg-purple-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700';
+                    ?>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $p; ?>"
+                       class="px-3 py-1 text-xs <?php echo $active_class; ?> rounded"><?php echo $p; ?></a>
+                    <?php } ?>
+
+                    <?php if ($comment_page < $total_comment_pages) { ?>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $comment_page + 1; ?>"
+                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">다음 ›</a>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $total_comment_pages; ?>"
+                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">»</a>
+                    <?php } ?>
+                </div>
+                <?php } ?>
+
                 <div id="comment-list">
                 <?php
-                // 모든 댓글 가져오기
-                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_id ASC LIMIT 500");
+                // 페이지에 해당하는 댓글 가져오기
+                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_id ASC LIMIT {$comment_offset}, {$comments_per_page}");
 
                 // 댓글을 배열로 변환하고 계층 구조 생성
                 $all_comments = array();
@@ -518,6 +671,33 @@ foreach ($media_files as $idx => $media) {
                 }
                 ?>
                 </div>
+
+                <?php if ($total_comment_pages > 1) { ?>
+                <!-- 댓글 페이지네이션 (하단) -->
+                <div class="flex items-center justify-center gap-1 mt-4 flex-wrap">
+                    <?php if ($comment_page > 1) { ?>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=1"
+                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">«</a>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $comment_page - 1; ?>"
+                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">‹ 이전</a>
+                    <?php } ?>
+
+                    <?php
+                    for ($p = $start_page; $p <= $end_page; $p++) {
+                        $active_class = ($p == $comment_page) ? 'bg-purple-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700';
+                    ?>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $p; ?>"
+                       class="px-3 py-1 text-xs <?php echo $active_class; ?> rounded"><?php echo $p; ?></a>
+                    <?php } ?>
+
+                    <?php if ($comment_page < $total_comment_pages) { ?>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $comment_page + 1; ?>"
+                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">다음 ›</a>
+                    <a href="?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&comment_page=<?php echo $total_comment_pages; ?>"
+                       class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">»</a>
+                    <?php } ?>
+                </div>
+                <?php } ?>
             </div>
         </article>
     </main>

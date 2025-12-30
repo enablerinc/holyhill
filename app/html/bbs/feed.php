@@ -20,7 +20,10 @@ if ($member['mb_level'] < $board['bo_list_level']) {
 }
 
 // 페이지당 게시물 수 설정
-$page_rows = 30;
+$page_rows = 50;
+
+// 현재 페이지
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 
 // 정렬 파라미터 (기본값: 최신순)
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'recent';
@@ -65,7 +68,10 @@ $write_table = $g5['write_prefix'] . $bo_table;
 // 정렬 조건 (wr_datetime 기준 최신순)
 $order_by = ($sort === 'popular') ? 'wr_good DESC, wr_datetime DESC' : 'wr_datetime DESC';
 
-$sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} {$search_condition} ORDER BY {$order_by} LIMIT {$page_rows}";
+// OFFSET 계산
+$offset = ($page - 1) * $page_rows;
+
+$sql = "SELECT * FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} {$search_condition} ORDER BY {$order_by} LIMIT {$offset}, {$page_rows}";
 
 $result = sql_query($sql);
 $list = array();
@@ -77,6 +83,10 @@ while ($row = sql_fetch_array($result)) {
 $total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} {$search_condition}";
 $total_count_result = sql_fetch($total_count_sql);
 $total_count = isset($total_count_result['cnt']) ? $total_count_result['cnt'] : 0;
+
+// 총 페이지 수
+$total_pages = max(1, ceil($total_count / $page_rows));
+if ($page > $total_pages) $page = $total_pages;
 
 // 글쓰기 권한 체크
 $write_href = '';
@@ -406,200 +416,67 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
         <?php } ?>
     </section>
 
-    <!-- 더 보기 버튼 -->
-    <?php if ($total_count > $page_rows) { ?>
-    <div id="load-more-btn" class="text-center py-4">
-        <button onclick="loadMorePosts()" class="px-6 py-3 bg-lilac text-white rounded-full text-sm font-medium hover:bg-deep-purple transition-colors">
-            <i class="fa-solid fa-plus mr-2"></i>더 보기
-        </button>
-    </div>
-    <?php } ?>
+    <!-- 페이지네이션 -->
+    <?php if ($total_pages > 1) { ?>
+    <div class="px-4 py-6">
+        <!-- 페이지 정보 -->
+        <div class="text-center mb-4">
+            <span class="text-sm text-gray-500">총 <?php echo number_format($total_count); ?>개 게시물 (<?php echo $page; ?>/<?php echo $total_pages; ?> 페이지)</span>
+        </div>
 
-    <!-- 로딩 인디케이터 -->
-    <div id="loading" class="hidden text-center py-8">
-        <i class="fa-solid fa-spinner fa-spin text-3xl text-lilac"></i>
-        <p class="text-sm text-gray-500 mt-2">게시물을 불러오는 중...</p>
-    </div>
+        <!-- 페이지네이션 버튼 -->
+        <div class="flex items-center justify-center gap-1 flex-wrap">
+            <?php
+            // 검색 파라미터 유지를 위한 쿼리 스트링 생성
+            $query_params = array();
+            if ($search_keyword) {
+                $query_params['search_type'] = $search_type;
+                $query_params['search'] = $search_keyword;
+            }
+            if ($sort !== 'recent') {
+                $query_params['sort'] = $sort;
+            }
+            $base_query = http_build_query($query_params);
+            $base_url = G5_BBS_URL . '/feed.php' . ($base_query ? '?' . $base_query . '&' : '?');
+            ?>
 
-    <!-- 더 이상 게시물이 없을 때 -->
-    <div id="no-more" class="<?php echo $total_count <= $page_rows ? '' : 'hidden'; ?> text-center py-8 text-gray-500">
+            <?php if ($page > 1) { ?>
+            <a href="<?php echo $base_url; ?>page=1" class="px-3 py-2 text-sm bg-white border border-gray-200 hover:bg-gray-50 rounded-lg">«</a>
+            <a href="<?php echo $base_url; ?>page=<?php echo $page - 1; ?>" class="px-3 py-2 text-sm bg-white border border-gray-200 hover:bg-gray-50 rounded-lg">‹ 이전</a>
+            <?php } ?>
+
+            <?php
+            // 페이지 번호 계산 (최대 5개)
+            $start_page = max(1, $page - 2);
+            $end_page = min($total_pages, $start_page + 4);
+            if ($end_page - $start_page < 4) {
+                $start_page = max(1, $end_page - 4);
+            }
+
+            for ($p = $start_page; $p <= $end_page; $p++) {
+                $is_current = ($p == $page);
+                $page_class = $is_current ? 'bg-lilac text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-700';
+            ?>
+            <a href="<?php echo $base_url; ?>page=<?php echo $p; ?>" class="px-4 py-2 text-sm <?php echo $page_class; ?> rounded-lg font-medium"><?php echo $p; ?></a>
+            <?php } ?>
+
+            <?php if ($page < $total_pages) { ?>
+            <a href="<?php echo $base_url; ?>page=<?php echo $page + 1; ?>" class="px-3 py-2 text-sm bg-white border border-gray-200 hover:bg-gray-50 rounded-lg">다음 ›</a>
+            <a href="<?php echo $base_url; ?>page=<?php echo $total_pages; ?>" class="px-3 py-2 text-sm bg-white border border-gray-200 hover:bg-gray-50 rounded-lg">»</a>
+            <?php } ?>
+        </div>
+    </div>
+    <?php } elseif ($total_count > 0) { ?>
+    <!-- 게시물이 있지만 1페이지뿐일 때 -->
+    <div class="text-center py-8 text-gray-500">
         <i class="fa-solid fa-check-circle text-2xl text-lilac mb-2"></i>
         <p class="text-sm">모든 게시물을 확인했습니다</p>
     </div>
+    <?php } ?>
 
 </main>
 
 <?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
-
-<!-- 무한 스크롤 스크립트 -->
-<script>
-// 전역 변수
-let currentPage = 1;
-let isLoading = false;
-let hasMore = true;
-const sort = '<?php echo $sort; ?>';
-const searchType = '<?php echo $search_type; ?>';
-const searchKeyword = '<?php echo addslashes($search_keyword); ?>';
-const boTable = '<?php echo $bo_table; ?>';
-const totalCount = <?php echo $total_count; ?>;
-const pageRows = <?php echo $page_rows; ?>;
-const totalPages = Math.ceil(totalCount / pageRows);
-
-// 초기화: 1페이지만 있으면 더 보기 버튼 숨김
-if (totalPages <= 1) {
-    hasMore = false;
-    const loadMoreBtn = document.getElementById('load-more-btn');
-    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-}
-
-// 버튼 클릭으로 더 보기
-function loadMorePosts() {
-    if (isLoading || !hasMore) return;
-    loadMore();
-}
-
-// 스크롤 이벤트
-window.addEventListener('scroll', function() {
-    if (isLoading || !hasMore) return;
-
-    const scrollHeight = document.documentElement.scrollHeight;
-    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-    const clientHeight = document.documentElement.clientHeight;
-
-    if (scrollTop + clientHeight >= scrollHeight - 300) {
-        loadMore();
-    }
-});
-
-function loadMore() {
-    if (currentPage >= totalPages) {
-        hasMore = false;
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-        document.getElementById('no-more').classList.remove('hidden');
-        return;
-    }
-
-    isLoading = true;
-    currentPage++;
-
-    document.getElementById('loading').classList.remove('hidden');
-
-    const url = '<?php echo G5_BBS_URL; ?>/feed_ajax.php?bo_table=' + boTable +
-                '&sort=' + sort +
-                '&search_type=' + searchType +
-                '&search=' + encodeURIComponent(searchKeyword) +
-                '&page=' + currentPage +
-                '&page_rows=' + pageRows;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.items.length > 0) {
-                const feedList = document.getElementById('feed-list');
-
-                    data.items.forEach(item => {
-                        // 썸네일 결정
-                        const thumbnail = item.video_thumbnail || (item.images && item.images.length > 0 ? item.images[0] : '');
-                        const hasVideo = item.video_id && item.video_thumbnail;
-                        const hasImage = !!thumbnail;
-
-                        // 작성자 프로필 이미지
-                        let profileHTML = item.writer_photo
-                            ? `<img src="${item.writer_photo}" alt="${item.writer_nick}" class="w-5 h-5 rounded-full object-cover">`
-                            : `<div class="w-5 h-5 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
-                                <span class="text-white text-xs font-semibold">${item.writer_nick.charAt(0)}</span>
-                               </div>`;
-
-                        // 타일 카드 HTML
-                        let contentHTML = '';
-                        if (hasImage) {
-                            // 이미지가 있는 경우
-                            contentHTML = `
-                                <div class="relative aspect-square">
-                                    <img src="${thumbnail}" alt="${item.subject}" class="w-full h-full object-cover">
-                                    ${hasVideo ? `
-                                    <div class="absolute inset-0 flex items-center justify-center">
-                                        <div class="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center">
-                                            <i class="fa-solid fa-play text-white text-sm ml-0.5"></i>
-                                        </div>
-                                    </div>` : ''}
-                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                                        <div class="flex items-center gap-2 text-white text-xs">
-                                            <span class="flex items-center gap-1">
-                                                <i class="fa-solid fa-heart"></i>
-                                                ${item.good_count}
-                                            </span>
-                                            <span class="flex items-center gap-1">
-                                                <i class="fa-regular fa-comment"></i>
-                                                ${item.comment_count}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        } else {
-                            // 텍스트만 있는 경우
-                            contentHTML = `
-                                <div class="aspect-square bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex flex-col justify-center">
-                                    <p class="text-gray-800 text-sm leading-relaxed line-clamp-5 text-center">${item.text_content || ''}</p>
-                                    <div class="mt-auto pt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
-                                        <span class="flex items-center gap-1">
-                                            <i class="fa-solid fa-heart text-red-400"></i>
-                                            ${item.good_count}
-                                        </span>
-                                        <span class="flex items-center gap-1">
-                                            <i class="fa-regular fa-comment"></i>
-                                            ${item.comment_count}
-                                        </span>
-                                    </div>
-                                </div>
-                            `;
-                        }
-
-                        const itemHTML = `
-                            <a href="${item.view_href}" class="block">
-                                <article class="bg-white rounded-xl shadow-warm overflow-hidden hover:shadow-lg transition-shadow">
-                                    ${contentHTML}
-                                    <div class="p-2">
-                                        <div class="flex items-center gap-2">
-                                            ${profileHTML}
-                                            <span class="text-xs text-gray-700 font-medium truncate flex-1">${item.writer_nick}</span>
-                                            <span class="text-xs text-gray-400">${item.display_date}</span>
-                                        </div>
-                                    </div>
-                                </article>
-                            </a>
-                        `;
-                        feedList.insertAdjacentHTML('beforeend', itemHTML);
-                    });
-
-                    isLoading = false;
-                    document.getElementById('loading').classList.add('hidden');
-
-                    // 마지막 페이지면 더 보기 버튼 숨김
-                    if (currentPage >= totalPages) {
-                        hasMore = false;
-                        const loadMoreBtn = document.getElementById('load-more-btn');
-                        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-                        document.getElementById('no-more').classList.remove('hidden');
-                    }
-
-            } else {
-                hasMore = false;
-                const loadMoreBtn = document.getElementById('load-more-btn');
-                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('no-more').classList.remove('hidden');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            isLoading = false;
-            document.getElementById('loading').classList.add('hidden');
-        });
-}
-</script>
 
 <!-- 알림 위젯 -->
 <?php if ($is_member) { ?>
