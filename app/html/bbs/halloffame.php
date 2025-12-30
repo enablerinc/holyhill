@@ -93,15 +93,7 @@ while ($row = sql_fetch_array($member_points_result)) {
 }
 
 // ===========================
-// 2. Top 3 회원 선정
-// ===========================
-$top_members = array();
-for ($i = 0; $i < min(3, count($all_members)); $i++) {
-    $top_members[] = array_merge($all_members[$i], array('rank' => $i + 1));
-}
-
-// ===========================
-// 3. 베스트 성산인 (3만점 이상 - Top 3 포함)
+// 2. 베스트 성산인 (3만점 이상)
 // ===========================
 $best_members = array();
 $rank = 1;
@@ -114,7 +106,7 @@ for ($i = 0; $i < count($all_members); $i++) {
 $total_best = count($best_members);
 
 // ===========================
-// 4. 이달의 활동 통계
+// 3. 이달의 활동 통계
 // ===========================
 
 // 총 게시물 수 (해당 월)
@@ -192,7 +184,7 @@ $attendance_result = sql_fetch($attendance_sql);
 $total_attendance = $attendance_result ? (int)$attendance_result['cnt'] : 0;
 
 // ===========================
-// 5. 출석 우수자 통계
+// 4. 출석 우수자 통계
 // ===========================
 
 // 이번 달 총 일수 계산
@@ -511,81 +503,6 @@ function getProfileImage($mb_id) {
     </section>
 
 
-
-    <section id="top-three-section" class="px-4 mb-6">
-        <div class="flex items-center gap-2 mb-4">
-            <i class="fa-solid fa-crown text-divine-lilac text-lg"></i>
-            <h3 class="text-lg font-semibold text-grace-green">이달의 베스트 성산인</h3>
-        </div>
-
-        <?php if (count($top_members) > 0): ?>
-        <div class="flex gap-3 overflow-x-auto pb-2">
-            <?php foreach ($top_members as $idx => $member): ?>
-            <?php
-                $border_class = '';
-                $gradient_class = '';
-                $badge_color = '';
-
-                if ($member['rank'] == 1) {
-                    $border_class = 'border-2 border-divine-lilac/30';
-                    $gradient_class = 'golden-gradient';
-                    $badge_color = 'bg-divine-lilac';
-                    $shadow_class = 'shadow-divine';
-                    $crown_class = 'crown-shadow';
-                } elseif ($member['rank'] == 2) {
-                    $border_class = 'border border-gray-200';
-                    $gradient_class = 'silver-gradient';
-                    $badge_color = 'bg-lilac';
-                    $shadow_class = 'shadow-warm';
-                    $crown_class = '';
-                } else {
-                    $border_class = 'border border-lilac/20';
-                    $gradient_class = 'bronze-gradient';
-                    $badge_color = 'bg-deep-purple';
-                    $shadow_class = 'shadow-warm';
-                    $crown_class = '';
-                }
-
-                $width_class = $member['rank'] == 1 ? 'min-w-[140px]' : 'min-w-[130px]';
-                $img_size = $member['rank'] == 1 ? 'w-20 h-20' : 'w-18 h-18';
-            ?>
-
-            <div class="<?php echo $width_class; ?> bg-white rounded-2xl p-4 <?php echo $shadow_class; ?> <?php echo $border_class; ?>">
-                <div class="text-center">
-                    <div class="relative mb-3">
-                        <div class="<?php echo $img_size; ?> <?php echo $gradient_class; ?> rounded-full p-1 mx-auto <?php echo $crown_class; ?>">
-                            <img src="<?php echo $member['avatar']; ?>" class="w-full h-full rounded-full object-cover">
-                        </div>
-                        <?php if ($member['rank'] == 1): ?>
-                        <div class="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                            <i class="fa-solid fa-crown text-divine-lilac text-xl crown-shadow"></i>
-                        </div>
-                        <?php endif; ?>
-                        <div class="absolute -bottom-1 -right-1 <?php echo $member['rank'] == 1 ? 'w-6 h-6' : 'w-5 h-5'; ?> <?php echo $badge_color; ?> rounded-full flex items-center justify-center">
-                            <span class="text-white text-xs font-bold"><?php echo $member['rank']; ?></span>
-                        </div>
-                    </div>
-                    <h4 class="font-semibold text-grace-green text-sm mb-1"><?php echo $member['name']; ?></h4>
-                    <p class="text-xs text-gray-500 mb-2"><?php echo $member['nick']; ?></p>
-                    <div class="flex items-center justify-center gap-1 mb-2">
-                        <i class="fa-solid fa-cross text-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?> text-xs"></i>
-                        <span class="text-sm font-bold text-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'lilac' : 'deep-purple'); ?>"><?php echo number_format($member['points']); ?>점</span>
-                    </div>
-                    <div class="flex flex-wrap gap-1 justify-center">
-                        <span class="text-xs bg-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full">글 <?php echo $member['post_count']; ?>개</span>
-                        <span class="text-xs bg-<?php echo $member['rank'] == 1 ? 'divine-lilac' : ($member['rank'] == 2 ? 'soft-lavender' : 'deep-purple'); ?>/20 text-deep-purple px-2 py-1 rounded-full">댓글 <?php echo $member['comment_count']; ?>개</span>
-                    </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <?php else: ?>
-        <div class="bg-white rounded-2xl p-8 shadow-warm text-center">
-            <i class="fa-solid fa-crown text-gray-300 text-5xl mb-3"></i>
-            <p class="text-sm text-gray-400">이번 달 활동 내역이 없습니다.</p>
-        </div>
-        <?php endif; ?>
-    </section>
 
     <section id="hall-of-faith" class="px-4">
         <div class="flex items-center justify-between mb-4">

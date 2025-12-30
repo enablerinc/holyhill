@@ -537,27 +537,31 @@ function convert_youtube_to_iframe_index($content) {
                             $profile_img = G5_DATA_URL.'/member_image/'.substr($best['mb_id'], 0, 2).'/'.$best['mb_id'].'.gif';
                         }
 
-                        // 순위 배지 (1,2,3등만 메달)
+                        // 3만점 이상인 경우에만 하이라이트 및 메달/등수 표시
+                        $is_best_member = ($best['monthly_points'] >= $best_member_point);
+
+                        // 순위 배지 (3만점 이상인 경우에만 1,2,3등 메달)
                         $rank_badge = '';
                         $rank_class = '';
-                        if ($rank == 1) {
-                            $rank_badge = '🥇';
-                            $rank_class = 'text-yellow-500';
-                        } elseif ($rank == 2) {
-                            $rank_badge = '🥈';
-                            $rank_class = 'text-gray-400';
-                        } elseif ($rank == 3) {
-                            $rank_badge = '🥉';
-                            $rank_class = 'text-orange-400';
+                        if ($is_best_member) {
+                            if ($rank == 1) {
+                                $rank_badge = '🥇';
+                                $rank_class = 'text-yellow-500';
+                            } elseif ($rank == 2) {
+                                $rank_badge = '🥈';
+                                $rank_class = 'text-gray-400';
+                            } elseif ($rank == 3) {
+                                $rank_badge = '🥉';
+                                $rank_class = 'text-orange-400';
+                            }
                         }
 
-                        // 3만점 이상이면 하이라이트 적용 (1,2,3등도 포함)
-                        $is_best_member = ($best['monthly_points'] >= $best_member_point);
-                        $highlight_class = ($rank <= 3 || $is_best_member) ? 'bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-2 -mx-2 border border-purple-100' : '';
-                        $point_class = ($rank <= 3 || $is_best_member) ? 'text-purple-600' : 'text-gray-600';
+                        // 3만점 이상이면 하이라이트 적용
+                        $highlight_class = $is_best_member ? 'bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-2 -mx-2 border border-purple-100' : '';
+                        $point_class = $is_best_member ? 'text-purple-600' : 'text-gray-600';
                     ?>
                     <div class="flex items-center gap-3 <?php echo $highlight_class; ?>">
-                        <?php if ($rank <= 3) { ?>
+                        <?php if ($is_best_member && $rank <= 3) { ?>
                         <span class="text-lg w-6 text-center"><?php echo $rank_badge; ?></span>
                         <?php } elseif ($is_best_member) { ?>
                         <span class="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs text-white font-bold"><?php echo $rank; ?></span>
