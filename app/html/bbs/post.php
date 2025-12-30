@@ -127,7 +127,7 @@ $image_exts = array('jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg');
 $video_exts = array('mp4', 'webm', 'mov', 'avi', 'mkv');
 $audio_exts = array('mp3', 'm4a', 'wav', 'flac', 'aac', 'wma');
 
-$file_result = sql_query("SELECT bf_file, bf_type, bf_filesize FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' ORDER BY bf_no");
+$file_result = sql_query("SELECT bf_file, bf_source, bf_type, bf_filesize FROM {$g5['board_file_table']} WHERE bo_table = '{$bo_table}' AND wr_id = '{$wr_id}' ORDER BY bf_no");
 while ($file = sql_fetch_array($file_result)) {
     $file_ext = strtolower(pathinfo($file['bf_file'], PATHINFO_EXTENSION));
 
@@ -141,8 +141,12 @@ while ($file = sql_fetch_array($file_result)) {
         $file_type = 'audio';
     }
 
+    // 원본 파일명 (bf_source가 없으면 bf_file 사용)
+    $source_name = !empty($file['bf_source']) ? $file['bf_source'] : $file['bf_file'];
+
     $media_files[] = array(
         'file' => $file['bf_file'],
+        'source' => $source_name,
         'type' => $file_type,
         'size' => isset($file['bf_filesize']) ? $file['bf_filesize'] : 0
     );
@@ -322,8 +326,10 @@ function replace_audio_placeholders($content, $media_files, $bo_table) {
         $index = intval($matches[1]) - 1;
         if (isset($media_files[$index]) && $media_files[$index]['type'] === 'audio') {
             $audio_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media_files[$index]['file'];
-            $file_name = pathinfo($media_files[$index]['file'], PATHINFO_FILENAME);
-            $file_ext = strtoupper(pathinfo($media_files[$index]['file'], PATHINFO_EXTENSION));
+            // 원본 파일명 사용
+            $source_name = isset($media_files[$index]['source']) ? $media_files[$index]['source'] : $media_files[$index]['file'];
+            $file_name = pathinfo($source_name, PATHINFO_FILENAME);
+            $file_ext = strtoupper(pathinfo($source_name, PATHINFO_EXTENSION));
             return '<div class="audio-container my-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -351,13 +357,15 @@ function replace_file_placeholders($content, $media_files, $bo_table) {
         $index = intval($matches[1]) - 1;
         if (isset($media_files[$index]) && $media_files[$index]['type'] === 'file') {
             $file_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media_files[$index]['file'];
-            $file_name = pathinfo($media_files[$index]['file'], PATHINFO_FILENAME);
-            $file_ext = strtolower(pathinfo($media_files[$index]['file'], PATHINFO_EXTENSION));
+            // 원본 파일명 사용
+            $source_name = isset($media_files[$index]['source']) ? $media_files[$index]['source'] : $media_files[$index]['file'];
+            $file_name = pathinfo($source_name, PATHINFO_FILENAME);
+            $file_ext = strtolower(pathinfo($source_name, PATHINFO_EXTENSION));
             $file_size = isset($media_files[$index]['size']) ? format_file_size($media_files[$index]['size']) : '';
             $file_icon = get_file_icon($file_ext);
 
             return '<div class="file-container my-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                <a href="'.$file_url.'" download class="flex items-center gap-3 no-underline">
+                <a href="'.$file_url.'" download="'.htmlspecialchars($source_name).'" class="flex items-center gap-3 no-underline">
                     <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                         <i class="fa-solid '.$file_icon.' text-white text-lg"></i>
                     </div>
@@ -526,8 +534,10 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                 <div class="space-y-4 mb-4">
                     <?php foreach ($gallery_media as $media) {
                         $media_url = G5_DATA_URL.'/file/'.$bo_table.'/'.$media['file'];
-                        $file_name = pathinfo($media['file'], PATHINFO_FILENAME);
-                        $file_ext = strtoupper(pathinfo($media['file'], PATHINFO_EXTENSION));
+                        // 원본 파일명 사용
+                        $source_name = isset($media['source']) ? $media['source'] : $media['file'];
+                        $file_name = pathinfo($source_name, PATHINFO_FILENAME);
+                        $file_ext = strtoupper(pathinfo($source_name, PATHINFO_EXTENSION));
                     ?>
                     <div class="w-full">
                         <?php if ($media['type'] === 'video') { ?>
@@ -561,7 +571,7 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                             $file_size = isset($media['size']) ? format_file_size($media['size']) : '';
                             ?>
                             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                                <a href="<?php echo $media_url; ?>" download class="flex items-center gap-3 no-underline">
+                                <a href="<?php echo $media_url; ?>" download="<?php echo htmlspecialchars($source_name); ?>" class="flex items-center gap-3 no-underline">
                                     <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                                         <i class="fa-solid <?php echo $file_icon; ?> text-white text-lg"></i>
                                     </div>
