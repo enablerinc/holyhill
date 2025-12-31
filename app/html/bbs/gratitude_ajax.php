@@ -85,7 +85,7 @@ foreach ($grouped_list as $date_key => $items) {
 ?>
 <!-- 날짜 구분 -->
 <div class="date-divider flex justify-center py-4">
-    <span class="bg-warm-cream px-4 py-1 text-sm font-medium text-gentle-brown/80 relative z-10">
+    <span class="bg-warm-beige px-4 py-1 text-sm font-medium text-grace-green/80 relative z-10">
         <?php echo get_date_label($date_key); ?>
     </span>
 </div>
@@ -129,14 +129,14 @@ foreach ($grouped_list as $date_key => $items) {
         // 작성자 페이지 URL
         $user_href = G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($writer_id).'&wr_id='.$wr_id;
     ?>
-    <a href="<?php echo $user_href; ?>" class="diary-item block bg-white rounded-2xl p-4 shadow-sm border border-soft-peach/30 hover:shadow-md">
+    <a href="<?php echo $user_href; ?>" class="diary-item block bg-white rounded-2xl p-4 shadow-sm border border-soft-lavender/30 hover:shadow-md">
         <div class="flex items-start gap-3">
             <!-- 프로필 -->
             <div class="flex-shrink-0">
                 <?php if ($writer_photo) { ?>
-                <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-11 h-11 rounded-full object-cover border-2 border-soft-peach">
+                <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-11 h-11 rounded-full object-cover border-2 border-soft-lavender">
                 <?php } else { ?>
-                <div class="w-11 h-11 rounded-full bg-gradient-to-br from-warm-pink to-deep-rose flex items-center justify-center border-2 border-soft-peach">
+                <div class="w-11 h-11 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center border-2 border-soft-lavender">
                     <span class="text-white font-bold text-sm"><?php echo mb_substr($writer_nick, 0, 1, 'UTF-8'); ?></span>
                 </div>
                 <?php } ?>
@@ -145,18 +145,18 @@ foreach ($grouped_list as $date_key => $items) {
             <!-- 내용 -->
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between mb-1">
-                    <span class="font-semibold text-gentle-brown text-sm"><?php echo $writer_nick; ?></span>
-                    <span class="text-xs text-gentle-brown/50"><?php echo get_time_ago_gratitude($item['wr_datetime']); ?></span>
+                    <span class="font-semibold text-grace-green text-sm"><?php echo $writer_nick; ?></span>
+                    <span class="text-xs text-grace-green/50"><?php echo get_time_ago_gratitude($item['wr_datetime']); ?></span>
                 </div>
-                <p class="text-gentle-brown/80 text-sm leading-relaxed line-clamp-2"><?php echo $content_preview; ?></p>
+                <p class="text-grace-green/80 text-sm leading-relaxed line-clamp-2"><?php echo $content_preview; ?></p>
 
                 <!-- 좋아요/댓글 -->
                 <div class="flex items-center gap-4 mt-2">
-                    <span class="flex items-center gap-1 text-xs text-gentle-brown/50">
-                        <i class="fa-solid fa-heart text-warm-pink"></i>
+                    <span class="flex items-center gap-1 text-xs text-grace-green/50">
+                        <i class="fa-solid fa-heart text-lilac"></i>
                         <?php echo number_format($good_count); ?>
                     </span>
-                    <span class="flex items-center gap-1 text-xs text-gentle-brown/50">
+                    <span class="flex items-center gap-1 text-xs text-grace-green/50">
                         <i class="fa-regular fa-comment"></i>
                         <?php echo number_format($comment_count); ?>
                     </span>
@@ -165,7 +165,7 @@ foreach ($grouped_list as $date_key => $items) {
 
             <!-- 화살표 -->
             <div class="flex-shrink-0 self-center">
-                <i class="fa-solid fa-chevron-right text-gentle-brown/30 text-sm"></i>
+                <i class="fa-solid fa-chevron-right text-grace-green/30 text-sm"></i>
             </div>
         </div>
     </a>

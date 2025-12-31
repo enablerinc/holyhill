@@ -93,22 +93,22 @@ $random_prompt = $prompts[array_rand($prompts)];
         ::-webkit-scrollbar { display: none; }
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #FDF8F3;
+            background-color: #EEF3F8;
         }
         textarea {
             resize: none;
         }
         textarea::placeholder {
-            color: #C4B5A8;
+            color: #9CA3AF;
         }
         .char-counter {
             transition: color 0.3s;
         }
         .char-counter.warning {
-            color: #E8A598;
+            color: #B19CD9;
         }
         .char-counter.danger {
-            color: #C44569;
+            color: #6B46C1;
         }
         @keyframes float {
             0%, 100% { transform: translateY(0); }
@@ -123,28 +123,27 @@ $random_prompt = $prompts[array_rand($prompts)];
             theme: {
                 extend: {
                     colors: {
-                        'warm-cream': '#FDF8F3',
-                        'soft-peach': '#FEF3E8',
-                        'gentle-brown': '#8B7355',
-                        'warm-pink': '#E8A598',
-                        'deep-rose': '#C44569',
-                        'muted-sage': '#A8B5A0'
+                        'warm-beige': '#EEF3F8',
+                        'soft-lavender': '#E8E2F7',
+                        'grace-green': '#6B705C',
+                        'lilac': '#B19CD9',
+                        'deep-purple': '#6B46C1'
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-warm-cream min-h-screen">
+<body class="bg-warm-beige min-h-screen">
 
 <!-- 헤더 -->
-<header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-peach shadow-sm">
+<header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
     <div class="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
         <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="w-10 h-10 flex items-center justify-center -ml-2">
-            <i class="fa-solid fa-xmark text-gentle-brown text-xl"></i>
+            <i class="fa-solid fa-xmark text-grace-green text-xl"></i>
         </a>
-        <h1 class="text-base font-bold text-gentle-brown"><?php echo $w == 'u' ? '감사일기 수정' : '감사일기'; ?></h1>
-        <button type="button" id="btn_submit" onclick="submitDiary()" class="px-4 py-2 bg-gradient-to-r from-warm-pink to-deep-rose text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-shadow">
+        <h1 class="text-base font-bold text-grace-green"><?php echo $w == 'u' ? '감사일기 수정' : '감사일기'; ?></h1>
+        <button type="button" id="btn_submit" onclick="submitDiary()" class="px-4 py-2 bg-gradient-to-r from-lilac to-deep-purple text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-shadow">
             완료
         </button>
     </div>
@@ -153,14 +152,14 @@ $random_prompt = $prompts[array_rand($prompts)];
 <main class="pt-20 pb-8 max-w-2xl mx-auto px-4">
 
     <!-- 날짜 카드 -->
-    <div class="bg-white rounded-2xl p-4 shadow-sm border border-soft-peach/50 mb-4">
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-soft-lavender/50 mb-4">
         <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-gradient-to-br from-warm-pink to-deep-rose rounded-xl flex items-center justify-center shadow-md float-animation">
-                <i class="fa-solid fa-heart text-white text-lg"></i>
+            <div class="w-12 h-12 bg-gradient-to-br from-lilac to-deep-purple rounded-xl flex items-center justify-center shadow-md float-animation">
+                <i class="fa-solid fa-book text-white text-lg"></i>
             </div>
             <div>
-                <p class="text-lg font-bold text-gentle-brown"><?php echo $today_date; ?></p>
-                <p class="text-sm text-gentle-brown/60"><?php echo $today_dow; ?>요일의 감사</p>
+                <p class="text-lg font-bold text-grace-green"><?php echo $today_date; ?></p>
+                <p class="text-sm text-grace-green/60"><?php echo $today_dow; ?>요일의 감사</p>
             </div>
         </div>
     </div>
@@ -175,20 +174,20 @@ $random_prompt = $prompts[array_rand($prompts)];
         <input type="hidden" name="html" value="html1">
         <input type="hidden" name="wr_subject" value="<?php echo $today_date; ?> 감사일기">
 
-        <div class="bg-white rounded-3xl shadow-sm border border-soft-peach/50 overflow-hidden">
+        <div class="bg-white rounded-3xl shadow-sm border border-soft-lavender/50 overflow-hidden">
             <!-- 프로필 영역 -->
-            <div class="px-5 py-4 border-b border-soft-peach/30">
+            <div class="px-5 py-4 border-b border-soft-lavender/30">
                 <div class="flex items-center gap-3">
                     <?php if ($profile_photo) { ?>
-                    <img src="<?php echo $profile_photo; ?>" alt="<?php echo $member_name; ?>" class="w-12 h-12 rounded-full object-cover border-2 border-soft-peach">
+                    <img src="<?php echo $profile_photo; ?>" alt="<?php echo $member_name; ?>" class="w-12 h-12 rounded-full object-cover border-2 border-soft-lavender">
                     <?php } else { ?>
-                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-warm-pink to-deep-rose flex items-center justify-center border-2 border-soft-peach">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center border-2 border-soft-lavender">
                         <span class="text-white font-bold text-lg"><?php echo mb_substr($member_name, 0, 1, 'UTF-8'); ?></span>
                     </div>
                     <?php } ?>
                     <div>
-                        <p class="font-semibold text-gentle-brown"><?php echo $member_name; ?></p>
-                        <p class="text-xs text-gentle-brown/50">감사일기를 기록해요</p>
+                        <p class="font-semibold text-grace-green"><?php echo $member_name; ?></p>
+                        <p class="text-xs text-grace-green/50">감사일기를 기록해요</p>
                     </div>
                 </div>
             </div>
@@ -198,7 +197,7 @@ $random_prompt = $prompts[array_rand($prompts)];
                 <textarea
                     name="wr_content"
                     id="wr_content"
-                    class="w-full min-h-[250px] border-none focus:outline-none focus:ring-0 text-gentle-brown text-base leading-relaxed placeholder-gentle-brown/40"
+                    class="w-full min-h-[250px] border-none focus:outline-none focus:ring-0 text-grace-green text-base leading-relaxed placeholder-grace-green/40"
                     placeholder="<?php echo $random_prompt; ?>"
                     maxlength="2000"
                     oninput="updateCharCount()"
@@ -206,11 +205,11 @@ $random_prompt = $prompts[array_rand($prompts)];
             </div>
 
             <!-- 하단 정보 -->
-            <div class="px-5 py-3 bg-warm-cream/50 border-t border-soft-peach/30">
+            <div class="px-5 py-3 bg-warm-beige/50 border-t border-soft-lavender/30">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <i class="fa-regular fa-lightbulb text-warm-pink"></i>
-                        <span class="text-xs text-gentle-brown/60">감사하는 마음은 행복을 부릅니다</span>
+                        <i class="fa-regular fa-lightbulb text-lilac"></i>
+                        <span class="text-xs text-grace-green/60">감사하는 마음은 행복을 부릅니다</span>
                     </div>
                     <span class="text-xs char-counter" id="charCounter">
                         <span id="currentChars">0</span>/2000
@@ -220,9 +219,9 @@ $random_prompt = $prompts[array_rand($prompts)];
         </div>
 
         <!-- 감사 힌트 -->
-        <div class="mt-6 bg-white/80 rounded-2xl p-4 border border-soft-peach/30">
-            <p class="text-sm text-gentle-brown/70 mb-3 font-medium">
-                <i class="fa-solid fa-sparkles text-warm-pink mr-1"></i>
+        <div class="mt-6 bg-white/80 rounded-2xl p-4 border border-soft-lavender/30">
+            <p class="text-sm text-grace-green/70 mb-3 font-medium">
+                <i class="fa-solid fa-sparkles text-lilac mr-1"></i>
                 이런 것도 감사할 수 있어요
             </p>
             <div class="flex flex-wrap gap-2">
@@ -230,7 +229,7 @@ $random_prompt = $prompts[array_rand($prompts)];
                 $hints = array('건강', '가족', '친구', '맛있는 음식', '좋은 날씨', '새로운 배움', '작은 친절', '따뜻한 햇살');
                 foreach ($hints as $hint) {
                 ?>
-                <button type="button" onclick="insertHint('<?php echo $hint; ?>')" class="px-3 py-1.5 bg-soft-peach/70 text-gentle-brown text-sm rounded-full hover:bg-warm-pink/30 transition-colors">
+                <button type="button" onclick="insertHint('<?php echo $hint; ?>')" class="px-3 py-1.5 bg-soft-lavender/70 text-grace-green text-sm rounded-full hover:bg-lilac/30 transition-colors">
                     <?php echo $hint; ?>
                 </button>
                 <?php } ?>

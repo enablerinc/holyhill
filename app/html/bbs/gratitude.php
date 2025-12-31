@@ -110,13 +110,13 @@ function get_date_label($date_str) {
         ::-webkit-scrollbar { display: none; }
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #FDF8F3;
+            background-color: #EEF3F8;
         }
         .diary-item {
             transition: all 0.2s ease;
         }
         .diary-item:active {
-            background-color: #FEF3E8;
+            background-color: #E8E2F7;
             transform: scale(0.99);
         }
         .date-divider {
@@ -129,13 +129,7 @@ function get_date_label($date_str) {
             right: 0;
             top: 50%;
             height: 1px;
-            background: linear-gradient(to right, transparent, #E8DDD4, transparent);
-        }
-        .gradient-heart {
-            background: linear-gradient(135deg, #FF6B9D 0%, #C44569 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            background: linear-gradient(to right, transparent, #E8E2F7, transparent);
         }
     </style>
     <script>
@@ -143,34 +137,33 @@ function get_date_label($date_str) {
             theme: {
                 extend: {
                     colors: {
-                        'warm-cream': '#FDF8F3',
-                        'soft-peach': '#FEF3E8',
-                        'gentle-brown': '#8B7355',
-                        'warm-pink': '#E8A598',
-                        'deep-rose': '#C44569',
-                        'muted-sage': '#A8B5A0'
+                        'warm-beige': '#EEF3F8',
+                        'soft-lavender': '#E8E2F7',
+                        'grace-green': '#6B705C',
+                        'lilac': '#B19CD9',
+                        'deep-purple': '#6B46C1'
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-warm-cream">
+<body class="bg-warm-beige">
 
 <!-- 헤더 -->
-<header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-peach shadow-sm">
+<header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
     <div class="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-gradient-to-br from-warm-pink to-deep-rose rounded-xl flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-heart text-white text-sm"></i>
+            <div class="w-9 h-9 bg-gradient-to-br from-lilac to-deep-purple rounded-xl flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-book text-white text-sm"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-gentle-brown">감사일기</h1>
-                <p class="text-xs text-gentle-brown/60">매일 감사를 기록해요</p>
+                <h1 class="text-lg font-bold text-grace-green">감사일기</h1>
+                <p class="text-xs text-grace-green/60">매일 감사를 기록해요</p>
             </div>
         </div>
         <?php if ($write_href) { ?>
-        <a href="<?php echo $write_href; ?>" class="w-10 h-10 bg-gradient-to-br from-warm-pink to-deep-rose rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
+        <a href="<?php echo $write_href; ?>" class="w-10 h-10 bg-gradient-to-br from-lilac to-deep-purple rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
             <i class="fa-solid fa-plus text-white"></i>
         </a>
         <?php } ?>
@@ -182,29 +175,29 @@ function get_date_label($date_str) {
     <?php if ($total_count > 0) { ?>
     <!-- 통계 카드 -->
     <div class="px-4 py-3">
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-soft-peach/50">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-soft-lavender/50">
             <div class="flex items-center justify-around text-center">
                 <div>
-                    <p class="text-2xl font-bold text-deep-rose"><?php echo number_format($total_count); ?></p>
-                    <p class="text-xs text-gentle-brown/70">전체 감사</p>
+                    <p class="text-2xl font-bold text-deep-purple"><?php echo number_format($total_count); ?></p>
+                    <p class="text-xs text-grace-green/70">전체 감사</p>
                 </div>
-                <div class="w-px h-10 bg-soft-peach"></div>
+                <div class="w-px h-10 bg-soft-lavender"></div>
                 <div>
                     <?php
                     $today_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 AND DATE(wr_datetime) = CURDATE()";
                     $today_count = sql_fetch($today_count_sql)['cnt'];
                     ?>
-                    <p class="text-2xl font-bold text-warm-pink"><?php echo number_format($today_count); ?></p>
-                    <p class="text-xs text-gentle-brown/70">오늘의 감사</p>
+                    <p class="text-2xl font-bold text-lilac"><?php echo number_format($today_count); ?></p>
+                    <p class="text-xs text-grace-green/70">오늘의 감사</p>
                 </div>
-                <div class="w-px h-10 bg-soft-peach"></div>
+                <div class="w-px h-10 bg-soft-lavender"></div>
                 <div>
                     <?php
                     $writer_count_sql = "SELECT COUNT(DISTINCT mb_id) as cnt FROM {$write_table} WHERE wr_is_comment = 0 AND mb_id != ''";
                     $writer_count = sql_fetch($writer_count_sql)['cnt'];
                     ?>
-                    <p class="text-2xl font-bold text-muted-sage"><?php echo number_format($writer_count); ?></p>
-                    <p class="text-xs text-gentle-brown/70">참여자</p>
+                    <p class="text-2xl font-bold text-grace-green"><?php echo number_format($writer_count); ?></p>
+                    <p class="text-xs text-grace-green/70">참여자</p>
                 </div>
             </div>
         </div>
@@ -219,7 +212,7 @@ function get_date_label($date_str) {
         ?>
         <!-- 날짜 구분 -->
         <div class="date-divider flex justify-center py-4">
-            <span class="bg-warm-cream px-4 py-1 text-sm font-medium text-gentle-brown/80 relative z-10">
+            <span class="bg-warm-beige px-4 py-1 text-sm font-medium text-grace-green/80 relative z-10">
                 <?php echo get_date_label($date_key); ?>
             </span>
         </div>
@@ -263,14 +256,14 @@ function get_date_label($date_str) {
                 // 작성자 페이지 URL
                 $user_href = G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($writer_id).'&wr_id='.$wr_id;
             ?>
-            <a href="<?php echo $user_href; ?>" class="diary-item block bg-white rounded-2xl p-4 shadow-sm border border-soft-peach/30 hover:shadow-md">
+            <a href="<?php echo $user_href; ?>" class="diary-item block bg-white rounded-2xl p-4 shadow-sm border border-soft-lavender/30 hover:shadow-md">
                 <div class="flex items-start gap-3">
                     <!-- 프로필 -->
                     <div class="flex-shrink-0">
                         <?php if ($writer_photo) { ?>
-                        <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-11 h-11 rounded-full object-cover border-2 border-soft-peach">
+                        <img src="<?php echo $writer_photo; ?>" alt="<?php echo $writer_nick; ?>" class="w-11 h-11 rounded-full object-cover border-2 border-soft-lavender">
                         <?php } else { ?>
-                        <div class="w-11 h-11 rounded-full bg-gradient-to-br from-warm-pink to-deep-rose flex items-center justify-center border-2 border-soft-peach">
+                        <div class="w-11 h-11 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center border-2 border-soft-lavender">
                             <span class="text-white font-bold text-sm"><?php echo mb_substr($writer_nick, 0, 1, 'UTF-8'); ?></span>
                         </div>
                         <?php } ?>
@@ -279,18 +272,18 @@ function get_date_label($date_str) {
                     <!-- 내용 -->
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="font-semibold text-gentle-brown text-sm"><?php echo $writer_nick; ?></span>
-                            <span class="text-xs text-gentle-brown/50"><?php echo get_time_ago_gratitude($item['wr_datetime']); ?></span>
+                            <span class="font-semibold text-grace-green text-sm"><?php echo $writer_nick; ?></span>
+                            <span class="text-xs text-grace-green/50"><?php echo get_time_ago_gratitude($item['wr_datetime']); ?></span>
                         </div>
-                        <p class="text-gentle-brown/80 text-sm leading-relaxed line-clamp-2"><?php echo $content_preview; ?></p>
+                        <p class="text-grace-green/80 text-sm leading-relaxed line-clamp-2"><?php echo $content_preview; ?></p>
 
                         <!-- 좋아요/댓글 -->
                         <div class="flex items-center gap-4 mt-2">
-                            <span class="flex items-center gap-1 text-xs text-gentle-brown/50">
-                                <i class="fa-solid fa-heart text-warm-pink"></i>
+                            <span class="flex items-center gap-1 text-xs text-grace-green/50">
+                                <i class="fa-solid fa-heart text-lilac"></i>
                                 <?php echo number_format($good_count); ?>
                             </span>
-                            <span class="flex items-center gap-1 text-xs text-gentle-brown/50">
+                            <span class="flex items-center gap-1 text-xs text-grace-green/50">
                                 <i class="fa-regular fa-comment"></i>
                                 <?php echo number_format($comment_count); ?>
                             </span>
@@ -299,7 +292,7 @@ function get_date_label($date_str) {
 
                     <!-- 화살표 -->
                     <div class="flex-shrink-0 self-center">
-                        <i class="fa-solid fa-chevron-right text-gentle-brown/30 text-sm"></i>
+                        <i class="fa-solid fa-chevron-right text-grace-green/30 text-sm"></i>
                     </div>
                 </div>
             </a>
@@ -311,13 +304,13 @@ function get_date_label($date_str) {
         ?>
         <!-- 게시글 없음 -->
         <div class="text-center py-20">
-            <div class="w-20 h-20 bg-soft-peach rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-heart text-3xl text-warm-pink"></i>
+            <div class="w-20 h-20 bg-soft-lavender rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-book text-3xl text-lilac"></i>
             </div>
-            <p class="text-gentle-brown font-medium mb-2">아직 감사일기가 없어요</p>
-            <p class="text-gentle-brown/60 text-sm mb-6">첫 번째 감사를 기록해 보세요!</p>
+            <p class="text-grace-green font-medium mb-2">아직 감사일기가 없어요</p>
+            <p class="text-grace-green/60 text-sm mb-6">첫 번째 감사를 기록해 보세요!</p>
             <?php if ($write_href) { ?>
-            <a href="<?php echo $write_href; ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-warm-pink to-deep-rose text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-shadow">
+            <a href="<?php echo $write_href; ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-lilac to-deep-purple text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-shadow">
                 <i class="fa-solid fa-plus"></i>
                 감사 기록하기
             </a>
@@ -329,7 +322,7 @@ function get_date_label($date_str) {
     <!-- 더 보기 버튼 -->
     <?php if ($total_pages > 1 && $page < $total_pages) { ?>
     <div class="px-4 py-6 text-center">
-        <button onclick="loadMore()" id="load-more-btn" class="px-8 py-3 bg-white border border-soft-peach text-gentle-brown rounded-full font-medium hover:bg-soft-peach/30 transition-colors">
+        <button onclick="loadMore()" id="load-more-btn" class="px-8 py-3 bg-white border border-soft-lavender text-grace-green rounded-full font-medium hover:bg-soft-lavender/30 transition-colors">
             더 보기
         </button>
     </div>
@@ -337,7 +330,7 @@ function get_date_label($date_str) {
 
     <!-- 로딩 인디케이터 -->
     <div id="loading" class="hidden text-center py-8">
-        <i class="fa-solid fa-spinner fa-spin text-2xl text-warm-pink"></i>
+        <i class="fa-solid fa-spinner fa-spin text-2xl text-lilac"></i>
     </div>
 
 </main>

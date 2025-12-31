@@ -113,7 +113,7 @@ function get_time_ago_user($datetime) {
         ::-webkit-scrollbar { display: none; }
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #FDF8F3;
+            background-color: #EEF3F8;
         }
         .diary-card {
             transition: all 0.3s ease;
@@ -122,7 +122,7 @@ function get_time_ago_user($datetime) {
             animation: highlight-pulse 2s ease-out;
         }
         @keyframes highlight-pulse {
-            0% { box-shadow: 0 0 0 4px rgba(232, 165, 152, 0.6); }
+            0% { box-shadow: 0 0 0 4px rgba(177, 156, 217, 0.6); }
             100% { box-shadow: none; }
         }
         .comment-section {
@@ -146,27 +146,26 @@ function get_time_ago_user($datetime) {
             theme: {
                 extend: {
                     colors: {
-                        'warm-cream': '#FDF8F3',
-                        'soft-peach': '#FEF3E8',
-                        'gentle-brown': '#8B7355',
-                        'warm-pink': '#E8A598',
-                        'deep-rose': '#C44569',
-                        'muted-sage': '#A8B5A0'
+                        'warm-beige': '#EEF3F8',
+                        'soft-lavender': '#E8E2F7',
+                        'grace-green': '#6B705C',
+                        'lilac': '#B19CD9',
+                        'deep-purple': '#6B46C1'
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-warm-cream">
+<body class="bg-warm-beige">
 
 <!-- 헤더 -->
-<header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-peach shadow-sm">
+<header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
     <div class="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
         <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="w-10 h-10 flex items-center justify-center -ml-2">
-            <i class="fa-solid fa-arrow-left text-gentle-brown text-lg"></i>
+            <i class="fa-solid fa-arrow-left text-grace-green text-lg"></i>
         </a>
-        <h1 class="text-base font-bold text-gentle-brown"><?php echo $target_name; ?>의 감사일기</h1>
+        <h1 class="text-base font-bold text-grace-green"><?php echo $target_name; ?>의 감사일기</h1>
         <div class="w-10"></div>
     </div>
 </header>
@@ -175,31 +174,31 @@ function get_time_ago_user($datetime) {
 
     <!-- 프로필 카드 -->
     <div class="px-4 py-6">
-        <div class="bg-white rounded-3xl p-6 shadow-sm border border-soft-peach/50 text-center">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-soft-lavender/50 text-center">
             <!-- 프로필 이미지 -->
             <div class="mb-4">
                 <?php if ($target_photo) { ?>
-                <img src="<?php echo $target_photo; ?>" alt="<?php echo $target_name; ?>" class="w-20 h-20 rounded-full object-cover mx-auto border-4 border-soft-peach shadow-lg">
+                <img src="<?php echo $target_photo; ?>" alt="<?php echo $target_name; ?>" class="w-20 h-20 rounded-full object-cover mx-auto border-4 border-soft-lavender shadow-lg">
                 <?php } else { ?>
-                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-warm-pink to-deep-rose flex items-center justify-center mx-auto border-4 border-soft-peach shadow-lg">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center mx-auto border-4 border-soft-lavender shadow-lg">
                     <span class="text-white font-bold text-2xl"><?php echo mb_substr($target_name, 0, 1, 'UTF-8'); ?></span>
                 </div>
                 <?php } ?>
             </div>
 
             <!-- 이름 -->
-            <h2 class="text-xl font-bold text-gentle-brown mb-4"><?php echo $target_name; ?></h2>
+            <h2 class="text-xl font-bold text-grace-green mb-4"><?php echo $target_name; ?></h2>
 
             <!-- 통계 -->
             <div class="flex items-center justify-center gap-8">
                 <div class="text-center">
-                    <p class="text-2xl font-bold text-deep-rose"><?php echo number_format($total_count); ?></p>
-                    <p class="text-xs text-gentle-brown/60">감사일기</p>
+                    <p class="text-2xl font-bold text-deep-purple"><?php echo number_format($total_count); ?></p>
+                    <p class="text-xs text-grace-green/60">감사일기</p>
                 </div>
-                <div class="w-px h-10 bg-soft-peach"></div>
+                <div class="w-px h-10 bg-soft-lavender"></div>
                 <div class="text-center">
-                    <p class="text-2xl font-bold text-warm-pink"><?php echo number_format($total_good); ?></p>
-                    <p class="text-xs text-gentle-brown/60">받은 공감</p>
+                    <p class="text-2xl font-bold text-lilac"><?php echo number_format($total_good); ?></p>
+                    <p class="text-xs text-grace-green/60">받은 공감</p>
                 </div>
             </div>
         </div>
@@ -229,45 +228,45 @@ function get_time_ago_user($datetime) {
                 $day_of_week = array('일', '월', '화', '수', '목', '금', '토');
                 $dow = $day_of_week[date('w', strtotime($diary['wr_datetime']))];
         ?>
-        <article id="diary-<?php echo $wr_id; ?>" class="diary-card bg-white rounded-2xl shadow-sm border border-soft-peach/30 overflow-hidden <?php echo $is_highlight ? 'highlight' : ''; ?>">
+        <article id="diary-<?php echo $wr_id; ?>" class="diary-card bg-white rounded-2xl shadow-sm border border-soft-lavender/30 overflow-hidden <?php echo $is_highlight ? 'highlight' : ''; ?>">
             <!-- 날짜 헤더 -->
-            <div class="px-5 py-3 bg-gradient-to-r from-soft-peach/50 to-warm-cream border-b border-soft-peach/30">
+            <div class="px-5 py-3 bg-gradient-to-r from-soft-lavender/50 to-warm-beige border-b border-soft-lavender/30">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-semibold text-gentle-brown"><?php echo $date_display; ?> (<?php echo $dow; ?>)</span>
-                    <span class="text-xs text-gentle-brown/50"><?php echo get_time_ago_user($diary['wr_datetime']); ?></span>
+                    <span class="text-sm font-semibold text-grace-green"><?php echo $date_display; ?> (<?php echo $dow; ?>)</span>
+                    <span class="text-xs text-grace-green/50"><?php echo get_time_ago_user($diary['wr_datetime']); ?></span>
                 </div>
             </div>
 
             <!-- 본문 -->
             <div class="px-5 py-4">
-                <p class="text-gentle-brown leading-relaxed whitespace-pre-wrap"><?php echo nl2br(get_text($diary['wr_content'])); ?></p>
+                <p class="text-grace-green leading-relaxed whitespace-pre-wrap"><?php echo nl2br(get_text($diary['wr_content'])); ?></p>
             </div>
 
             <!-- 하단 액션 -->
-            <div class="px-5 py-3 border-t border-soft-peach/30 bg-warm-cream/30">
+            <div class="px-5 py-3 border-t border-soft-lavender/30 bg-warm-beige/30">
                 <div class="flex items-center justify-between">
                     <!-- 좋아요 버튼 -->
-                    <button onclick="toggleGood(<?php echo $wr_id; ?>)" class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-soft-peach/50 transition-colors" id="good-btn-<?php echo $wr_id; ?>">
-                        <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-lg <?php echo $is_good ? 'text-deep-rose' : 'text-gentle-brown/50'; ?>" id="heart-icon-<?php echo $wr_id; ?>"></i>
-                        <span class="text-sm text-gentle-brown" id="good-count-<?php echo $wr_id; ?>"><?php echo number_format($diary['wr_good']); ?></span>
+                    <button onclick="toggleGood(<?php echo $wr_id; ?>)" class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-soft-lavender/50 transition-colors" id="good-btn-<?php echo $wr_id; ?>">
+                        <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-lg <?php echo $is_good ? 'text-deep-purple' : 'text-grace-green/50'; ?>" id="heart-icon-<?php echo $wr_id; ?>"></i>
+                        <span class="text-sm text-grace-green" id="good-count-<?php echo $wr_id; ?>"><?php echo number_format($diary['wr_good']); ?></span>
                     </button>
 
                     <!-- 댓글 토글 버튼 -->
-                    <button onclick="toggleComments(<?php echo $wr_id; ?>)" class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-soft-peach/50 transition-colors" id="comment-toggle-<?php echo $wr_id; ?>">
-                        <i class="fa-regular fa-comment text-lg text-gentle-brown/50"></i>
-                        <span class="text-sm text-gentle-brown" id="comment-count-<?php echo $wr_id; ?>"><?php echo number_format($comment_count); ?></span>
-                        <i class="fa-solid fa-chevron-down text-xs text-gentle-brown/30 transition-transform" id="comment-arrow-<?php echo $wr_id; ?>"></i>
+                    <button onclick="toggleComments(<?php echo $wr_id; ?>)" class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-soft-lavender/50 transition-colors" id="comment-toggle-<?php echo $wr_id; ?>">
+                        <i class="fa-regular fa-comment text-lg text-grace-green/50"></i>
+                        <span class="text-sm text-grace-green" id="comment-count-<?php echo $wr_id; ?>"><?php echo number_format($comment_count); ?></span>
+                        <i class="fa-solid fa-chevron-down text-xs text-grace-green/30 transition-transform" id="comment-arrow-<?php echo $wr_id; ?>"></i>
                     </button>
 
                     <?php if (($is_member && $member['mb_id'] === $diary['mb_id']) || $is_admin) { ?>
                     <!-- 수정/삭제 -->
                     <div class="relative">
-                        <button onclick="toggleMenu(<?php echo $wr_id; ?>)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-soft-peach/50">
-                            <i class="fa-solid fa-ellipsis text-gentle-brown/50"></i>
+                        <button onclick="toggleMenu(<?php echo $wr_id; ?>)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-soft-lavender/50">
+                            <i class="fa-solid fa-ellipsis text-grace-green/50"></i>
                         </button>
-                        <div id="menu-<?php echo $wr_id; ?>" class="hidden absolute right-0 bottom-10 bg-white border border-soft-peach rounded-xl shadow-lg py-2 w-24 z-10">
-                            <a href="<?php echo G5_BBS_URL; ?>/gratitude_write.php?w=u&wr_id=<?php echo $wr_id; ?>" class="block px-4 py-2 text-sm text-gentle-brown hover:bg-soft-peach/50">수정</a>
-                            <button onclick="deleteDiary(<?php echo $wr_id; ?>)" class="block w-full text-left px-4 py-2 text-sm text-deep-rose hover:bg-soft-peach/50">삭제</button>
+                        <div id="menu-<?php echo $wr_id; ?>" class="hidden absolute right-0 bottom-10 bg-white border border-soft-lavender rounded-xl shadow-lg py-2 w-24 z-10">
+                            <a href="<?php echo G5_BBS_URL; ?>/gratitude_write.php?w=u&wr_id=<?php echo $wr_id; ?>" class="block px-4 py-2 text-sm text-grace-green hover:bg-soft-lavender/50">수정</a>
+                            <button onclick="deleteDiary(<?php echo $wr_id; ?>)" class="block w-full text-left px-4 py-2 text-sm text-deep-purple hover:bg-soft-lavender/50">삭제</button>
                         </div>
                     </div>
                     <?php } ?>
@@ -276,7 +275,7 @@ function get_time_ago_user($datetime) {
 
             <!-- 댓글 섹션 -->
             <div class="comment-section" id="comments-<?php echo $wr_id; ?>">
-                <div class="px-5 py-4 bg-warm-cream/50 border-t border-soft-peach/30">
+                <div class="px-5 py-4 bg-warm-beige/50 border-t border-soft-lavender/30">
                     <!-- 댓글 목록 -->
                     <div class="space-y-3 mb-4" id="comment-list-<?php echo $wr_id; ?>">
                         <?php
@@ -303,21 +302,21 @@ function get_time_ago_user($datetime) {
                             <?php if ($c_photo) { ?>
                             <img src="<?php echo $c_photo; ?>" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
                             <?php } else { ?>
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-warm-pink to-deep-rose flex items-center justify-center flex-shrink-0">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center flex-shrink-0">
                                 <span class="text-white text-xs font-bold"><?php echo mb_substr($c_nick, 0, 1, 'UTF-8'); ?></span>
                             </div>
                             <?php } ?>
                             <div class="flex-1">
                                 <div class="bg-white rounded-2xl px-4 py-2 shadow-sm">
                                     <div class="flex items-center justify-between mb-1">
-                                        <span class="font-semibold text-sm text-gentle-brown"><?php echo $c_nick; ?></span>
-                                        <span class="text-xs text-gentle-brown/40"><?php echo get_time_ago_user($comment['wr_datetime']); ?></span>
+                                        <span class="font-semibold text-sm text-grace-green"><?php echo $c_nick; ?></span>
+                                        <span class="text-xs text-grace-green/40"><?php echo get_time_ago_user($comment['wr_datetime']); ?></span>
                                     </div>
-                                    <p class="text-sm text-gentle-brown/80"><?php echo nl2br(get_text($comment['wr_content'])); ?></p>
+                                    <p class="text-sm text-grace-green/80"><?php echo nl2br(get_text($comment['wr_content'])); ?></p>
                                 </div>
                                 <?php if (($is_member && $member['mb_id'] === $comment['mb_id']) || $is_admin) { ?>
                                 <div class="flex gap-2 mt-1 ml-4">
-                                    <button onclick="deleteComment(<?php echo $comment['wr_id']; ?>, <?php echo $wr_id; ?>)" class="text-xs text-deep-rose/70 hover:text-deep-rose">삭제</button>
+                                    <button onclick="deleteComment(<?php echo $comment['wr_id']; ?>, <?php echo $wr_id; ?>)" class="text-xs text-deep-purple/70 hover:text-deep-purple">삭제</button>
                                 </div>
                                 <?php } ?>
                             </div>
@@ -331,24 +330,24 @@ function get_time_ago_user($datetime) {
                         <?php if ($my_profile_photo) { ?>
                         <img src="<?php echo $my_profile_photo; ?>" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
                         <?php } else { ?>
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-warm-pink to-deep-rose flex items-center justify-center flex-shrink-0">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center flex-shrink-0">
                             <span class="text-white text-xs font-bold"><?php echo mb_substr($member['mb_name'] ? $member['mb_name'] : $member['mb_nick'], 0, 1, 'UTF-8'); ?></span>
                         </div>
                         <?php } ?>
-                        <div class="flex-1 flex gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-soft-peach/50">
+                        <div class="flex-1 flex gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-soft-lavender/50">
                             <input type="text"
                                    id="comment-input-<?php echo $wr_id; ?>"
-                                   class="flex-1 bg-transparent border-none outline-none text-sm text-gentle-brown placeholder-gentle-brown/40"
+                                   class="flex-1 bg-transparent border-none outline-none text-sm text-grace-green placeholder-grace-green/40"
                                    placeholder="따뜻한 댓글을 남겨주세요..."
                                    onkeypress="if(event.key==='Enter') submitComment(<?php echo $wr_id; ?>)">
-                            <button onclick="submitComment(<?php echo $wr_id; ?>)" class="text-deep-rose hover:text-warm-pink transition-colors">
+                            <button onclick="submitComment(<?php echo $wr_id; ?>)" class="text-deep-purple hover:text-lilac transition-colors">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </button>
                         </div>
                     </div>
                     <?php } else { ?>
                     <div class="text-center py-2">
-                        <a href="<?php echo G5_BBS_URL; ?>/login.php?url=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" class="text-sm text-deep-rose hover:underline">로그인하고 댓글 남기기</a>
+                        <a href="<?php echo G5_BBS_URL; ?>/login.php?url=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" class="text-sm text-deep-purple hover:underline">로그인하고 댓글 남기기</a>
                     </div>
                     <?php } ?>
                 </div>
@@ -359,10 +358,10 @@ function get_time_ago_user($datetime) {
         } else {
         ?>
         <div class="text-center py-20">
-            <div class="w-16 h-16 bg-soft-peach rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-regular fa-face-sad-tear text-2xl text-warm-pink"></i>
+            <div class="w-16 h-16 bg-soft-lavender rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-regular fa-face-sad-tear text-2xl text-lilac"></i>
             </div>
-            <p class="text-gentle-brown">아직 작성된 감사일기가 없어요</p>
+            <p class="text-grace-green">아직 작성된 감사일기가 없어요</p>
         </div>
         <?php } ?>
     </div>
@@ -410,8 +409,8 @@ function toggleGood(wrId) {
 
             icon.classList.toggle('fa-regular');
             icon.classList.toggle('fa-solid');
-            icon.classList.toggle('text-gentle-brown/50');
-            icon.classList.toggle('text-deep-rose');
+            icon.classList.toggle('text-grace-green/50');
+            icon.classList.toggle('text-deep-purple');
 
             count.textContent = data.count;
         }
@@ -470,14 +469,14 @@ function submitComment(wrId) {
             const commentList = document.getElementById('comment-list-' + wrId);
             const newCommentHTML = `
                 <div class="flex gap-3 new-comment" id="comment-${data.comment.id}">
-                    <img src="${data.comment.photo || ''}" class="w-8 h-8 rounded-full object-cover flex-shrink-0" onerror="this.outerHTML='<div class=\\'w-8 h-8 rounded-full bg-gradient-to-br from-warm-pink to-deep-rose flex items-center justify-center flex-shrink-0\\'><span class=\\'text-white text-xs font-bold\\'>${data.comment.nick.charAt(0)}</span></div>'">
+                    <img src="${data.comment.photo || ''}" class="w-8 h-8 rounded-full object-cover flex-shrink-0" onerror="this.outerHTML='<div class=\\'w-8 h-8 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center flex-shrink-0\\'><span class=\\'text-white text-xs font-bold\\'>${data.comment.nick.charAt(0)}</span></div>'">
                     <div class="flex-1">
-                        <div class="bg-white rounded-2xl px-4 py-2 shadow-sm" style="background: rgba(232, 165, 152, 0.1);">
+                        <div class="bg-white rounded-2xl px-4 py-2 shadow-sm" style="background: rgba(177, 156, 217, 0.1);">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="font-semibold text-sm text-gentle-brown">${data.comment.nick}</span>
-                                <span class="text-xs text-gentle-brown/40">방금 전</span>
+                                <span class="font-semibold text-sm text-grace-green">${data.comment.nick}</span>
+                                <span class="text-xs text-grace-green/40">방금 전</span>
                             </div>
-                            <p class="text-sm text-gentle-brown/80">${data.comment.content}</p>
+                            <p class="text-sm text-grace-green/80">${data.comment.content}</p>
                         </div>
                     </div>
                 </div>

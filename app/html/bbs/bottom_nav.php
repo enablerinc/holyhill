@@ -55,7 +55,7 @@ if ($is_member && isset($_SESSION['ss_mb_id'])) {
 
         <!-- 감사일기 -->
         <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-heart <?php echo ($current_page == 'gratitude') ? $active_icon_class : $inactive_icon_class; ?>"></i>
+            <i class="fa-solid fa-book <?php echo ($current_page == 'gratitude') ? $active_icon_class : $inactive_icon_class; ?>"></i>
             <span class="<?php echo ($current_page == 'gratitude') ? $active_text_class : $inactive_text_class; ?>">감사일기</span>
         </a>
 
