@@ -61,12 +61,13 @@ $today_dow = $day_of_week[date('w')];
 
 // 감사 프롬프트 (랜덤)
 $prompts = array(
-    '오늘 하루 감사한 일은 무엇인가요?',
-    '오늘 받은 작은 축복을 기록해보세요',
-    '감사한 마음을 글로 표현해보세요',
-    '오늘 행복했던 순간을 적어보세요',
-    '감사할 일을 찾으면 더 많이 보여요',
-    '작은 것에 감사하면 큰 것이 옵니다',
+    '오늘 하루를 허락하신 하나님께 감사해요',
+    '오늘 경험한 하나님의 은혜를 기록해보세요',
+    '범사에 감사하는 마음을 표현해보세요',
+    '오늘 하루 지켜주신 하나님께 감사해요',
+    '작은 것에도 감사하면 더 큰 축복이 옵니다',
+    '감사는 하나님을 기쁘시게 하는 기도입니다',
+    '오늘 누린 은혜를 세어보세요',
 );
 $random_prompt = $prompts[array_rand($prompts)];
 ?>
@@ -226,11 +227,59 @@ $random_prompt = $prompts[array_rand($prompts)];
             </p>
             <div class="flex flex-wrap gap-2">
                 <?php
-                $hints = array('건강', '가족', '친구', '맛있는 음식', '좋은 날씨', '새로운 배움', '작은 친절', '따뜻한 햇살');
+                $hints = array(
+                    // 일상의 감사
+                    '오늘 하루',
+                    '눈을 뜨게 하심',
+                    '건강',
+                    '가족',
+                    // 신앙의 감사
+                    '말씀',
+                    '예배',
+                    '기도',
+                    '교회 가족',
+                    // 식사와 일상
+                    '맛있는 식사',
+                    '좋은 날씨',
+                    '무탈한 하루',
+                    '편안한 잠자리',
+                    // 관계와 은혜
+                    '만남',
+                    '작은 친절',
+                    '용서',
+                    '새로운 배움',
+                );
                 foreach ($hints as $hint) {
                 ?>
                 <button type="button" onclick="insertHint('<?php echo $hint; ?>')" class="px-3 py-1.5 bg-soft-lavender/70 text-grace-green text-sm rounded-full hover:bg-lilac/30 transition-colors">
                     <?php echo $hint; ?>
+                </button>
+                <?php } ?>
+            </div>
+        </div>
+
+        <!-- 추가 감사 문장 제안 -->
+        <div class="mt-4 bg-gradient-to-r from-soft-lavender/30 to-lilac/20 rounded-2xl p-4 border border-soft-lavender/30">
+            <p class="text-sm text-grace-green/70 mb-3 font-medium">
+                <i class="fa-regular fa-lightbulb text-lilac mr-1"></i>
+                이렇게 시작해보세요
+            </p>
+            <div class="space-y-2">
+                <?php
+                $sentences = array(
+                    '오늘 하루를 허락하신 하나님께 감사드립니다.',
+                    '눈을 뜨고 새 아침을 맞이하게 하심에 감사합니다.',
+                    '오늘도 무탈하게 하루를 보내게 하심에 감사합니다.',
+                    '맛있는 밥을 먹을 수 있음에 감사합니다.',
+                    '사랑하는 가족과 함께할 수 있어 감사합니다.',
+                    '오늘 말씀을 통해 위로받아 감사합니다.',
+                    '교회 가족들과 함께 예배드릴 수 있어 감사합니다.',
+                    '잠자리에 들기 전, 오늘 하루도 지켜주심에 감사합니다.',
+                );
+                foreach ($sentences as $sentence) {
+                ?>
+                <button type="button" onclick="insertSentence('<?php echo addslashes($sentence); ?>')" class="block w-full text-left px-3 py-2 bg-white/70 text-grace-green/80 text-sm rounded-lg hover:bg-white transition-colors">
+                    "<?php echo $sentence; ?>"
                 </button>
                 <?php } ?>
             </div>
@@ -271,6 +320,22 @@ function insertHint(hint) {
 
     textarea.value = currentValue.substring(0, startPos) + insertText + currentValue.substring(endPos);
     textarea.selectionStart = textarea.selectionEnd = startPos + insertText.length;
+    textarea.focus();
+
+    updateCharCount();
+}
+
+// 문장 삽입
+function insertSentence(sentence) {
+    const textarea = document.getElementById('wr_content');
+    const currentValue = textarea.value;
+
+    // 줄바꿈 후 추가 (기존 내용이 있으면)
+    const prefix = currentValue ? (currentValue.endsWith('\n') ? '' : '\n') : '';
+    const insertText = prefix + sentence + '\n';
+
+    textarea.value = currentValue + insertText;
+    textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
     textarea.focus();
 
     updateCharCount();

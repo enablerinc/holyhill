@@ -528,6 +528,181 @@ function convert_youtube_to_iframe_index($content) {
             ?>
         </section>
 
+        <!-- 4.5. 오늘의 감사 -->
+        <?php if ($is_member) {
+            // diary 게시판 존재 여부 확인
+            $diary_table = $g5['write_prefix'] . 'diary';
+            $diary_exists = sql_query("SHOW TABLES LIKE '{$diary_table}'", false);
+
+            if (sql_num_rows($diary_exists) > 0) {
+                // 오늘 작성한 내 감사일기
+                $my_today_diary = sql_fetch("SELECT wr_id FROM {$diary_table}
+                    WHERE mb_id = '{$member['mb_id']}'
+                    AND DATE(wr_datetime) = CURDATE()
+                    AND wr_is_comment = 0
+                    ORDER BY wr_id DESC LIMIT 1");
+
+                // 오늘 감사일기 작성한 회원들 (최근 5명)
+                $today_writers_sql = "SELECT DISTINCT d.mb_id, m.mb_name, m.mb_nick
+                    FROM {$diary_table} d
+                    JOIN {$g5['member_table']} m ON d.mb_id = m.mb_id
+                    WHERE DATE(d.wr_datetime) = CURDATE()
+                    AND d.wr_is_comment = 0
+                    ORDER BY d.wr_datetime DESC
+                    LIMIT 5";
+                $today_writers_result = sql_query($today_writers_sql);
+                $today_writers_count = sql_num_rows($today_writers_result);
+
+                // 최근 감사일기 (가로 스크롤용, 최근 6개)
+                $recent_diaries_sql = "SELECT d.wr_id, d.wr_content, d.wr_datetime, d.wr_good, d.mb_id, m.mb_name, m.mb_nick
+                    FROM {$diary_table} d
+                    JOIN {$g5['member_table']} m ON d.mb_id = m.mb_id
+                    WHERE d.wr_is_comment = 0
+                    ORDER BY d.wr_datetime DESC
+                    LIMIT 6";
+                $recent_diaries_result = sql_query($recent_diaries_sql);
+                $recent_diaries_count = sql_num_rows($recent_diaries_result);
+        ?>
+        <section id="gratitude-section" class="px-4 py-4">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-book text-lilac"></i>
+                    <h2 class="text-base font-semibold text-gray-800">오늘의 감사</h2>
+                </div>
+                <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                    전체 보기 →
+                </a>
+            </div>
+
+            <!-- 내 감사일기 카드 -->
+            <div class="bg-gradient-to-r from-soft-lavender/50 to-lilac/30 rounded-2xl p-4 mb-4 border border-lilac/20">
+                <?php if ($my_today_diary) { ?>
+                <!-- 오늘 이미 작성한 경우 -->
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-lilac to-deep-purple rounded-full flex items-center justify-center shadow-md">
+                        <i class="fa-solid fa-check text-white text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-grace-green">오늘의 감사 완료!</p>
+                        <p class="text-xs text-grace-green/60">오늘도 감사를 기록했어요</p>
+                    </div>
+                    <a href="<?php echo G5_BBS_URL; ?>/gratitude_user.php?mb_id=<?php echo $member['mb_id']; ?>"
+                       class="px-4 py-2 bg-white text-lilac text-sm font-medium rounded-full hover:bg-lilac/10 transition-colors">
+                        내 일기 보기
+                    </a>
+                </div>
+                <?php } else { ?>
+                <!-- 오늘 아직 작성 안한 경우 -->
+                <a href="<?php echo G5_BBS_URL; ?>/gratitude_write.php" class="flex items-center gap-3 group">
+                    <?php
+                    $my_photo = '';
+                    $profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
+                    if (file_exists($profile_path)) {
+                        $my_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
+                    }
+                    ?>
+                    <?php if ($my_photo) { ?>
+                    <img src="<?php echo $my_photo; ?>" alt="내 프로필" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md">
+                    <?php } else { ?>
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center border-2 border-white shadow-md">
+                        <span class="text-white font-bold text-lg"><?php echo mb_substr($member['mb_name'] ? $member['mb_name'] : $member['mb_nick'], 0, 1, 'UTF-8'); ?></span>
+                    </div>
+                    <?php } ?>
+                    <div class="flex-1">
+                        <p class="font-semibold text-grace-green group-hover:text-deep-purple transition-colors">오늘의 감사 기록하기</p>
+                        <p class="text-xs text-grace-green/60">오늘 하루를 허락하신 하나님께 감사해요</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gradient-to-br from-lilac to-deep-purple rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-plus text-white"></i>
+                    </div>
+                </a>
+                <?php } ?>
+
+                <!-- 오늘 작성한 사람들 -->
+                <?php if ($today_writers_count > 0) { ?>
+                <div class="mt-3 pt-3 border-t border-lilac/20">
+                    <div class="flex items-center gap-2">
+                        <div class="flex -space-x-2">
+                            <?php
+                            while ($writer = sql_fetch_array($today_writers_result)) {
+                                $writer_photo = '';
+                                $w_profile_path = G5_DATA_PATH.'/member_image/'.substr($writer['mb_id'], 0, 2).'/'.$writer['mb_id'].'.gif';
+                                if (file_exists($w_profile_path)) {
+                                    $writer_photo = G5_DATA_URL.'/member_image/'.substr($writer['mb_id'], 0, 2).'/'.$writer['mb_id'].'.gif';
+                                }
+                            ?>
+                            <?php if ($writer_photo) { ?>
+                            <img src="<?php echo $writer_photo; ?>" class="w-6 h-6 rounded-full border-2 border-white object-cover" alt="<?php echo $writer['mb_name']; ?>">
+                            <?php } else { ?>
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 border-2 border-white flex items-center justify-center">
+                                <span class="text-white text-xs font-bold"><?php echo mb_substr($writer['mb_name'] ? $writer['mb_name'] : $writer['mb_nick'], 0, 1, 'UTF-8'); ?></span>
+                            </div>
+                            <?php } ?>
+                            <?php } ?>
+                        </div>
+                        <span class="text-xs text-grace-green/60">오늘 <?php echo $today_writers_count; ?>명이 감사를 기록했어요</span>
+                    </div>
+                </div>
+                <?php } ?>
+            </div>
+
+            <!-- 최근 감사일기 가로 스크롤 -->
+            <?php if ($recent_diaries_count > 0) { ?>
+            <div class="overflow-x-auto scrollbar-hide -mx-4 px-4">
+                <div class="flex gap-3" style="width: max-content;">
+                    <?php
+                    while ($diary = sql_fetch_array($recent_diaries_result)) {
+                        $d_photo = '';
+                        $d_profile_path = G5_DATA_PATH.'/member_image/'.substr($diary['mb_id'], 0, 2).'/'.$diary['mb_id'].'.gif';
+                        if (file_exists($d_profile_path)) {
+                            $d_photo = G5_DATA_URL.'/member_image/'.substr($diary['mb_id'], 0, 2).'/'.$diary['mb_id'].'.gif';
+                        }
+                        $d_name = $diary['mb_name'] ? $diary['mb_name'] : $diary['mb_nick'];
+                        $d_content = strip_tags($diary['wr_content']);
+                        $d_content = mb_substr($d_content, 0, 50, 'UTF-8');
+                        if (mb_strlen(strip_tags($diary['wr_content']), 'UTF-8') > 50) {
+                            $d_content .= '...';
+                        }
+
+                        // 시간 표시
+                        $d_time_diff = time() - strtotime($diary['wr_datetime']);
+                        if ($d_time_diff < 3600) {
+                            $d_time = floor($d_time_diff / 60) . '분 전';
+                        } elseif ($d_time_diff < 86400) {
+                            $d_time = floor($d_time_diff / 3600) . '시간 전';
+                        } else {
+                            $d_time = date('m.d', strtotime($diary['wr_datetime']));
+                        }
+                    ?>
+                    <a href="<?php echo G5_BBS_URL; ?>/gratitude_user.php?mb_id=<?php echo $diary['mb_id']; ?>&wr_id=<?php echo $diary['wr_id']; ?>"
+                       class="flex-shrink-0 w-56 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-soft-lavender/30">
+                        <div class="flex items-center gap-2 mb-2">
+                            <?php if ($d_photo) { ?>
+                            <img src="<?php echo $d_photo; ?>" class="w-7 h-7 rounded-full object-cover" alt="<?php echo $d_name; ?>">
+                            <?php } else { ?>
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
+                                <span class="text-white text-xs font-bold"><?php echo mb_substr($d_name, 0, 1, 'UTF-8'); ?></span>
+                            </div>
+                            <?php } ?>
+                            <span class="text-sm font-medium text-grace-green"><?php echo $d_name; ?></span>
+                            <span class="text-xs text-grace-green/40 ml-auto"><?php echo $d_time; ?></span>
+                        </div>
+                        <p class="text-sm text-grace-green/70 leading-relaxed line-clamp-2"><?php echo $d_content; ?></p>
+                        <div class="mt-2 flex items-center gap-1 text-xs text-grace-green/40">
+                            <i class="fa-solid fa-heart text-red-400"></i>
+                            <span><?php echo $diary['wr_good']; ?></span>
+                        </div>
+                    </a>
+                    <?php } ?>
+                </div>
+            </div>
+            <?php } ?>
+        </section>
+        <?php
+            } // diary table exists
+        } // is_member
+        ?>
+
         <!-- 5. 이달의 베스트 성산인 TOP 15 -->
         <section id="best-members" class="px-4 py-4">
             <div class="flex items-center justify-between mb-4">
