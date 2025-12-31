@@ -236,12 +236,18 @@ if ($w == 'c') // 댓글 입력
         }
         error_log($debug_msg);
 
+        // 감사일기는 gratitude_user.php로, 나머지는 post.php로 이동
+        if ($bo_table === 'diary') {
+            $notification_url = G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($wr['mb_id']).'&wr_id='.$wr_id;
+        } else {
+            $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+        }
+
         // 대댓글인 경우
         if ($tmp_comment_reply && $reply_array['mb_id']) {
             // 부모 댓글 작성자에게 알림
             $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
             $notification_content = generate_notification_content('reply', $from_nick);
-            $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
             $result = create_notification('reply', $mb_id, $reply_array['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
             error_log("대댓글 알림 생성: " . ($result ? "성공" : "실패") . " - to {$reply_array['mb_id']}");
         }
@@ -249,7 +255,6 @@ if ($w == 'c') // 댓글 입력
         else if ($wr['mb_id']) {
             $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
             $notification_content = generate_notification_content('comment', $from_nick);
-            $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
             $result = create_notification('comment', $mb_id, $wr['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
             error_log("일반 댓글 알림 생성: " . ($result ? "성공" : "실패") . " - to {$wr['mb_id']}");
         } else {
