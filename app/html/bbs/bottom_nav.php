@@ -9,6 +9,8 @@ if ($current_script == 'index.php' && strpos($_SERVER['REQUEST_URI'], '/bbs/inde
     $current_page = 'home';
 } elseif ($current_script == 'feed.php') {
     $current_page = 'feed';
+} elseif ($current_script == 'gratitude.php' || $current_script == 'gratitude_user.php' || $current_script == 'gratitude_write.php') {
+    $current_page = 'gratitude';
 } elseif ($current_script == 'word_feed.php') {
     $current_page = 'word';
 } elseif ($current_script == 'halloffame.php') {
@@ -49,6 +51,12 @@ if ($is_member && isset($_SESSION['ss_mb_id'])) {
         <a href="<?php echo G5_BBS_URL; ?>/feed.php" class="flex flex-col items-center gap-1">
             <i class="fa-solid fa-droplet <?php echo ($current_page == 'feed') ? $active_icon_class : $inactive_icon_class; ?>"></i>
             <span class="<?php echo ($current_page == 'feed') ? $active_text_class : $inactive_text_class; ?>">성산샘터</span>
+        </a>
+
+        <!-- 감사일기 -->
+        <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-heart <?php echo ($current_page == 'gratitude') ? $active_icon_class : $inactive_icon_class; ?>"></i>
+            <span class="<?php echo ($current_page == 'gratitude') ? $active_text_class : $inactive_text_class; ?>">감사일기</span>
         </a>
 
         <!-- 말씀 -->

@@ -145,6 +145,8 @@ run_event('bbs_delete', $write, $board);
 // 삭제 후 리다이렉트 경로
 if ($bo_table === 'gallery') {
     goto_url(G5_BBS_URL.'/feed.php');
+} elseif ($bo_table === 'diary') {
+    goto_url(G5_BBS_URL.'/gratitude.php');
 } else {
     goto_url(G5_BBS_URL.'/index.php');
 }

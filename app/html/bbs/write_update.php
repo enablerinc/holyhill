@@ -799,7 +799,12 @@ if (!($w == 'u' || $w == 'cu') && $config['cf_email_use'] && $board['bo_use_emai
 
 delete_cache_latest($bo_table);
 
-$redirect_url = run_replace('write_update_move_url', short_url_clean(G5_HTTP_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id.$qstr), $board, $wr_id, $w, $qstr, $file_upload_msg);
+// 감사일기 게시판인 경우 감사일기 페이지로 리다이렉트
+if ($bo_table === 'diary') {
+    $redirect_url = G5_HTTP_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($member['mb_id']).'&wr_id='.$wr_id;
+} else {
+    $redirect_url = run_replace('write_update_move_url', short_url_clean(G5_HTTP_BBS_URL.'/post.php?bo_table='.$bo_table.'&amp;wr_id='.$wr_id.$qstr), $board, $wr_id, $w, $qstr, $file_upload_msg);
+}
 
 run_event('write_update_after', $board, $wr_id, $w, $qstr, $redirect_url);
 
