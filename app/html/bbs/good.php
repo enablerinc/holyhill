@@ -91,7 +91,12 @@ if(isset($_POST['js']) && $_POST['js'] === "on") {
             if ($good == 'good' && $write['mb_id'] && $member['mb_id']) {
                 $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
                 $notification_content = generate_notification_content('good', $from_nick);
-                $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+                // 감사일기는 gratitude_user.php로, 나머지는 post.php로 이동
+                if ($bo_table === 'diary') {
+                    $notification_url = G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($write['mb_id']).'&wr_id='.$wr_id;
+                } else {
+                    $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+                }
                 create_notification('good', $member['mb_id'], $write['mb_id'], $bo_table, $wr_id, 0, $notification_content, $notification_url);
             }
 
@@ -165,7 +170,12 @@ if(isset($_POST['js']) && $_POST['js'] === "on") {
             if ($good == 'good' && $write['mb_id'] && $member['mb_id']) {
                 $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
                 $notification_content = generate_notification_content('good', $from_nick);
-                $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+                // 감사일기는 gratitude_user.php로, 나머지는 post.php로 이동
+                if ($bo_table === 'diary') {
+                    $notification_url = G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($write['mb_id']).'&wr_id='.$wr_id;
+                } else {
+                    $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+                }
                 create_notification('good', $member['mb_id'], $write['mb_id'], $bo_table, $wr_id, 0, $notification_content, $notification_url);
             }
 

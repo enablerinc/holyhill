@@ -102,7 +102,13 @@ if ($board['bo_comment_point']) {
 
 // 알림 생성
 $from_nick = $member['mb_nick'] ? $member['mb_nick'] : $member['mb_name'];
-$notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+
+// 감사일기는 gratitude_user.php로, 나머지는 post.php로 이동
+if ($bo_table === 'diary') {
+    $notification_url = G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($write['mb_id']).'&wr_id='.$wr_id;
+} else {
+    $notification_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+}
 
 if ($parent_comment_id > 0 && isset($parent_comment) && $parent_comment['mb_id']) {
     // 대댓글인 경우: 부모 댓글 작성자에게 알림
