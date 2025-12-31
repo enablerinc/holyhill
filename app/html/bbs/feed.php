@@ -141,6 +141,10 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             <h1 class="text-lg font-semibold text-grace-green">성산샘터</h1>
         </div>
         <div class="flex items-center gap-4">
+            <!-- 검색 토글 버튼 -->
+            <button id="search-toggle" class="w-8 h-8 flex items-center justify-center" onclick="toggleSearch()">
+                <i class="fa-solid fa-search text-grace-green text-lg"></i>
+            </button>
             <?php if ($is_member) { ?>
             <div class="relative">
                 <i id="notification-bell" class="fa-regular fa-bell text-gray-700 text-lg cursor-pointer hover:text-purple-600 transition-colors"></i>
@@ -158,10 +162,10 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
 <main id="main-content" class="pt-16 pb-20 max-w-2xl mx-auto">
 
-    <!-- 검색 및 정렬 -->
-    <section class="bg-white px-4 py-3 border-b border-soft-lavender">
+    <!-- 검색 섹션 (기본 숨김, 검색어가 있으면 표시) -->
+    <section id="search-section" class="bg-white px-4 py-3 border-b border-soft-lavender overflow-hidden transition-all duration-300 <?php echo $search_keyword ? '' : 'hidden'; ?>">
         <!-- 검색창 -->
-        <form action="<?php echo G5_BBS_URL; ?>/feed.php" method="get" class="mb-3">
+        <form action="<?php echo G5_BBS_URL; ?>/feed.php" method="get">
             <input type="hidden" name="sort" value="<?php echo $sort; ?>">
             <div class="flex gap-2">
                 <select name="search_type" class="px-3 py-2 bg-warm-beige border-0 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-lilac">
@@ -181,9 +185,11 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                 <button type="submit" class="px-4 py-2 bg-lilac text-white rounded-lg text-sm font-medium hover:bg-deep-purple transition-colors">
                     <i class="fa-solid fa-search"></i>
                 </button>
+                <button type="button" onclick="toggleSearch()" class="px-3 py-2 text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
         </form>
-
     </section>
 
     <?php
@@ -482,6 +488,27 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 <?php if ($is_member) { ?>
 <?php include_once(G5_BBS_PATH.'/notification_widget.php'); ?>
 <?php } ?>
+
+<script>
+// 검색창 토글
+function toggleSearch() {
+    const searchSection = document.getElementById('search-section');
+    const searchToggle = document.getElementById('search-toggle');
+
+    if (searchSection.classList.contains('hidden')) {
+        searchSection.classList.remove('hidden');
+        searchToggle.querySelector('i').classList.add('text-lilac');
+        // 검색 입력창에 포커스
+        setTimeout(() => {
+            const input = searchSection.querySelector('input[name="search"]');
+            if (input) input.focus();
+        }, 100);
+    } else {
+        searchSection.classList.add('hidden');
+        searchToggle.querySelector('i').classList.remove('text-lilac');
+    }
+}
+</script>
 
 </body>
 </html>
