@@ -8,6 +8,19 @@ if (!$is_member) {
 
 $g5['title'] = '내 정보';
 
+// 뱃지 시스템 로드
+if (file_exists(G5_EXTEND_PATH.'/badge_system.extend.php')) {
+    include_once(G5_EXTEND_PATH.'/badge_system.extend.php');
+}
+
+// 역대 뱃지 조회
+$historical_badges = array();
+$badge_stats = array();
+if (function_exists('get_member_badges')) {
+    $historical_badges = get_member_badges($member['mb_id']);
+    $badge_stats = get_member_badge_stats($member['mb_id']);
+}
+
 // 회원 정보 가져오기
 $mb = get_member($member['mb_id']);
 
@@ -649,6 +662,72 @@ $my_comments_list = array_slice($my_comments_list, 0, 5);
         </div>
         <?php } ?>
     </section>
+
+    <?php if (count($historical_badges) > 0) { ?>
+    <!-- 역대 뱃지 섹션 -->
+    <section id="historical-badges" class="px-4 mt-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-grace-green">역대 뱃지</h3>
+            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                총 <?php echo count($historical_badges); ?>개
+            </span>
+        </div>
+
+        <!-- 뱃지 통계 요약 -->
+        <?php if (count($badge_stats) > 0) { ?>
+        <div class="bg-white rounded-2xl p-4 shadow-warm mb-3">
+            <div class="flex flex-wrap gap-2">
+                <?php foreach ($badge_stats as $type => $cnt) {
+                    $info = function_exists('get_badge_info') ? get_badge_info($type) : null;
+                    if ($info) {
+                ?>
+                <div class="flex items-center gap-1 bg-soft-lavender/50 px-3 py-1.5 rounded-full">
+                    <i class="fa-solid <?php echo $info['icon']; ?> text-lilac text-xs"></i>
+                    <span class="text-xs text-grace-green"><?php echo $info['name']; ?></span>
+                    <span class="text-xs font-bold text-deep-purple">x<?php echo $cnt; ?></span>
+                </div>
+                <?php } } ?>
+            </div>
+        </div>
+        <?php } ?>
+
+        <!-- 역대 뱃지 목록 (최근 10개) -->
+        <div class="bg-white rounded-2xl shadow-warm overflow-hidden">
+            <div class="divide-y divide-gray-100">
+                <?php
+                $display_badges = array_slice($historical_badges, 0, 10);
+                foreach ($display_badges as $badge) {
+                    $info = function_exists('get_badge_info') ? get_badge_info($badge['badge_type']) : null;
+                    if (!$info) continue;
+
+                    $color_class = is_array($info['colors'])
+                        ? (isset($info['colors'][$badge['badge_rank']]) ? $info['colors'][$badge['badge_rank']] : $info['colors'][1])
+                        : $info['colors'];
+                ?>
+                <div class="flex items-center gap-3 p-3">
+                    <div class="w-10 h-10 bg-gradient-to-r <?php echo $color_class; ?> rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid <?php echo $info['icon']; ?> text-white text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-grace-green"><?php echo $info['name']; ?></span>
+                            <?php if ($badge['badge_rank'] > 0 && $badge['badge_rank'] <= 3) { ?>
+                            <span class="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded"><?php echo $badge['badge_rank']; ?>위</span>
+                            <?php } ?>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-gray-400">
+                            <span><?php echo $badge['badge_year']; ?>년 <?php echo $badge['badge_month']; ?>월</span>
+                            <?php if ($badge['badge_value']) { ?>
+                            <span class="text-lilac"><?php echo $badge['badge_value']; ?></span>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
+            </div>
+        </div>
+    </section>
+    <?php } ?>
 
     <section id="recent-activity" class="px-4 mt-6">
         <h3 class="text-lg font-semibold text-grace-green mb-4">최근 활동</h3>
