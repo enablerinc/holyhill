@@ -31,17 +31,41 @@ $post_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}gallery
 $post_count = sql_fetch($post_count_sql);
 $total_posts = $post_count['cnt'];
 
-// 2. 댓글 수 (gallery 게시판)
+// 1-2. 감사일기 수 (diary 게시판)
+$diary_count = 0;
+$diary_table_check = sql_query("SHOW TABLES LIKE '{$g5['write_prefix']}diary'", false);
+if (sql_num_rows($diary_table_check)) {
+    $diary_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}diary
+                       WHERE mb_id = '{$mb_id}' AND wr_is_comment = 0";
+    $diary_count_result = sql_fetch($diary_count_sql);
+    $diary_count = $diary_count_result['cnt'] ? (int)$diary_count_result['cnt'] : 0;
+}
+
+// 2. 댓글 수 (gallery + diary 게시판)
 $comment_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}gallery
                       WHERE mb_id = '{$mb_id}' AND wr_is_comment = 1";
 $comment_count = sql_fetch($comment_count_sql);
-$total_comments = $comment_count['cnt'];
+$total_comments = (int)$comment_count['cnt'];
 
-// 3. 받은 아멘(좋아요) 수
+if (sql_num_rows($diary_table_check)) {
+    $diary_comment_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}diary
+                          WHERE mb_id = '{$mb_id}' AND wr_is_comment = 1";
+    $diary_comment = sql_fetch($diary_comment_sql);
+    $total_comments += $diary_comment['cnt'] ? (int)$diary_comment['cnt'] : 0;
+}
+
+// 3. 받은 아멘(좋아요) 수 (gallery + diary)
 $good_count_sql = "SELECT SUM(wr_good) as total FROM {$g5['write_prefix']}gallery
                    WHERE mb_id = '{$mb_id}' AND wr_is_comment = 0";
 $good_count = sql_fetch($good_count_sql);
-$total_goods = $good_count['total'] ? $good_count['total'] : 0;
+$total_goods = $good_count['total'] ? (int)$good_count['total'] : 0;
+
+if (sql_num_rows($diary_table_check)) {
+    $diary_good_sql = "SELECT SUM(wr_good) as total FROM {$g5['write_prefix']}diary
+                       WHERE mb_id = '{$mb_id}' AND wr_is_comment = 0";
+    $diary_good = sql_fetch($diary_good_sql);
+    $total_goods += $diary_good['total'] ? (int)$diary_good['total'] : 0;
+}
 
 // 최근 게시글 가져오기
 $recent_posts_sql = "SELECT * FROM {$g5['write_prefix']}gallery
@@ -62,6 +86,19 @@ $recent_comments_sql = "SELECT a.*,
                         ORDER BY a.wr_id DESC
                         LIMIT 10";
 $recent_comments = sql_query($recent_comments_sql);
+
+// 최근 감사일기 가져오기
+$recent_diaries = array();
+if (sql_num_rows($diary_table_check)) {
+    $recent_diaries_sql = "SELECT * FROM {$g5['write_prefix']}diary
+                           WHERE mb_id = '{$mb_id}' AND wr_is_comment = 0
+                           ORDER BY wr_id DESC
+                           LIMIT 10";
+    $recent_diaries_result = sql_query($recent_diaries_sql);
+    while ($row = sql_fetch_array($recent_diaries_result)) {
+        $recent_diaries[] = $row;
+    }
+}
 
 // 가입일 계산
 $join_date = date('Y년 m월 d일', strtotime($mb['mb_datetime']));
@@ -198,6 +235,10 @@ $is_online = $online_check['cnt'] > 0;
                     class="flex-1 py-3 text-sm font-semibold text-deep-purple border-b-2 border-deep-purple">
                 <i class="fa-solid fa-grid-2"></i> 게시글
             </button>
+            <button onclick="switchTab('diary')" id="tab-diary"
+                    class="flex-1 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent">
+                <i class="fa-solid fa-book"></i> 감사일기
+            </button>
             <button onclick="switchTab('comments')" id="tab-comments"
                     class="flex-1 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent">
                 <i class="fa-solid fa-comment"></i> 댓글
@@ -250,6 +291,47 @@ $is_online = $online_check['cnt'] > 0;
             <?php } ?>
         </div>
 
+        <!-- 감사일기 탭 -->
+        <div id="content-diary" class="tab-content">
+            <?php if (count($recent_diaries) > 0) { ?>
+            <div class="divide-y divide-gray-100">
+                <?php foreach ($recent_diaries as $diary) {
+                    $diary_date = date('Y.m.d', strtotime($diary['wr_datetime']));
+                    $diary_content = strip_tags($diary['wr_content']);
+                    $diary_content = preg_replace('/\s+/', ' ', $diary_content);
+                    $diary_preview = mb_substr(trim($diary_content), 0, 80, 'UTF-8');
+                    if (mb_strlen(trim($diary_content), 'UTF-8') > 80) {
+                        $diary_preview .= '...';
+                    }
+                ?>
+                <a href="<?php echo G5_BBS_URL; ?>/gratitude_user.php?mb_id=<?php echo urlencode($mb_id); ?>&wr_id=<?php echo $diary['wr_id']; ?>"
+                   class="block p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-lilac to-deep-purple rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-book text-white text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs text-gray-500"><?php echo $diary_date; ?></span>
+                                <div class="flex items-center gap-2 text-xs text-gray-400">
+                                    <span><i class="fa-solid fa-heart text-red-500"></i> <?php echo $diary['wr_good']; ?></span>
+                                    <span><i class="fa-regular fa-comment"></i> <?php echo $diary['wr_comment']; ?></span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-700 line-clamp-2"><?php echo $diary_preview; ?></p>
+                        </div>
+                    </div>
+                </a>
+                <?php } ?>
+            </div>
+            <?php } else { ?>
+            <div class="py-16 text-center">
+                <i class="fa-solid fa-book text-gray-300 text-5xl mb-4"></i>
+                <p class="text-gray-500">아직 작성한 감사일기가 없습니다</p>
+            </div>
+            <?php } ?>
+        </div>
+
         <!-- 댓글 탭 -->
         <div id="content-comments" class="tab-content">
             <?php if (sql_num_rows($recent_comments) > 0) { ?>
@@ -296,6 +378,7 @@ $is_online = $online_check['cnt'] > 0;
 function switchTab(tab) {
     // 모든 탭 버튼 비활성화
     document.getElementById('tab-posts').className = 'flex-1 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent';
+    document.getElementById('tab-diary').className = 'flex-1 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent';
     document.getElementById('tab-comments').className = 'flex-1 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent';
 
     // 모든 탭 컨텐츠 숨기기
@@ -305,6 +388,9 @@ function switchTab(tab) {
     if (tab === 'posts') {
         document.getElementById('tab-posts').className = 'flex-1 py-3 text-sm font-semibold text-deep-purple border-b-2 border-deep-purple';
         document.getElementById('content-posts').classList.add('active');
+    } else if (tab === 'diary') {
+        document.getElementById('tab-diary').className = 'flex-1 py-3 text-sm font-semibold text-deep-purple border-b-2 border-deep-purple';
+        document.getElementById('content-diary').classList.add('active');
     } else {
         document.getElementById('tab-comments').className = 'flex-1 py-3 text-sm font-semibold text-deep-purple border-b-2 border-deep-purple';
         document.getElementById('content-comments').classList.add('active');

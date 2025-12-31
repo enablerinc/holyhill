@@ -154,9 +154,7 @@ function get_date_label($date_str) {
 <header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-soft-lavender">
     <div class="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-gradient-to-br from-lilac to-deep-purple rounded-xl flex items-center justify-center shadow-md">
-                <i class="fa-solid fa-book text-white text-sm"></i>
-            </div>
+            <img src="<?php echo G5_IMG_URL; ?>/logo.png" alt="성산교회 로고" class="w-9 h-9 rounded-lg object-cover">
             <div>
                 <h1 class="text-lg font-bold text-grace-green">감사일기</h1>
                 <p class="text-xs text-grace-green/60">매일 감사를 기록해요</p>
@@ -280,7 +278,7 @@ function get_date_label($date_str) {
                         <!-- 좋아요/댓글 -->
                         <div class="flex items-center gap-4 mt-2">
                             <span class="flex items-center gap-1 text-xs text-grace-green/50">
-                                <i class="fa-solid fa-heart text-lilac"></i>
+                                <i class="fa-solid fa-heart text-red-500"></i>
                                 <?php echo number_format($good_count); ?>
                             </span>
                             <span class="flex items-center gap-1 text-xs text-grace-green/50">

@@ -18,11 +18,24 @@ $diff = $now - $join_date;
 $years = floor($diff / (365 * 60 * 60 * 24));
 $months = floor(($diff - $years * 365 * 60 * 60 * 24) / (30 * 60 * 60 * 24));
 
-// 게시물 수 조회 - gallery 게시판의 게시물만 (user_profile.php와 동일)
+// 게시물 수 조회 - gallery 게시판의 게시물
 $post_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}gallery
                    WHERE mb_id = '{$mb['mb_id']}' AND wr_is_comment = 0";
 $post_count_result = sql_fetch($post_count_sql);
-$post_count = $post_count_result['cnt'];
+$post_count = (int)$post_count_result['cnt'];
+
+// 감사일기 수 조회 - diary 게시판
+$diary_count = 0;
+$diary_table_check = sql_query("SHOW TABLES LIKE '{$g5['write_prefix']}diary'", false);
+if (sql_num_rows($diary_table_check)) {
+    $diary_count_sql = "SELECT COUNT(*) as cnt FROM {$g5['write_prefix']}diary
+                       WHERE mb_id = '{$mb['mb_id']}' AND wr_is_comment = 0";
+    $diary_count_result = sql_fetch($diary_count_sql);
+    $diary_count = (int)$diary_count_result['cnt'];
+}
+
+// 총 게시물 = gallery + diary
+$total_post_count = $post_count + $diary_count;
 
 // 포인트
 $point = number_format($mb['mb_point']);
@@ -304,8 +317,11 @@ if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$m
     $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 }
 
-// 내게 온 댓글 조회 (gallery 게시판)
-$my_comments_sql = "SELECT c.*,
+// 내게 온 댓글 조회 (gallery + diary 게시판)
+$my_comments_list = array();
+
+// gallery 댓글
+$gallery_comments_sql = "SELECT c.*, 'gallery' as bo_table,
                            p.wr_subject as parent_subject,
                            m.mb_name as comment_author_nick,
                            m.mb_id as comment_author_id
@@ -317,7 +333,36 @@ $my_comments_sql = "SELECT c.*,
                     AND c.mb_id != '{$mb['mb_id']}'
                     ORDER BY c.wr_datetime DESC
                     LIMIT 5";
-$my_comments_result = sql_query($my_comments_sql);
+$gallery_comments_result = sql_query($gallery_comments_sql);
+while ($row = sql_fetch_array($gallery_comments_result)) {
+    $my_comments_list[] = $row;
+}
+
+// diary 댓글
+if (sql_num_rows($diary_table_check)) {
+    $diary_comments_sql = "SELECT c.*, 'diary' as bo_table,
+                               '감사일기' as parent_subject,
+                               m.mb_name as comment_author_nick,
+                               m.mb_id as comment_author_id
+                        FROM {$g5['write_prefix']}diary c
+                        LEFT JOIN {$g5['write_prefix']}diary p ON (c.wr_parent = p.wr_id)
+                        LEFT JOIN {$g5['member_table']} m ON (c.mb_id = m.mb_id)
+                        WHERE c.wr_is_comment = 1
+                        AND p.mb_id = '{$mb['mb_id']}'
+                        AND c.mb_id != '{$mb['mb_id']}'
+                        ORDER BY c.wr_datetime DESC
+                        LIMIT 5";
+    $diary_comments_result = sql_query($diary_comments_sql);
+    while ($row = sql_fetch_array($diary_comments_result)) {
+        $my_comments_list[] = $row;
+    }
+}
+
+// 날짜순 정렬 후 5개만
+usort($my_comments_list, function($a, $b) {
+    return strtotime($b['wr_datetime']) - strtotime($a['wr_datetime']);
+});
+$my_comments_list = array_slice($my_comments_list, 0, 5);
 
 ?>
 
@@ -397,7 +442,7 @@ $my_comments_result = sql_query($my_comments_sql);
 
         <div class="flex justify-center gap-6 mb-6">
             <div class="text-center">
-                <div class="text-lg font-semibold text-grace-green"><?php echo $post_count; ?></div>
+                <div class="text-lg font-semibold text-grace-green"><?php echo $total_post_count; ?></div>
                 <div class="text-xs text-gray-500">게시물</div>
             </div>
             <div class="text-center">
@@ -433,7 +478,7 @@ $my_comments_result = sql_query($my_comments_sql);
         </div>
 
         <?php
-        $has_any_badge = ($attendance_days >= 90) || ($post_count >= 10) || ($mb['mb_point'] >= 1000) || (count($hof_badges) > 0);
+        $has_any_badge = ($attendance_days >= 90) || ($total_post_count >= 10) || ($mb['mb_point'] >= 1000) || (count($hof_badges) > 0);
         ?>
 
         <?php if ($has_any_badge) { ?>
@@ -576,7 +621,7 @@ $my_comments_result = sql_query($my_comments_sql);
             </div>
             <?php } ?>
 
-            <?php if ($post_count >= 10) { ?>
+            <?php if ($total_post_count >= 10) { ?>
             <div class="bg-white rounded-2xl p-4 text-center shadow-warm">
                 <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
                     <i class="fa-solid fa-pen text-white"></i>
@@ -692,17 +737,17 @@ $my_comments_result = sql_query($my_comments_sql);
     <section id="my-comments" class="px-4 mt-6">
         <h3 class="text-lg font-semibold text-grace-green mb-4 flex items-center justify-between">
             <span>내게 온 댓글</span>
-            <?php if (sql_num_rows($my_comments_result) > 0) { ?>
+            <?php if (count($my_comments_list) > 0) { ?>
             <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                <?php echo sql_num_rows($my_comments_result); ?>개
+                <?php echo count($my_comments_list); ?>개
             </span>
             <?php } ?>
         </h3>
 
         <div class="space-y-3">
             <?php
-            if (sql_num_rows($my_comments_result) > 0) {
-                while ($comment = sql_fetch_array($my_comments_result)) {
+            if (count($my_comments_list) > 0) {
+                foreach ($my_comments_list as $comment) {
                     // 시간 계산
                     $time_diff = time() - strtotime($comment['wr_datetime']);
                     if ($time_diff < 3600) {
@@ -721,8 +766,15 @@ $my_comments_result = sql_query($my_comments_sql);
                             $comment_author_photo = G5_DATA_URL.'/member_image/'.substr($comment['comment_author_id'], 0, 2).'/'.$comment['comment_author_id'].'.gif';
                         }
                     }
+
+                    // 댓글 링크 (gallery vs diary)
+                    if ($comment['bo_table'] === 'diary') {
+                        $comment_link = G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($mb['mb_id']).'&wr_id='.$comment['wr_parent'];
+                    } else {
+                        $comment_link = G5_BBS_URL.'/post.php?bo_table=gallery&wr_id='.$comment['wr_parent'].'#c_'.$comment['wr_id'];
+                    }
                     ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $comment['wr_parent']; ?>#c_<?php echo $comment['wr_id']; ?>"
+                    <a href="<?php echo $comment_link; ?>"
                        class="bg-white rounded-2xl p-4 shadow-warm block hover:shadow-lg transition-shadow">
                         <div class="flex items-start gap-3">
                             <img src="<?php echo $comment_author_photo; ?>"
@@ -737,6 +789,9 @@ $my_comments_result = sql_query($my_comments_sql);
                                         </p>
                                         <?php if ($comment['parent_subject']) { ?>
                                         <p class="text-xs text-gray-400">
+                                            <?php if ($comment['bo_table'] === 'diary') { ?>
+                                            <i class="fa-solid fa-book text-lilac mr-1"></i>
+                                            <?php } ?>
                                             <?php echo cut_str($comment['parent_subject'], 40); ?>
                                         </p>
                                         <?php } ?>

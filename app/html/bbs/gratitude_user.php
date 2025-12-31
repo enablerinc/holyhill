@@ -247,7 +247,7 @@ function get_time_ago_user($datetime) {
                 <div class="flex items-center justify-between">
                     <!-- 좋아요 버튼 -->
                     <button onclick="toggleGood(<?php echo $wr_id; ?>)" class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-soft-lavender/50 transition-colors" id="good-btn-<?php echo $wr_id; ?>">
-                        <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-lg <?php echo $is_good ? 'text-deep-purple' : 'text-grace-green/50'; ?>" id="heart-icon-<?php echo $wr_id; ?>"></i>
+                        <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-lg <?php echo $is_good ? 'text-red-500' : 'text-grace-green/50'; ?>" id="heart-icon-<?php echo $wr_id; ?>"></i>
                         <span class="text-sm text-grace-green" id="good-count-<?php echo $wr_id; ?>"><?php echo number_format($diary['wr_good']); ?></span>
                     </button>
 
@@ -410,7 +410,7 @@ function toggleGood(wrId) {
             icon.classList.toggle('fa-regular');
             icon.classList.toggle('fa-solid');
             icon.classList.toggle('text-grace-green/50');
-            icon.classList.toggle('text-deep-purple');
+            icon.classList.toggle('text-red-500');
 
             count.textContent = data.count;
         }

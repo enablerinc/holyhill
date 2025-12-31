@@ -153,7 +153,7 @@ foreach ($grouped_list as $date_key => $items) {
                 <!-- 좋아요/댓글 -->
                 <div class="flex items-center gap-4 mt-2">
                     <span class="flex items-center gap-1 text-xs text-grace-green/50">
-                        <i class="fa-solid fa-heart text-lilac"></i>
+                        <i class="fa-solid fa-heart text-red-500"></i>
                         <?php echo number_format($good_count); ?>
                     </span>
                     <span class="flex items-center gap-1 text-xs text-grace-green/50">
