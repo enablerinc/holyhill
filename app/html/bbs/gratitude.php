@@ -93,11 +93,6 @@ $page_rows = 30;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $page_rows;
 
-// 전체 게시글 수 (전체 기준)
-$total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0";
-$total_count_result = sql_fetch($total_count_sql);
-$total_count = $total_count_result['cnt'] ? (int)$total_count_result['cnt'] : 0;
-
 // 선택된 날짜의 게시글 수
 $selected_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 AND DATE(wr_datetime) = '{$selected_date}'";
 $selected_count = (int)sql_fetch($selected_count_sql)['cnt'];
@@ -320,29 +315,12 @@ function get_date_label($date_str) {
             </div>
 
             <!-- 단계 인디케이터 -->
-            <div class="flex items-center justify-center gap-2 mb-4">
+            <div class="flex items-center justify-center gap-2">
                 <span class="stage-dot <?php echo $growth['stage'] >= 1 ? 'bg-green-300 active' : 'bg-gray-200'; ?>" title="씨앗"></span>
                 <span class="stage-dot <?php echo $growth['stage'] >= 2 ? 'bg-green-400 active' : 'bg-gray-200'; ?>" title="새싹"></span>
                 <span class="stage-dot <?php echo $growth['stage'] >= 3 ? 'bg-pink-300 active' : 'bg-gray-200'; ?>" title="꽃봉오리"></span>
                 <span class="stage-dot <?php echo $growth['stage'] >= 4 ? 'bg-pink-400 active' : 'bg-gray-200'; ?>" title="꽃"></span>
                 <span class="stage-dot <?php echo $growth['stage'] >= 5 ? 'bg-purple-400 active' : 'bg-gray-200'; ?>" title="만개"></span>
-            </div>
-
-            <!-- 간단 통계 -->
-            <div class="flex items-center justify-center gap-6 text-center pt-3 border-t border-soft-lavender/50">
-                <div>
-                    <p class="text-lg font-bold text-deep-purple"><?php echo number_format($total_count); ?></p>
-                    <p class="text-xs text-grace-green/60">전체 감사</p>
-                </div>
-                <div class="w-px h-8 bg-soft-lavender"></div>
-                <div>
-                    <?php
-                    $total_writers_sql = "SELECT COUNT(DISTINCT mb_id) as cnt FROM {$write_table} WHERE wr_is_comment = 0 AND mb_id != ''";
-                    $total_writers = sql_fetch($total_writers_sql)['cnt'];
-                    ?>
-                    <p class="text-lg font-bold text-grace-green"><?php echo number_format($total_writers); ?></p>
-                    <p class="text-xs text-grace-green/60">총 참여자</p>
-                </div>
             </div>
         </div>
     </div>
