@@ -434,11 +434,29 @@ $my_comments_list = array_slice($my_comments_list, 0, 5);
     <section id="profile-header" class="relative">
         <div class="profile-gradient h-32"></div>
         <div class="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
-            <div class="w-24 h-24 bg-white rounded-full p-1 shadow-warm">
-                <img src="<?php echo $profile_img; ?>" class="w-full h-full rounded-full object-cover" alt="프로필 이미지">
+            <div class="w-24 h-24 bg-white rounded-full p-1 shadow-warm relative cursor-pointer group" onclick="document.getElementById('profile_image_input').click()">
+                <img id="profile_image_preview" src="<?php echo $profile_img; ?>" class="w-full h-full rounded-full object-cover" alt="프로필 이미지">
+                <!-- 카메라 오버레이 -->
+                <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i class="fa-solid fa-camera text-white text-xl"></i>
+                </div>
+                <!-- 모바일용 항상 보이는 카메라 아이콘 -->
+                <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-lilac rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                    <i class="fa-solid fa-camera text-white text-xs"></i>
+                </div>
             </div>
+            <!-- 숨겨진 파일 입력 -->
+            <input type="file" id="profile_image_input" accept="image/jpeg,image/png,image/gif" class="hidden" onchange="uploadProfileImage(this)">
         </div>
     </section>
+
+    <!-- 업로드 로딩 오버레이 -->
+    <div id="upload_overlay" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl p-6 text-center">
+            <div class="animate-spin w-10 h-10 border-4 border-lilac border-t-transparent rounded-full mx-auto mb-3"></div>
+            <p class="text-sm text-grace-green">프로필 사진 변경 중...</p>
+        </div>
+    </div>
 
     <section id="profile-info" class="pt-16 px-4 text-center">
         <h2 class="text-xl font-semibold text-grace-green mb-1"><?php echo get_text($mb['mb_name']); ?></h2>
@@ -944,6 +962,64 @@ function confirmLogout() {
     if (confirm('로그아웃 하시겠습니까?')) {
         location.href = '<?php echo G5_BBS_URL; ?>/logout.php';
     }
+}
+
+function uploadProfileImage(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const file = input.files[0];
+
+    // 파일 크기 체크 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        alert('파일 크기는 10MB 이하로 선택해주세요.');
+        return;
+    }
+
+    // 이미지 타입 체크
+    if (!file.type.match(/image\/(jpeg|png|gif)/)) {
+        alert('JPG, PNG, GIF 이미지만 업로드 가능합니다.');
+        return;
+    }
+
+    // 미리보기 표시
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('profile_image_preview').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // 업로드 시작
+    const overlay = document.getElementById('upload_overlay');
+    overlay.classList.remove('hidden');
+
+    const formData = new FormData();
+    formData.append('profile_image', file);
+
+    fetch('<?php echo G5_BBS_URL; ?>/profile_image_update.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        overlay.classList.add('hidden');
+        if (data.success) {
+            // 캐시 방지를 위해 타임스탬프 추가
+            document.getElementById('profile_image_preview').src = data.image_url + '?' + new Date().getTime();
+            alert('프로필 사진이 변경되었습니다.');
+        } else {
+            alert(data.message || '업로드에 실패했습니다.');
+            // 실패 시 원래 이미지로 복원
+            location.reload();
+        }
+    })
+    .catch(error => {
+        overlay.classList.add('hidden');
+        alert('업로드 중 오류가 발생했습니다.');
+        location.reload();
+    });
+
+    // 같은 파일 다시 선택 가능하도록
+    input.value = '';
 }
 </script>
 
