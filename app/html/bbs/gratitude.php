@@ -323,22 +323,46 @@ function get_date_label($date_str) {
 
             <!-- 감사나무 시각화 -->
             <?php
-            // 나무 모양 슬롯 배열 (위에서 아래로, 피라미드 형태)
-            // 총 40개 슬롯: 3 + 5 + 7 + 9 + 9 + 7 = 40
-            $tree_rows = [3, 5, 7, 9, 9, 7];
+            // 목표 인원에 따라 나무 모양 동적 생성
+            function generate_tree_rows($goal) {
+                if ($goal <= 10) {
+                    return [2, 3, 3, 2]; // 10개
+                } elseif ($goal <= 15) {
+                    return [2, 3, 5, 3, 2]; // 15개
+                } elseif ($goal <= 20) {
+                    return [2, 4, 5, 5, 4]; // 20개
+                } elseif ($goal <= 25) {
+                    return [3, 4, 6, 6, 4, 2]; // 25개
+                } elseif ($goal <= 30) {
+                    return [3, 5, 6, 7, 6, 3]; // 30개
+                } elseif ($goal <= 35) {
+                    return [3, 5, 7, 8, 7, 5]; // 35개
+                } elseif ($goal <= 40) {
+                    return [3, 5, 7, 9, 9, 7]; // 40개
+                } elseif ($goal <= 50) {
+                    return [3, 5, 7, 9, 11, 9, 6]; // 50개
+                } else {
+                    return [3, 6, 8, 10, 12, 12, 9]; // 60개+
+                }
+            }
+
+            $tree_rows = generate_tree_rows($goal_count);
             $total_slots = array_sum($tree_rows);
-            $filled_count = min($today_participants, $total_slots);
+            $filled_count = min($today_participants, $goal_count);
             $is_fruit = ($growth['stage'] >= 5);
             $flower_emoji = '🌸';
             $fruit_emoji = '🍎';
             $empty_emoji = '·';
             $slot_index = 0;
+
+            // 채워진 비율에 따라 슬롯 수 계산
+            $filled_slots = round(($filled_count / $goal_count) * $total_slots);
             ?>
             <div class="gratitude-tree <?php echo $is_fruit ? 'fruit-glow' : ''; ?> mb-3">
                 <?php foreach ($tree_rows as $row_count) { ?>
                 <div class="tree-row">
                     <?php for ($i = 0; $i < $row_count; $i++) {
-                        $is_filled = ($slot_index < $filled_count);
+                        $is_filled = ($slot_index < $filled_slots);
                         $slot_index++;
                     ?>
                     <div class="tree-slot <?php echo $is_filled ? 'filled' : 'empty'; ?>">
