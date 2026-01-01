@@ -130,7 +130,7 @@ function convert_youtube_to_iframe_index($content) {
         <section id="slogan" class="mx-4 mb-3 mt-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl px-4 py-2.5 shadow-sm border border-amber-200">
             <div class="flex items-center justify-center gap-2">
                 <i class="fa-solid fa-quote-left text-amber-400 text-xs"></i>
-                <p class="text-sm font-bold text-amber-800"><?php echo get_text(strip_tags($slogan['wr_content'])); ?></p>
+                <p class="text-lg font-bold text-amber-800"><?php echo get_text(strip_tags($slogan['wr_content'])); ?></p>
                 <i class="fa-solid fa-quote-right text-amber-400 text-xs"></i>
                 <?php if ($is_admin) { ?>
                 <a href="<?php echo G5_BBS_URL; ?>/write_slogan.php?wr_id=<?php echo $slogan['wr_id']; ?>" class="ml-1 text-amber-500 hover:text-amber-700">
