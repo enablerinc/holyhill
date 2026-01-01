@@ -115,7 +115,7 @@ function convert_youtube_to_iframe_index($content) {
 
     <div id="main-container" class="max-w-2xl mx-auto">
 
-        <!-- 1. 표어 섹션 -->
+        <!-- 1. 표어 섹션 (컴팩트) -->
         <?php
         // 표어 게시판에서 최신 표어 가져오기 (slogan 게시판)
         $slogan_table = $g5['write_prefix'] . 'slogan';
@@ -127,41 +127,27 @@ function convert_youtube_to_iframe_index($content) {
         }
         ?>
         <?php if ($slogan && $slogan['wr_content']) { ?>
-        <section id="slogan" class="mx-4 mb-4 mt-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-4 shadow-md border border-amber-200">
-            <div class="text-center">
-                <i class="fa-solid fa-quote-left text-amber-400 text-lg mb-2"></i>
-                <?php if ($slogan['wr_subject']) { ?>
-                <p class="text-sm text-amber-600 mb-1"><?php echo get_text($slogan['wr_subject']); ?></p>
-                <?php } ?>
-                <p class="text-lg font-bold text-amber-800 leading-relaxed">
-                    "<?php echo get_text(strip_tags($slogan['wr_content'])); ?>"
-                </p>
-                <i class="fa-solid fa-quote-right text-amber-400 text-lg mt-2"></i>
+        <section id="slogan" class="mx-4 mb-3 mt-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl px-4 py-2.5 shadow-sm border border-amber-200">
+            <div class="flex items-center justify-center gap-2">
+                <i class="fa-solid fa-quote-left text-amber-400 text-xs"></i>
+                <p class="text-sm font-bold text-amber-800"><?php echo get_text(strip_tags($slogan['wr_content'])); ?></p>
+                <i class="fa-solid fa-quote-right text-amber-400 text-xs"></i>
                 <?php if ($is_admin) { ?>
-                <div class="mt-3 flex items-center justify-center gap-3">
-                    <a href="<?php echo G5_BBS_URL; ?>/write_slogan.php?wr_id=<?php echo $slogan['wr_id']; ?>"
-                       class="text-xs text-amber-600 hover:text-amber-800 font-medium">
-                        <i class="fa-solid fa-pen text-xs"></i> 수정
-                    </a>
-                    <span class="text-amber-300">|</span>
-                    <a href="<?php echo G5_BBS_URL; ?>/write_slogan.php"
-                       class="text-xs text-amber-600 hover:text-amber-800 font-medium">
-                        <i class="fa-solid fa-plus text-xs"></i> 새 표어 등록
-                    </a>
-                </div>
+                <a href="<?php echo G5_BBS_URL; ?>/write_slogan.php?wr_id=<?php echo $slogan['wr_id']; ?>" class="ml-1 text-amber-500 hover:text-amber-700">
+                    <i class="fa-solid fa-pen text-xs"></i>
+                </a>
                 <?php } ?>
             </div>
         </section>
         <?php } elseif ($is_admin) { ?>
-        <section id="slogan" class="mx-4 mb-4 mt-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4 shadow-md border border-gray-200">
-            <div class="text-center">
-                <i class="fa-solid fa-quote-left text-gray-300 text-lg mb-2"></i>
-                <p class="text-base text-gray-500 mb-3">표어를 등록해주세요</p>
-                <a href="<?php echo G5_BBS_URL; ?>/write_slogan.php"
-                   class="inline-block px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 font-medium transition-colors">
-                    <i class="fa-solid fa-plus mr-1"></i> 표어 등록하기
+        <section id="slogan" class="mx-4 mb-3 mt-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl px-4 py-2.5 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-center gap-2">
+                <i class="fa-solid fa-quote-left text-gray-300 text-xs"></i>
+                <p class="text-sm text-gray-500">표어를 등록해주세요</p>
+                <i class="fa-solid fa-quote-right text-gray-300 text-xs"></i>
+                <a href="<?php echo G5_BBS_URL; ?>/write_slogan.php" class="ml-1 px-2 py-1 bg-amber-500 text-white text-xs rounded hover:bg-amber-600">
+                    <i class="fa-solid fa-plus"></i>
                 </a>
-                <p class="text-xs text-gray-400 mt-2">* 'slogan' 게시판이 없으면 관리자 페이지에서 먼저 생성하세요</p>
             </div>
         </section>
         <?php } ?>
