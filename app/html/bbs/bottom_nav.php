@@ -36,16 +36,10 @@ $menu_colors = array(
     'login' => array('active' => 'text-gray-700 text-xl', 'inactive' => 'text-gray-400 text-lg')
 );
 
-// 프로필 이미지 경로 (로그인한 경우에만)
-$nav_profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-if ($is_member && isset($_SESSION['ss_mb_id'])) {
-    // 세션에서 직접 가져와서 extract()에 의한 변수 오염 방지
-    $safe_mb_id = $_SESSION['ss_mb_id'];
-    $nav_profile_img = G5_DATA_URL.'/member_image/'.substr($safe_mb_id, 0, 2).'/'.$safe_mb_id.'.gif';
-    if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($safe_mb_id, 0, 2).'/'.$safe_mb_id.'.gif')) {
-        $nav_profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-    }
-}
+// 프로필 이미지 경로 (로그인한 경우에만) - 캐시 버스팅 적용
+$nav_profile_img = ($is_member && isset($_SESSION['ss_mb_id']))
+    ? get_profile_image_url($_SESSION['ss_mb_id'])
+    : 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 ?>
 
 <nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40">

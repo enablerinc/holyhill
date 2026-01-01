@@ -324,11 +324,8 @@ if ($golden_result && $golden_result['mb_id'] == $mb['mb_id']) {
     $hof_badges['golden_time'] = date('H:i:s', strtotime($golden_result['login_time']));
 }
 
-// 프로필 이미지 경로
-$profile_img = G5_DATA_URL.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$mb['mb_id'].'.gif';
-if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$mb['mb_id'].'.gif')) {
-    $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-}
+// 프로필 이미지 경로 - 캐시 버스팅 적용
+$profile_img = get_profile_image_url($mb['mb_id']);
 
 // 내게 온 댓글 조회 (gallery + diary 게시판)
 $my_comments_list = array();
