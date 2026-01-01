@@ -1,5 +1,5 @@
 <?php
-include_once('./_common.php');
+include_once(__DIR__.'/_common.php');
 
 // 관리자만 접근 가능
 if (!$is_admin) {
@@ -85,28 +85,13 @@ $content = isset($write['wr_content']) ? get_text($write['wr_content']) : '';
         <input type="hidden" name="bo_table" value="<?php echo $bo_table; ?>">
 
         <!-- 미리보기 -->
-        <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-4 shadow-md border border-amber-200 mb-6">
-            <div class="text-center">
-                <i class="fa-solid fa-quote-left text-amber-400 text-lg mb-2"></i>
-                <p id="preview-title" class="text-sm text-amber-600 mb-1"><?php echo $subject ? $subject : '2026년 표어'; ?></p>
-                <p id="preview-content" class="text-lg font-bold text-amber-800 leading-relaxed">
-                    "<?php echo $content ? $content : '표어 문구를 입력하세요'; ?>"
-                </p>
-                <i class="fa-solid fa-quote-right text-amber-400 text-lg mt-2"></i>
+        <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl px-4 py-2.5 shadow-sm border border-amber-200 mb-6">
+            <div class="flex items-center justify-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded"><?php echo date('Y'); ?>년 표어</span>
+                <p id="preview-content" class="text-lg font-bold text-amber-800"><?php echo $content ? $content : '표어 문구를 입력하세요'; ?></p>
             </div>
         </div>
-
-        <!-- 제목 입력 -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-                <i class="fa-solid fa-tag text-amber-500 mr-1"></i> 제목
-            </label>
-            <input type="text" name="wr_subject" id="wr_subject" value="<?php echo $subject; ?>"
-                   placeholder="예: 2026년 표어"
-                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
-                   required>
-            <p class="text-xs text-gray-500 mt-1">표어의 제목을 입력하세요 (예: 2026년 표어)</p>
-        </div>
+        <input type="hidden" name="wr_subject" value="<?php echo date('Y'); ?>년 표어">
 
         <!-- 문구 입력 -->
         <div class="mb-6">
@@ -130,12 +115,8 @@ $content = isset($write['wr_content']) ? get_text($write['wr_content']) : '';
 
 <script>
 // 실시간 미리보기
-document.getElementById('wr_subject').addEventListener('input', function() {
-    document.getElementById('preview-title').textContent = this.value || '2026년 표어';
-});
-
 document.getElementById('wr_content').addEventListener('input', function() {
-    document.getElementById('preview-content').textContent = '"' + (this.value || '표어 문구를 입력하세요') + '"';
+    document.getElementById('preview-content').textContent = this.value || '표어 문구를 입력하세요';
 });
 </script>
 
