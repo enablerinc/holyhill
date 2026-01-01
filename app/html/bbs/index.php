@@ -542,7 +542,11 @@ function convert_youtube_to_iframe_index($content) {
                     AND wr_is_comment = 0
                     ORDER BY wr_id DESC LIMIT 1");
 
-                // 오늘 감사일기 작성한 회원들 (최근 5명)
+                // 오늘 감사일기 작성한 총 인원수 (정확한 카운트)
+                $today_total_count_sql = "SELECT COUNT(DISTINCT mb_id) as cnt FROM {$diary_table} WHERE DATE(wr_datetime) = CURDATE() AND wr_is_comment = 0 AND mb_id != ''";
+                $today_writers_count = (int)sql_fetch($today_total_count_sql)['cnt'];
+
+                // 오늘 감사일기 작성한 회원들 (최근 5명 표시용)
                 $today_writers_sql = "SELECT DISTINCT d.mb_id, m.mb_name, m.mb_nick
                     FROM {$diary_table} d
                     JOIN {$g5['member_table']} m ON d.mb_id = m.mb_id
@@ -551,7 +555,6 @@ function convert_youtube_to_iframe_index($content) {
                     ORDER BY d.wr_datetime DESC
                     LIMIT 5";
                 $today_writers_result = sql_query($today_writers_sql);
-                $today_writers_count = sql_num_rows($today_writers_result);
 
                 // 최근 감사일기 (가로 스크롤용, 최근 6개)
                 $recent_diaries_sql = "SELECT d.wr_id, d.wr_content, d.wr_datetime, d.wr_good, d.mb_id, m.mb_name, m.mb_nick
