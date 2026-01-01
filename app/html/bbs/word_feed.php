@@ -204,11 +204,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                     if ($member_info) {
                         $writer_nick = $member_info['mb_nick'] ? $member_info['mb_nick'] : $list[$i]['wr_name'];
                     }
-                    // 프로필 이미지 확인
-                    $profile_path = G5_DATA_PATH.'/member_image/'.substr($writer_id, 0, 2).'/'.$writer_id.'.gif';
-                    if (file_exists($profile_path)) {
-                        $writer_photo = G5_DATA_URL.'/member_image/'.substr($writer_id, 0, 2).'/'.$writer_id.'.gif';
-                    }
+                    // 프로필 이미지 - 캐시 버스팅 적용
+                    $writer_photo = get_profile_image_url($writer_id);
                 }
 
                 // 댓글 수 조회

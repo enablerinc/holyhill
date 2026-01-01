@@ -17,12 +17,8 @@ if (!$mb['mb_id']) {
 
 $g5['title'] = $mb['mb_name'].'님의 프로필';
 
-// 프로필 이미지
-$profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-$profile_path = G5_DATA_PATH.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$mb['mb_id'].'.gif';
-if (file_exists($profile_path)) {
-    $profile_photo = G5_DATA_URL.'/member_image/'.substr($mb['mb_id'], 0, 2).'/'.$mb['mb_id'].'.gif';
-}
+// 프로필 이미지 - 캐시 버스팅 적용
+$profile_photo = get_profile_image_url($mb['mb_id']);
 
 // 통계 정보 가져오기
 // 1. 게시글 수 (gallery 게시판)

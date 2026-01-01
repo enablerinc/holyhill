@@ -122,10 +122,7 @@ function getTodayAttendanceList($g5, $limit = 50) {
     $rank = 0;
     while ($row = sql_fetch_array($result)) {
         $rank++;
-        $profile_img = G5_DATA_URL.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif';
-        if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif')) {
-            $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-        }
+        $profile_img = get_profile_image_url($row['mb_id']);
 
         $list[] = array(
             'rank' => $rank,

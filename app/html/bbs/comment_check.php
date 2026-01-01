@@ -31,14 +31,8 @@ $result = sql_query($sql);
 $new_comments = array();
 
 while ($row = sql_fetch_array($result)) {
-    // 작성자 프로필 사진 가져오기
-    $c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-    if ($row['mb_id']) {
-        $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif';
-        if (file_exists($c_profile_path)) {
-            $c_photo = G5_DATA_URL.'/member_image/'.substr($row['mb_id'], 0, 2).'/'.$row['mb_id'].'.gif';
-        }
-    }
+    // 작성자 프로필 사진 - 캐시 버스팅 적용
+    $c_photo = $row['mb_id'] ? get_profile_image_url($row['mb_id']) : 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 
     // 시간 포맷 (몇 분 전, 몇 시간 전 등)
     $datetime = strtotime($row['wr_datetime']);

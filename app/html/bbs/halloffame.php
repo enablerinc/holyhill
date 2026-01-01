@@ -41,11 +41,8 @@ $all_members = array();
 while ($row = sql_fetch_array($member_points_result)) {
     $mb_id = $row['mb_id'];
 
-    // 프로필 이미지 경로
-    $profile_img = G5_DATA_URL.'/member_image/'.substr($mb_id, 0, 2).'/'.$mb_id.'.gif';
-    if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb_id, 0, 2).'/'.$mb_id.'.gif')) {
-        $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-    }
+    // 프로필 이미지 경로 - 캐시 버스팅 적용
+    $profile_img = get_profile_image_url($mb_id);
 
     // 모든 게시판에서 회원의 게시글 수 및 댓글 수 조회
     $post_count = 0;
@@ -485,11 +482,7 @@ $golden_time_member = $golden_result ? $golden_result : null;
 
 // 프로필 이미지 가져오기 함수
 function getProfileImage($mb_id) {
-    $profile_img = G5_DATA_URL.'/member_image/'.substr($mb_id, 0, 2).'/'.$mb_id.'.gif';
-    if (!file_exists(G5_DATA_PATH.'/member_image/'.substr($mb_id, 0, 2).'/'.$mb_id.'.gif')) {
-        $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-    }
-    return $profile_img;
+    return get_profile_image_url($mb_id);
 }
 
 ?>

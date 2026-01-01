@@ -124,14 +124,8 @@ if ($parent_comment_id > 0 && isset($parent_comment) && $parent_comment['mb_id']
 $new_token = get_random_token_string();
 set_session('ss_comment_token', $new_token);
 
-// 방금 작성한 댓글 정보 반환
-$c_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-if ($member['mb_id']) {
-    $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (file_exists($c_profile_path)) {
-        $c_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    }
-}
+// 방금 작성한 댓글 정보 반환 - 캐시 버스팅 적용
+$c_photo = $member['mb_id'] ? get_profile_image_url($member['mb_id']) : 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 
 echo json_encode([
     'success' => true,

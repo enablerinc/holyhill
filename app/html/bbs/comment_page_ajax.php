@@ -77,14 +77,8 @@ if ($comment_page > $total_comment_pages) $comment_page = $total_comment_pages;
 
 $comment_offset = ($comment_page - 1) * $comments_per_page;
 
-// 현재 로그인한 사용자 프로필 사진
-$comment_profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-if ($is_member) {
-    $comment_profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (file_exists($comment_profile_path)) {
-        $comment_profile_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    }
-}
+// 현재 로그인한 사용자 프로필 사진 - 캐시 버스팅 적용
+$comment_profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 
 // 댓글 가져오기
 $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_id ASC LIMIT {$comment_offset}, {$comments_per_page}");
@@ -121,11 +115,7 @@ function render_comment_ajax($comment, $depth, $children_map, $g5, $is_member, $
         if ($c_mb) {
             $c_nick = $c_mb['mb_name'];
         }
-
-        $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
-        if (file_exists($c_profile_path)) {
-            $c_photo = G5_DATA_URL.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
-        }
+        $c_photo = get_profile_image_url($c['mb_id']);
     }
     ?>
     <div id="c_<?php echo $c['wr_id']; ?>" class="mb-3 <?php echo $indent_class; ?>" data-depth="<?php echo $depth; ?>">

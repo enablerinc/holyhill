@@ -359,11 +359,8 @@ function convert_youtube_to_iframe_index($content) {
                         if ($mb_info) {
                             $feed_nick = $mb_info['mb_name'] ? $mb_info['mb_name'] : $mb_info['mb_nick'];
                         }
-                        // 프로필 사진 경로
-                        $profile_path = G5_DATA_PATH.'/member_image/'.substr($feed['mb_id'], 0, 2).'/'.$feed['mb_id'].'.gif';
-                        if (file_exists($profile_path)) {
-                            $feed_photo = G5_DATA_URL.'/member_image/'.substr($feed['mb_id'], 0, 2).'/'.$feed['mb_id'].'.gif';
-                        }
+                        // 프로필 사진 경로 - 캐시 버스팅 적용
+                        $feed_photo = get_profile_image_url($feed['mb_id']);
                     }
 
                     // YouTube URL 추출 및 썸네일 생성
@@ -588,13 +585,10 @@ function convert_youtube_to_iframe_index($content) {
                 <!-- 오늘 아직 작성 안한 경우 -->
                 <a href="<?php echo G5_BBS_URL; ?>/gratitude_write.php" class="flex items-center gap-3 group">
                     <?php
-                    $my_photo = '';
-                    $profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-                    if (file_exists($profile_path)) {
-                        $my_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-                    }
+                    $my_photo = get_profile_image_url($member['mb_id']);
+                    $has_custom_photo = (strpos($my_photo, 'avatar-7.jpg') === false);
                     ?>
-                    <?php if ($my_photo) { ?>
+                    <?php if ($has_custom_photo) { ?>
                     <img src="<?php echo $my_photo; ?>" alt="내 프로필" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md">
                     <?php } else { ?>
                     <div class="w-12 h-12 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center border-2 border-white shadow-md">
@@ -618,13 +612,10 @@ function convert_youtube_to_iframe_index($content) {
                         <div class="flex -space-x-2">
                             <?php
                             while ($writer = sql_fetch_array($today_writers_result)) {
-                                $writer_photo = '';
-                                $w_profile_path = G5_DATA_PATH.'/member_image/'.substr($writer['mb_id'], 0, 2).'/'.$writer['mb_id'].'.gif';
-                                if (file_exists($w_profile_path)) {
-                                    $writer_photo = G5_DATA_URL.'/member_image/'.substr($writer['mb_id'], 0, 2).'/'.$writer['mb_id'].'.gif';
-                                }
+                                $writer_photo = get_profile_image_url($writer['mb_id']);
+                                $has_writer_photo = (strpos($writer_photo, 'avatar-7.jpg') === false);
                             ?>
-                            <?php if ($writer_photo) { ?>
+                            <?php if ($has_writer_photo) { ?>
                             <img src="<?php echo $writer_photo; ?>" class="w-6 h-6 rounded-full border-2 border-white object-cover" alt="<?php echo $writer['mb_name']; ?>">
                             <?php } else { ?>
                             <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 border-2 border-white flex items-center justify-center">
@@ -691,12 +682,8 @@ function convert_youtube_to_iframe_index($content) {
                     $rank = 1;
                     $best_member_point = 30000; // 베스트 성산인 기준 점수
                     while ($best = sql_fetch_array($best_result)) {
-                        // 프로필 이미지
-                        $profile_img = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-                        $profile_path = G5_DATA_PATH.'/member_image/'.substr($best['mb_id'], 0, 2).'/'.$best['mb_id'].'.gif';
-                        if (file_exists($profile_path)) {
-                            $profile_img = G5_DATA_URL.'/member_image/'.substr($best['mb_id'], 0, 2).'/'.$best['mb_id'].'.gif';
-                        }
+                        // 프로필 이미지 - 캐시 버스팅 적용
+                        $profile_img = get_profile_image_url($best['mb_id']);
 
                         // 3만점 이상인 경우에만 하이라이트 및 메달/등수 표시
                         $is_best_member = ($best['monthly_points'] >= $best_member_point);
@@ -780,11 +767,7 @@ function convert_youtube_to_iframe_index($content) {
             <div class="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
                 <?php
                 while ($online = sql_fetch_array($online_result)) {
-                    $online_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-                    $profile_path = G5_DATA_PATH.'/member_image/'.substr($online['mb_id'], 0, 2).'/'.$online['mb_id'].'.gif';
-                    if (file_exists($profile_path)) {
-                        $online_photo = G5_DATA_URL.'/member_image/'.substr($online['mb_id'], 0, 2).'/'.$online['mb_id'].'.gif';
-                    }
+                    $online_photo = get_profile_image_url($online['mb_id']);
                     $online_nick = $online['mb_nick'] ? $online['mb_nick'] : '회원';
                 ?>
                 <a href="<?php echo G5_BBS_URL; ?>/user_profile.php?mb_id=<?php echo $online['mb_id']; ?>"

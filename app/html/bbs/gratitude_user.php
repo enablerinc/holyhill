@@ -33,12 +33,8 @@ if (!$target_member) {
 
 $target_name = $target_member['mb_name'] ? $target_member['mb_name'] : ($target_member['mb_nick'] ? $target_member['mb_nick'] : $target_mb_id);
 
-// 프로필 이미지
-$target_photo = '';
-$profile_path = G5_DATA_PATH.'/member_image/'.substr($target_mb_id, 0, 2).'/'.$target_mb_id.'.gif';
-if (file_exists($profile_path)) {
-    $target_photo = G5_DATA_URL.'/member_image/'.substr($target_mb_id, 0, 2).'/'.$target_mb_id.'.gif';
-}
+// 프로필 이미지 - 캐시 버스팅 적용
+$target_photo = get_profile_image_url($target_mb_id);
 
 $g5['title'] = $target_name . '의 감사일기';
 
@@ -62,14 +58,8 @@ while ($row = sql_fetch_array($result)) {
     $diary_list[] = $row;
 }
 
-// 현재 로그인한 사용자의 프로필 (댓글용)
-$my_profile_photo = '';
-if ($is_member) {
-    $my_profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (file_exists($my_profile_path)) {
-        $my_profile_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    }
-}
+// 현재 로그인한 사용자의 프로필 (댓글용) - 캐시 버스팅 적용
+$my_profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : '';
 
 // 댓글 토큰
 $comment_token = '';
@@ -292,10 +282,7 @@ function get_time_ago_user($datetime) {
                                 if ($c_member) {
                                     $c_nick = $c_member['mb_name'] ? $c_member['mb_name'] : ($c_member['mb_nick'] ? $c_member['mb_nick'] : $comment['wr_name']);
                                 }
-                                $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($comment['mb_id'], 0, 2).'/'.$comment['mb_id'].'.gif';
-                                if (file_exists($c_profile_path)) {
-                                    $c_photo = G5_DATA_URL.'/member_image/'.substr($comment['mb_id'], 0, 2).'/'.$comment['mb_id'].'.gif';
-                                }
+                                $c_photo = get_profile_image_url($comment['mb_id']);
                             }
                         ?>
                         <div class="flex gap-3" id="comment-<?php echo $comment['wr_id']; ?>">

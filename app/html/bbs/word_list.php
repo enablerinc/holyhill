@@ -150,11 +150,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                     if ($member_info && $member_info['mb_nick']) {
                         $word_nick = $member_info['mb_nick'];
                     }
-                    // 프로필 이미지 확인
-                    $profile_path = G5_DATA_PATH.'/member_image/'.substr($word['mb_id'], 0, 2).'/'.$word['mb_id'].'.gif';
-                    if (file_exists($profile_path)) {
-                        $writer_photo = G5_DATA_URL.'/member_image/'.substr($word['mb_id'], 0, 2).'/'.$word['mb_id'].'.gif';
-                    }
+                    // 프로필 이미지 - 캐시 버스팅 적용
+                    $writer_photo = get_profile_image_url($word['mb_id']);
                 }
 
                 // YouTube URL이 있는지 확인

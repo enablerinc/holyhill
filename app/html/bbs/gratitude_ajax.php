@@ -73,10 +73,7 @@ foreach ($list as $item) {
         if ($member_info) {
             $writer_nick = $member_info['mb_name'] ? $member_info['mb_name'] : ($member_info['mb_nick'] ? $member_info['mb_nick'] : $item['wr_name']);
         }
-        $profile_path = G5_DATA_PATH.'/member_image/'.substr($writer_id, 0, 2).'/'.$writer_id.'.gif';
-        if (file_exists($profile_path)) {
-            $writer_photo = G5_DATA_URL.'/member_image/'.substr($writer_id, 0, 2).'/'.$writer_id.'.gif';
-        }
+        $writer_photo = get_profile_image_url($writer_id);
     }
 
     // 내용 미리보기

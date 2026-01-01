@@ -108,11 +108,8 @@ if ($write['mb_id']) {
         $mb_nick = $row['mb_name'];  // 이름 사용
     }
 
-    // 프로필 이미지
-    $profile_path = G5_DATA_PATH.'/member_image/'.substr($write['mb_id'], 0, 2).'/'.$write['mb_id'].'.gif';
-    if (file_exists($profile_path)) {
-        $mb_photo = G5_DATA_URL.'/member_image/'.substr($write['mb_id'], 0, 2).'/'.$write['mb_id'].'.gif';
-    }
+    // 프로필 이미지 - 캐시 버스팅 적용
+    $mb_photo = get_profile_image_url($write['mb_id']);
 }
 
 // 미디어 파일 (이미지 + 동영상 + 음원 + 문서)
@@ -206,10 +203,7 @@ if ($is_member) {
 // 댓글 작성자 프로필 사진 (답글 입력창에서 사용)
 $comment_profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 if ($is_member) {
-    $comment_profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (file_exists($comment_profile_path)) {
-        $comment_profile_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    }
+    $comment_profile_photo = get_profile_image_url($member['mb_id']);
 }
 
 // 본문에 사용된 미디어 인덱스 추출 (이미지 + 동영상 + 음원)
@@ -752,11 +746,7 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                         if ($c_mb) {
                             $c_nick = $c_mb['mb_name'];
                         }
-
-                        $c_profile_path = G5_DATA_PATH.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
-                        if (file_exists($c_profile_path)) {
-                            $c_photo = G5_DATA_URL.'/member_image/'.substr($c['mb_id'], 0, 2).'/'.$c['mb_id'].'.gif';
-                        }
+                        $c_photo = get_profile_image_url($c['mb_id']);
                     }
                     ?>
                     <div id="c_<?php echo $c['wr_id']; ?>" class="mb-3 <?php echo $indent_class; ?>" data-depth="<?php echo $depth; ?>">

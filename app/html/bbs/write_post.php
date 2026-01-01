@@ -66,14 +66,8 @@ $action_url = G5_BBS_URL.'/write_update.php';
 // 파일 업로드 개수
 $file_count = 10;
 
-// 프로필 이미지
-$profile_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-if ($is_member) {
-    $profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (file_exists($profile_path)) {
-        $profile_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    }
-}
+// 프로필 이미지 - 캐시 버스팅 적용
+$profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 ?>
 
 <!DOCTYPE html>

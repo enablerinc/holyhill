@@ -43,14 +43,8 @@ if (isset($_GET['w']) && $_GET['w'] == 'u' && isset($_GET['wr_id'])) {
 
 $g5['title'] = $w == 'u' ? '감사일기 수정' : '감사일기 쓰기';
 
-// 프로필 이미지
-$profile_photo = '';
-if ($is_member) {
-    $profile_path = G5_DATA_PATH.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    if (file_exists($profile_path)) {
-        $profile_photo = G5_DATA_URL.'/member_image/'.substr($member['mb_id'], 0, 2).'/'.$member['mb_id'].'.gif';
-    }
-}
+// 프로필 이미지 - 캐시 버스팅 적용
+$profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : '';
 
 $member_name = $member['mb_name'] ? $member['mb_name'] : ($member['mb_nick'] ? $member['mb_nick'] : $member['mb_id']);
 

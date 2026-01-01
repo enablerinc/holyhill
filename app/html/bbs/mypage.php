@@ -852,14 +852,8 @@ $my_comments_list = array_slice($my_comments_list, 0, 5);
                         $time_str = floor($time_diff / 86400) . '일 전';
                     }
 
-                    // 댓글 작성자 프로필 이미지
-                    $comment_author_photo = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
-                    if ($comment['comment_author_id']) {
-                        $author_profile_path = G5_DATA_PATH.'/member_image/'.substr($comment['comment_author_id'], 0, 2).'/'.$comment['comment_author_id'].'.gif';
-                        if (file_exists($author_profile_path)) {
-                            $comment_author_photo = G5_DATA_URL.'/member_image/'.substr($comment['comment_author_id'], 0, 2).'/'.$comment['comment_author_id'].'.gif';
-                        }
-                    }
+                    // 댓글 작성자 프로필 이미지 - 캐시 버스팅 적용
+                    $comment_author_photo = $comment['comment_author_id'] ? get_profile_image_url($comment['comment_author_id']) : 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
 
                     // 댓글 링크 (gallery vs diary)
                     if ($comment['bo_table'] === 'diary') {
