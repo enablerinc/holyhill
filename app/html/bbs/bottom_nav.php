@@ -39,42 +39,54 @@ if ($is_member && isset($_SESSION['ss_mb_id'])) {
 }
 ?>
 
-<nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-soft-lavender z-40">
-    <div class="flex items-center justify-around py-3">
+<nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40">
+    <div class="flex items-center justify-around py-4">
         <!-- 홈 -->
-        <a href="<?php echo G5_BBS_URL; ?>/index.php" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/index.php" class="flex flex-col items-center gap-1 relative">
             <i class="fa-solid fa-house <?php echo ($current_page == 'home') ? $active_icon_class : $inactive_icon_class; ?>"></i>
             <span class="<?php echo ($current_page == 'home') ? $active_text_class : $inactive_text_class; ?>">홈</span>
+            <?php if ($current_page == 'home'): ?><div class="absolute -bottom-1 w-1.5 h-1.5 bg-purple-600 rounded-full"></div><?php endif; ?>
         </a>
 
         <!-- 성산샘터 -->
-        <a href="<?php echo G5_BBS_URL; ?>/feed.php" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/feed.php" class="flex flex-col items-center gap-1 relative">
             <i class="fa-solid fa-droplet <?php echo ($current_page == 'feed') ? $active_icon_class : $inactive_icon_class; ?>"></i>
             <span class="<?php echo ($current_page == 'feed') ? $active_text_class : $inactive_text_class; ?>">성산샘터</span>
+            <?php if ($current_page == 'feed'): ?><div class="absolute -bottom-1 w-1.5 h-1.5 bg-purple-600 rounded-full"></div><?php endif; ?>
         </a>
 
         <!-- 감사일기 -->
-        <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="flex flex-col items-center gap-1 relative">
             <i class="fa-solid fa-book <?php echo ($current_page == 'gratitude') ? $active_icon_class : $inactive_icon_class; ?>"></i>
             <span class="<?php echo ($current_page == 'gratitude') ? $active_text_class : $inactive_text_class; ?>">감사일기</span>
+            <?php if ($current_page == 'gratitude'): ?><div class="absolute -bottom-1 w-1.5 h-1.5 bg-purple-600 rounded-full"></div><?php endif; ?>
         </a>
 
         <!-- 말씀 -->
-        <a href="<?php echo G5_BBS_URL; ?>/word_feed.php" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/word_feed.php" class="flex flex-col items-center gap-1 relative">
             <i class="fa-solid fa-book-bible <?php echo ($current_page == 'word') ? $active_icon_class : $inactive_icon_class; ?>"></i>
             <span class="<?php echo ($current_page == 'word') ? $active_text_class : $inactive_text_class; ?>">말씀</span>
+            <?php if ($current_page == 'word'): ?><div class="absolute -bottom-1 w-1.5 h-1.5 bg-purple-600 rounded-full"></div><?php endif; ?>
         </a>
 
         <!-- 명예의 전당 -->
-        <a href="<?php echo G5_BBS_URL; ?>/halloffame.php" class="flex flex-col items-center gap-1">
+        <a href="<?php echo G5_BBS_URL; ?>/halloffame.php" class="flex flex-col items-center gap-1 relative">
             <i class="fa-solid fa-trophy <?php echo ($current_page == 'halloffame') ? $active_icon_class : $inactive_icon_class; ?>"></i>
             <span class="<?php echo ($current_page == 'halloffame') ? $active_text_class : $inactive_text_class; ?>">명예의 전당</span>
+            <?php if ($current_page == 'halloffame'): ?><div class="absolute -bottom-1 w-1.5 h-1.5 bg-purple-600 rounded-full"></div><?php endif; ?>
         </a>
 
         <!-- 내 정보 / 로그인 -->
         <?php if ($is_member) { ?>
         <a href="<?php echo G5_BBS_URL; ?>/mypage.php" class="flex flex-col items-center gap-1">
-            <img src="<?php echo $nav_profile_img; ?>" class="w-6 h-6 rounded-full object-cover border-2 <?php echo ($current_page == 'mypage') ? 'border-purple-600' : 'border-lilac'; ?>">
+            <div class="relative">
+                <div class="<?php echo ($current_page == 'mypage') ? 'p-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full' : 'p-0.5 bg-gradient-to-r from-lilac to-purple-300 rounded-full'; ?>">
+                    <img src="<?php echo $nav_profile_img; ?>" class="w-7 h-7 rounded-full object-cover border-2 border-white">
+                </div>
+                <?php if ($current_page == 'mypage'): ?>
+                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-purple-600 rounded-full"></div>
+                <?php endif; ?>
+            </div>
             <span class="<?php echo ($current_page == 'mypage') ? $active_text_class : $inactive_text_class; ?>">내 정보</span>
         </a>
         <?php } else { ?>
