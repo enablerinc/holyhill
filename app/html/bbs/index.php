@@ -83,7 +83,7 @@ function convert_youtube_to_iframe_index($content) {
         <div class="flex items-center gap-2">
             <div class="relative">
                 <i id="notification-bell" class="fa-solid fa-bell text-grace-green text-lg cursor-pointer hover:text-deep-purple transition-colors"></i>
-                <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden pointer-events-none">0</span>
             </div>
         </div>
     </div>
@@ -976,6 +976,23 @@ function convert_youtube_to_iframe_index($content) {
             notificationPanel.classList.add('translate-x-full');
         }
     });
+
+    // 우측 스와이프로 패널 닫기
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    notificationPanel.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    notificationPanel.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        const swipeDistance = touchEndX - touchStartX;
+        // 우측으로 50px 이상 스와이프시 닫기
+        if (swipeDistance > 50) {
+            notificationPanel.classList.add('translate-x-full');
+        }
+    }, { passive: true });
 
     // 알림 개수 가져오기
     function loadNotificationCount() {

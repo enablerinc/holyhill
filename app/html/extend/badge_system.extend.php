@@ -41,6 +41,9 @@ define('BADGE_MOST_ATTENDANCE', 'most_attendance');   // 최다 출석자
 define('BADGE_CONSECUTIVE', 'consecutive');           // 연속 출석 챔피언
 define('BADGE_PERFECT_ATTENDANCE', 'perfect_attendance'); // 이달의 개근상
 define('BADGE_DAWN', 'dawn');                         // 새벽 출석자
+define('BADGE_GRATITUDE_7', 'gratitude_7');           // 감사일기 7일 연속
+define('BADGE_GRATITUDE_30', 'gratitude_30');         // 감사일기 30일 연속
+define('BADGE_GRATITUDE_PERFECT', 'gratitude_perfect'); // 감사일기 개근상
 
 // 뱃지 정보 배열
 function get_badge_info($badge_type) {
@@ -83,6 +86,21 @@ function get_badge_info($badge_type) {
             'name' => '새벽 출석',
             'icon' => 'fa-sun',
             'colors' => 'from-indigo-400 to-indigo-600'
+        ),
+        BADGE_GRATITUDE_7 => array(
+            'name' => '감사 새싹',
+            'icon' => 'fa-seedling',
+            'colors' => 'from-green-400 to-emerald-500'
+        ),
+        BADGE_GRATITUDE_30 => array(
+            'name' => '감사 나무',
+            'icon' => 'fa-tree',
+            'colors' => 'from-emerald-500 to-green-600'
+        ),
+        BADGE_GRATITUDE_PERFECT => array(
+            'name' => '감사 개근',
+            'icon' => 'fa-book-heart',
+            'colors' => 'from-pink-400 to-rose-500'
         )
     );
 
@@ -316,6 +334,50 @@ function run_badge_settlement($settle_year, $settle_month) {
     while ($row = sql_fetch_array($dawn_result)) {
         save_badge($row['mb_id'], BADGE_DAWN, $settle_year, $settle_month, $rank, $row['dawn_count'] . '회');
         $rank++;
+    }
+
+    // 7. 감사일기 뱃지
+    $diary_table = $g5['write_prefix'] . 'diary';
+    $diary_check = sql_query("SHOW TABLES LIKE '{$diary_table}'", false);
+    if (sql_num_rows($diary_check)) {
+        // 감사일기 개근상 (매일 작성)
+        $gratitude_perfect_sql = "
+            SELECT d.mb_id, COUNT(DISTINCT DATE(d.wr_datetime)) as diary_days, COUNT(*) as total_count
+            FROM {$diary_table} d
+            WHERE d.wr_is_comment = 0
+            AND d.wr_datetime >= '{$start_date}' AND d.wr_datetime <= '{$end_date}'
+            GROUP BY d.mb_id
+            HAVING diary_days >= {$days_in_month}";
+        $gratitude_perfect_result = sql_query($gratitude_perfect_sql);
+        while ($row = sql_fetch_array($gratitude_perfect_result)) {
+            save_badge($row['mb_id'], BADGE_GRATITUDE_PERFECT, $settle_year, $settle_month, 0, $row['total_count'] . '편');
+        }
+
+        // 감사일기 30일 연속 (개근 아닌 30일 이상 연속)
+        $gratitude_30_sql = "
+            SELECT d.mb_id, COUNT(DISTINCT DATE(d.wr_datetime)) as diary_days
+            FROM {$diary_table} d
+            WHERE d.wr_is_comment = 0
+            AND d.wr_datetime >= '{$start_date}' AND d.wr_datetime <= '{$end_date}'
+            GROUP BY d.mb_id
+            HAVING diary_days >= 30 AND diary_days < {$days_in_month}";
+        $gratitude_30_result = sql_query($gratitude_30_sql);
+        while ($row = sql_fetch_array($gratitude_30_result)) {
+            save_badge($row['mb_id'], BADGE_GRATITUDE_30, $settle_year, $settle_month, 0, $row['diary_days'] . '일');
+        }
+
+        // 감사일기 7일 연속 (7일 이상 ~ 30일 미만)
+        $gratitude_7_sql = "
+            SELECT d.mb_id, COUNT(DISTINCT DATE(d.wr_datetime)) as diary_days
+            FROM {$diary_table} d
+            WHERE d.wr_is_comment = 0
+            AND d.wr_datetime >= '{$start_date}' AND d.wr_datetime <= '{$end_date}'
+            GROUP BY d.mb_id
+            HAVING diary_days >= 7 AND diary_days < 30";
+        $gratitude_7_result = sql_query($gratitude_7_sql);
+        while ($row = sql_fetch_array($gratitude_7_result)) {
+            save_badge($row['mb_id'], BADGE_GRATITUDE_7, $settle_year, $settle_month, 0, $row['diary_days'] . '일');
+        }
     }
 }
 

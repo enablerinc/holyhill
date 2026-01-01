@@ -106,6 +106,40 @@ for ($i = 0; $i < count($all_members); $i++) {
 $total_best = count($best_members);
 
 // ===========================
+// 2.5 이달의 베스트 감사인 (매일 감사일기 작성)
+// ===========================
+$best_gratitude_members = array();
+$diary_table = $g5['write_prefix'] . 'diary';
+$diary_exists = sql_query("SHOW TABLES LIKE '{$diary_table}'", false);
+
+if (sql_num_rows($diary_exists) > 0) {
+    // 이번 달 경과 일수
+    $days_passed = ($current_year == date('Y') && $current_month == date('n')) ? (int)date('j') : (int)date('t', strtotime($start_date));
+
+    // 매일 감사일기 작성한 회원 조회
+    $best_gratitude_sql = "
+        SELECT
+            d.mb_id,
+            m.mb_name,
+            m.mb_nick,
+            COUNT(DISTINCT DATE(d.wr_datetime)) as diary_days,
+            COUNT(*) as total_diaries
+        FROM {$diary_table} d
+        JOIN {$g5['member_table']} m ON d.mb_id = m.mb_id
+        WHERE d.wr_is_comment = 0
+        AND d.wr_datetime >= '{$start_date}'
+        AND d.wr_datetime <= '{$end_date}'
+        GROUP BY d.mb_id
+        HAVING diary_days >= {$days_passed}
+        ORDER BY total_diaries DESC, diary_days DESC
+    ";
+    $best_gratitude_result = sql_query($best_gratitude_sql);
+    while ($row = sql_fetch_array($best_gratitude_result)) {
+        $best_gratitude_members[] = $row;
+    }
+}
+
+// ===========================
 // 3. 이달의 활동 통계
 // ===========================
 
@@ -129,6 +163,20 @@ while ($board = sql_fetch_array($board_list)) {
     }
 }
 
+// diary 테이블 게시물 추가 (별도 집계)
+$diary_table = $g5['write_prefix'] . 'diary';
+$diary_table_check = sql_query("SHOW TABLES LIKE '{$diary_table}'", false);
+if (sql_num_rows($diary_table_check)) {
+    $diary_posts_sql = "SELECT COUNT(*) as cnt FROM {$diary_table}
+                        WHERE wr_is_comment = 0
+                        AND wr_datetime >= '{$start_date}'
+                        AND wr_datetime <= '{$end_date}'";
+    $diary_posts_result = sql_fetch($diary_posts_sql);
+    if ($diary_posts_result) {
+        $total_posts += (int)$diary_posts_result['cnt'];
+    }
+}
+
 // 총 댓글 수 (해당 월)
 $total_comments = 0;
 $board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
@@ -146,6 +194,18 @@ while ($board = sql_fetch_array($board_list)) {
     $comments_result = sql_fetch($comments_sql);
     if ($comments_result) {
         $total_comments += (int)$comments_result['cnt'];
+    }
+}
+
+// diary 테이블 댓글 추가
+if (sql_num_rows($diary_table_check)) {
+    $diary_comments_sql = "SELECT COUNT(*) as cnt FROM {$diary_table}
+                           WHERE wr_is_comment = 1
+                           AND wr_datetime >= '{$start_date}'
+                           AND wr_datetime <= '{$end_date}'";
+    $diary_comments_result = sql_fetch($diary_comments_sql);
+    if ($diary_comments_result) {
+        $total_comments += (int)$diary_comments_result['cnt'];
     }
 }
 
@@ -169,6 +229,17 @@ while ($board = sql_fetch_array($board_list)) {
     $amens_result = sql_fetch($amens_sql);
     if ($amens_result) {
         $total_amens += (int)$amens_result['total'];
+    }
+}
+
+// diary 테이블 좋아요 추가
+if (sql_num_rows($diary_table_check)) {
+    $diary_amens_sql = "SELECT COALESCE(SUM(wr_good), 0) as total FROM {$diary_table}
+                        WHERE wr_datetime >= '{$start_date}'
+                        AND wr_datetime <= '{$end_date}'";
+    $diary_amens_result = sql_fetch($diary_amens_sql);
+    if ($diary_amens_result) {
+        $total_amens += (int)$diary_amens_result['total'];
     }
 }
 
@@ -561,6 +632,50 @@ function getProfileImage($mb_id) {
             <?php endif; ?>
         </div>
     </section>
+
+    <!-- 베스트 감사인 섹션 -->
+    <?php if (count($best_gratitude_members) > 0): ?>
+    <section id="best-gratitude" class="px-4 mt-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-book-heart text-pink-500 text-lg"></i>
+                <h3 class="text-lg font-semibold text-grace-green">이달의 베스트 감사인</h3>
+            </div>
+            <span class="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">매일 작성</span>
+        </div>
+
+        <div class="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4 border border-pink-200">
+            <p class="text-sm text-grace-green/70 mb-3">
+                <i class="fa-solid fa-hands-praying text-pink-400 mr-1"></i>
+                한번도 빠지지 않고 감사일기를 쓴 분들입니다
+            </p>
+            <div class="space-y-3">
+                <?php foreach ($best_gratitude_members as $idx => $gmember): ?>
+                <div class="flex items-center gap-3 bg-white/80 rounded-xl p-3">
+                    <div class="relative">
+                        <img src="<?php echo getProfileImage($gmember['mb_id']); ?>" class="w-12 h-12 rounded-full object-cover border-2 border-pink-300">
+                        <?php if ($idx === 0): ?>
+                        <div class="absolute -top-1 -right-1 text-lg">📖</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-grace-green"><?php echo get_text($gmember['mb_name']); ?></h4>
+                        <p class="text-xs text-pink-600">
+                            <i class="fa-solid fa-pen-fancy mr-1"></i>
+                            총 <?php echo $gmember['total_diaries']; ?>편 작성
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs bg-pink-100 text-pink-700 px-2 py-1 rounded-full font-medium">
+                            <?php echo $gmember['diary_days']; ?>일 연속
+                        </span>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <!-- 출석 우수자 통계 섹션 -->
     <section id="attendance-stats" class="px-4 mt-6">
