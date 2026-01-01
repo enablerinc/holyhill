@@ -70,9 +70,6 @@ $img_type = $img_info[2];
 $max_width = 500;
 $max_height = 500;
 
-// 리사이즈 필요 여부 확인
-$need_resize = ($orig_width > $max_width || $orig_height > $max_height);
-
 // 원본 이미지 로드
 switch ($img_type) {
     case IMAGETYPE_JPEG:
@@ -93,6 +90,57 @@ if (!$src_image) {
     echo json_encode(['success' => false, 'message' => '이미지를 처리할 수 없습니다.']);
     exit;
 }
+
+// EXIF 방향 정보 읽어서 이미지 회전 (JPEG만 해당)
+if ($img_type == IMAGETYPE_JPEG && function_exists('exif_read_data')) {
+    $exif = @exif_read_data($file['tmp_name']);
+    if ($exif && isset($exif['Orientation'])) {
+        switch ($exif['Orientation']) {
+            case 2: // 좌우 반전
+                imageflip($src_image, IMG_FLIP_HORIZONTAL);
+                break;
+            case 3: // 180도 회전
+                $src_image = imagerotate($src_image, 180, 0);
+                break;
+            case 4: // 상하 반전
+                imageflip($src_image, IMG_FLIP_VERTICAL);
+                break;
+            case 5: // 90도 시계방향 + 좌우 반전
+                $src_image = imagerotate($src_image, -90, 0);
+                imageflip($src_image, IMG_FLIP_HORIZONTAL);
+                // 가로세로 크기 교체
+                $tmp = $orig_width;
+                $orig_width = $orig_height;
+                $orig_height = $tmp;
+                break;
+            case 6: // 90도 시계방향 (세로 촬영 가장 흔함)
+                $src_image = imagerotate($src_image, -90, 0);
+                // 가로세로 크기 교체
+                $tmp = $orig_width;
+                $orig_width = $orig_height;
+                $orig_height = $tmp;
+                break;
+            case 7: // 90도 반시계방향 + 좌우 반전
+                $src_image = imagerotate($src_image, 90, 0);
+                imageflip($src_image, IMG_FLIP_HORIZONTAL);
+                // 가로세로 크기 교체
+                $tmp = $orig_width;
+                $orig_width = $orig_height;
+                $orig_height = $tmp;
+                break;
+            case 8: // 90도 반시계방향
+                $src_image = imagerotate($src_image, 90, 0);
+                // 가로세로 크기 교체
+                $tmp = $orig_width;
+                $orig_width = $orig_height;
+                $orig_height = $tmp;
+                break;
+        }
+    }
+}
+
+// 리사이즈 필요 여부 재확인 (회전 후 크기가 바뀔 수 있음)
+$need_resize = ($orig_width > $max_width || $orig_height > $max_height);
 
 // 리사이즈 처리
 if ($need_resize) {
