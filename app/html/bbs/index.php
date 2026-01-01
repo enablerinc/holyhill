@@ -1498,6 +1498,23 @@ function convert_youtube_to_iframe_index($content) {
         }
     });
 
+    // 우측 스와이프로 출석 현황 패널 닫기
+    let attendanceTouchStartX = 0;
+    let attendanceTouchEndX = 0;
+
+    attendanceListPanel.addEventListener('touchstart', function(e) {
+        attendanceTouchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    attendanceListPanel.addEventListener('touchend', function(e) {
+        attendanceTouchEndX = e.changedTouches[0].screenX;
+        const swipeDistance = attendanceTouchEndX - attendanceTouchStartX;
+        // 우측으로 50px 이상 스와이프시 닫기
+        if (swipeDistance > 50) {
+            closeAttendanceListPanel();
+        }
+    }, { passive: true });
+
     // 출석 결과 패널 외부 클릭시 닫기
     attendancePanel.addEventListener('click', function(e) {
         if (e.target === attendancePanel) {
