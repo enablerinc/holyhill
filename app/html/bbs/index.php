@@ -1,5 +1,5 @@
 <?php
-include_once('./_common.php');
+include_once(__DIR__.'/_common.php');
 
 $g5['title'] = '홈';
 
@@ -166,7 +166,7 @@ function convert_youtube_to_iframe_index($content) {
         </section>
         <?php } ?>
 
-        <!-- 2. 오늘의 말씀 위젯 -->
+        <!-- 2. 생명말씀 위젯 -->
         <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
             <?php
             // 오늘 이전에 등록된 말씀 중 가장 최신 것을 가져오기 (다음 말씀이 올라올 때까지 유지)
@@ -193,29 +193,23 @@ function convert_youtube_to_iframe_index($content) {
                 }
                 ?>
                 <div class="<?php echo $has_youtube ? '' : 'text-center'; ?>">
-                    <h3 class="text-sm font-medium text-purple-900 mb-2 flex items-center justify-center gap-2">
+                    <h3 class="text-sm font-medium text-purple-900 mb-3 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-book-bible text-purple-600"></i>
-                        오늘의 말씀
+                        생명말씀
                     </h3>
                     <?php if ($has_youtube) { ?>
                     <a href="<?php echo G5_BBS_URL; ?>/word_view.php?wr_id=<?php echo $word['wr_id']; ?>"
-                       class="block mb-2">
-                        <?php if ($word['wr_subject']) { ?>
-                            <h3 class="text-base font-bold mb-2 text-gray-900 text-left"><?php echo get_text($word['wr_subject']); ?></h3>
-                        <?php } ?>
+                       class="block mb-3">
                         <?php echo $word_content; ?>
                     </a>
                     <?php } else { ?>
                     <a href="<?php echo G5_BBS_URL; ?>/word_view.php?wr_id=<?php echo $word['wr_id']; ?>"
-                       class="block mb-2 cursor-pointer hover:opacity-80 transition-opacity">
+                       class="block mb-3 cursor-pointer hover:opacity-80 transition-opacity">
                         <p class="text-base font-medium text-gray-800 leading-relaxed">
                             "<?php echo $word_content; ?>"
                         </p>
                     </a>
                     <?php } ?>
-                    <p class="text-xs text-purple-600 mb-3">
-                        <?php echo date('Y년 m월 d일', strtotime($word['wr_datetime'])); ?> · <?php echo $word['wr_name']; ?>
-                    </p>
                     <div class="flex items-center justify-center gap-3">
                         <a href="<?php echo G5_BBS_URL; ?>/word_list.php"
                            class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
@@ -236,7 +230,7 @@ function convert_youtube_to_iframe_index($content) {
                 <div class="text-center">
                     <h3 class="text-sm font-medium text-purple-900 mb-2 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-book-bible text-purple-600"></i>
-                        오늘의 말씀
+                        생명말씀
                     </h3>
                     <p class="text-base font-medium text-gray-600 leading-relaxed mb-3">
                         등록된 말씀이 아직 없습니다
@@ -244,7 +238,7 @@ function convert_youtube_to_iframe_index($content) {
                     <?php if ($is_admin) { ?>
                     <a href="<?php echo G5_BBS_URL; ?>/write_word.php"
                        class="inline-block px-5 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 font-medium transition-colors">
-                        <i class="fa-solid fa-plus mr-1"></i> 오늘의 말씀 등록하기
+                        <i class="fa-solid fa-plus mr-1"></i> 생명말씀 등록하기
                     </a>
                     <?php } else { ?>
                     <p class="text-xs text-gray-500">관리자가 곧 말씀을 등록할 예정입니다</p>
