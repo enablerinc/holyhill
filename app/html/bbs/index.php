@@ -343,7 +343,7 @@ function convert_youtube_to_iframe_index($content) {
             $feed_sql = "SELECT * FROM {$g5['write_prefix']}gallery
                          WHERE wr_is_comment = 0
                          ORDER BY wr_id DESC
-                         LIMIT 4";
+                         LIMIT 8";
             $feed_result = sql_query($feed_sql);
 
             if ($feed_result && sql_num_rows($feed_result) > 0) {
@@ -555,16 +555,6 @@ function convert_youtube_to_iframe_index($content) {
                     ORDER BY d.wr_datetime DESC
                     LIMIT 5";
                 $today_writers_result = sql_query($today_writers_sql);
-
-                // 최근 감사일기 (가로 스크롤용, 최근 6개)
-                $recent_diaries_sql = "SELECT d.wr_id, d.wr_content, d.wr_datetime, d.wr_good, d.mb_id, m.mb_name, m.mb_nick
-                    FROM {$diary_table} d
-                    JOIN {$g5['member_table']} m ON d.mb_id = m.mb_id
-                    WHERE d.wr_is_comment = 0
-                    ORDER BY d.wr_datetime DESC
-                    LIMIT 6";
-                $recent_diaries_result = sql_query($recent_diaries_sql);
-                $recent_diaries_count = sql_num_rows($recent_diaries_result);
         ?>
         <section id="gratitude-section" class="px-4 py-4">
             <div class="flex items-center justify-between mb-4">
@@ -648,58 +638,6 @@ function convert_youtube_to_iframe_index($content) {
                 </div>
                 <?php } ?>
             </div>
-
-            <!-- 최근 감사일기 가로 스크롤 -->
-            <?php if ($recent_diaries_count > 0) { ?>
-            <div class="overflow-x-auto scrollbar-hide -mx-4 px-4">
-                <div class="flex gap-3" style="width: max-content;">
-                    <?php
-                    while ($diary = sql_fetch_array($recent_diaries_result)) {
-                        $d_photo = '';
-                        $d_profile_path = G5_DATA_PATH.'/member_image/'.substr($diary['mb_id'], 0, 2).'/'.$diary['mb_id'].'.gif';
-                        if (file_exists($d_profile_path)) {
-                            $d_photo = G5_DATA_URL.'/member_image/'.substr($diary['mb_id'], 0, 2).'/'.$diary['mb_id'].'.gif';
-                        }
-                        $d_name = $diary['mb_name'] ? $diary['mb_name'] : $diary['mb_nick'];
-                        $d_content = strip_tags($diary['wr_content']);
-                        $d_content = mb_substr($d_content, 0, 50, 'UTF-8');
-                        if (mb_strlen(strip_tags($diary['wr_content']), 'UTF-8') > 50) {
-                            $d_content .= '...';
-                        }
-
-                        // 시간 표시
-                        $d_time_diff = time() - strtotime($diary['wr_datetime']);
-                        if ($d_time_diff < 3600) {
-                            $d_time = floor($d_time_diff / 60) . '분 전';
-                        } elseif ($d_time_diff < 86400) {
-                            $d_time = floor($d_time_diff / 3600) . '시간 전';
-                        } else {
-                            $d_time = date('m.d', strtotime($diary['wr_datetime']));
-                        }
-                    ?>
-                    <a href="<?php echo G5_BBS_URL; ?>/gratitude_user.php?mb_id=<?php echo $diary['mb_id']; ?>&wr_id=<?php echo $diary['wr_id']; ?>"
-                       class="flex-shrink-0 w-56 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-soft-lavender/30">
-                        <div class="flex items-center gap-2 mb-2">
-                            <?php if ($d_photo) { ?>
-                            <img src="<?php echo $d_photo; ?>" class="w-7 h-7 rounded-full object-cover" alt="<?php echo $d_name; ?>">
-                            <?php } else { ?>
-                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-lilac to-deep-purple flex items-center justify-center">
-                                <span class="text-white text-xs font-bold"><?php echo mb_substr($d_name, 0, 1, 'UTF-8'); ?></span>
-                            </div>
-                            <?php } ?>
-                            <span class="text-sm font-medium text-grace-green"><?php echo $d_name; ?></span>
-                            <span class="text-xs text-grace-green/40 ml-auto"><?php echo $d_time; ?></span>
-                        </div>
-                        <p class="text-sm text-grace-green/70 leading-relaxed line-clamp-2"><?php echo $d_content; ?></p>
-                        <div class="mt-2 flex items-center gap-1 text-xs text-grace-green/40">
-                            <i class="fa-solid fa-heart text-red-400"></i>
-                            <span><?php echo $diary['wr_good']; ?></span>
-                        </div>
-                    </a>
-                    <?php } ?>
-                </div>
-            </div>
-            <?php } ?>
         </section>
         <?php
             } // diary table exists
