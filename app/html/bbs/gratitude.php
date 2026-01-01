@@ -298,9 +298,9 @@ function get_date_label($date_str) {
 
 <main class="pt-20 pb-24 max-w-2xl mx-auto">
 
-    <!-- 연속 기록 + 감사나무 카드 -->
+    <!-- 감사나무 카드 (가로 레이아웃) -->
     <div class="px-4 py-3">
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-soft-lavender/50 <?php echo $growth['stage'] >= 5 ? 'fruit-celebration' : ''; ?>">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-soft-lavender/50 <?php echo $growth['stage'] >= 5 ? 'fruit-celebration' : ''; ?>">
             <?php if ($growth['stage'] >= 5) { ?>
             <!-- 열매 맺힘 축하 애니메이션 -->
             <span class="floating-fruit">🍎</span>
@@ -311,17 +311,6 @@ function get_date_label($date_str) {
             <span class="floating-fruit">🍇</span>
             <?php } ?>
 
-            <!-- 연속 기록 -->
-            <?php if ($streak_days > 0) { ?>
-            <div class="text-center mb-4">
-                <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-orange-100 to-red-100 rounded-full">
-                    <span class="text-lg">🔥</span>
-                    <span class="text-sm font-bold text-orange-600">우리 교회 연속 감사 <?php echo number_format($streak_days); ?>일째!</span>
-                </span>
-            </div>
-            <?php } ?>
-
-            <!-- 감사나무 시각화 -->
             <?php
             // 목표 인원에 따라 나무 모양 동적 생성
             function generate_tree_rows($goal) {
@@ -358,41 +347,57 @@ function get_date_label($date_str) {
             // 채워진 비율에 따라 슬롯 수 계산
             $filled_slots = round(($filled_count / $goal_count) * $total_slots);
             ?>
-            <div class="gratitude-tree <?php echo $is_fruit ? 'fruit-glow' : ''; ?> mb-3">
-                <?php foreach ($tree_rows as $row_count) { ?>
-                <div class="tree-row">
-                    <?php for ($i = 0; $i < $row_count; $i++) {
-                        $is_filled = ($slot_index < $filled_slots);
-                        $slot_index++;
-                    ?>
-                    <div class="tree-slot <?php echo $is_filled ? 'filled' : 'empty'; ?>">
-                        <?php if ($is_filled) {
-                            echo $is_fruit ? $fruit_emoji : $flower_emoji;
-                        } else {
-                            echo $empty_emoji;
-                        } ?>
+
+            <!-- 가로 레이아웃: 나무(좌) + 텍스트(우) -->
+            <div class="flex items-center gap-4">
+                <!-- 왼쪽: 감사나무 -->
+                <div class="gratitude-tree <?php echo $is_fruit ? 'fruit-glow' : ''; ?> flex-shrink-0">
+                    <?php foreach ($tree_rows as $row_count) { ?>
+                    <div class="tree-row">
+                        <?php for ($i = 0; $i < $row_count; $i++) {
+                            $is_filled = ($slot_index < $filled_slots);
+                            $slot_index++;
+                        ?>
+                        <div class="tree-slot <?php echo $is_filled ? 'filled' : 'empty'; ?>">
+                            <?php if ($is_filled) {
+                                echo $is_fruit ? $fruit_emoji : $flower_emoji;
+                            } else {
+                                echo $empty_emoji;
+                            } ?>
+                        </div>
+                        <?php } ?>
                     </div>
                     <?php } ?>
+                    <!-- 나무 기둥 -->
+                    <div class="tree-trunk">
+                        <div class="trunk-segment"></div>
+                        <div class="trunk-segment"></div>
+                    </div>
                 </div>
-                <?php } ?>
-                <!-- 나무 기둥 -->
-                <div class="tree-trunk">
-                    <div class="trunk-segment"></div>
-                    <div class="trunk-segment"></div>
-                </div>
-            </div>
 
-            <!-- 참여 현황 -->
-            <div class="text-center">
-                <p class="text-lg font-bold text-grace-green">
-                    오늘 <span class="text-deep-purple"><?php echo number_format($today_participants); ?></span>명 참여
-                </p>
-                <p class="text-sm text-grace-green/70 mt-1"><?php echo $growth['message']; ?></p>
-                <?php if ($growth['stage'] < 5) {
-                    $remaining = $goal_count - $today_participants;
-                ?>
-                <p class="text-xs text-lilac mt-1">🍎 열매까지 <?php echo number_format($remaining); ?>명!</p>
-                <?php } ?>
+                <!-- 오른쪽: 텍스트 정보 -->
+                <div class="flex-1 min-w-0">
+                    <!-- 연속 기록 -->
+                    <?php if ($streak_days > 0) { ?>
+                    <div class="mb-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-orange-100 to-red-100 rounded-full">
+                            <span class="text-base">🔥</span>
+                            <span class="text-xs font-bold text-orange-600">연속 <?php echo number_format($streak_days); ?>일째!</span>
+                        </span>
+                    </div>
+                    <?php } ?>
+
+                    <!-- 참여 현황 -->
+                    <p class="text-base font-bold text-grace-green">
+                        오늘 <span class="text-deep-purple"><?php echo number_format($today_participants); ?></span>명 참여
+                    </p>
+                    <p class="text-sm text-grace-green/70 mt-1"><?php echo $growth['message']; ?></p>
+                    <?php if ($growth['stage'] < 5) {
+                        $remaining = $goal_count - $today_participants;
+                    ?>
+                    <p class="text-xs text-lilac mt-1">🍎 열매까지 <?php echo number_format($remaining); ?>명!</p>
+                    <?php } ?>
+                </div>
             </div>
         </div>
     </div>
