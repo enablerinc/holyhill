@@ -66,15 +66,15 @@ while (true) {
 function get_growth_stage($participants, $goal) {
     $ratio = $participants / $goal;
     if ($ratio >= 1) {
-        return ['icon' => '🍎🌳🍎', 'name' => '열매', 'message' => '열매가 맺혔어요!', 'stage' => 5];
+        return ['name' => '열매', 'message' => '🍎 감사 열매가 주렁주렁!', 'stage' => 5];
     } elseif ($ratio >= 0.75) {
-        return ['icon' => '🌸🌳🌸', 'name' => '꽃', 'message' => '꽃이 피었어요', 'stage' => 4];
+        return ['name' => '활짝', 'message' => '🌸 꽃이 활짝 피었어요!', 'stage' => 4];
     } elseif ($ratio >= 0.5) {
-        return ['icon' => '🌳', 'name' => '나무', 'message' => '나무가 자라요', 'stage' => 3];
+        return ['name' => '반개', 'message' => '🌸 꽃이 피어나고 있어요', 'stage' => 3];
     } elseif ($ratio >= 0.25) {
-        return ['icon' => '🌿', 'name' => '새싹', 'message' => '새싹이 자라요', 'stage' => 2];
+        return ['name' => '새싹', 'message' => '🌱 새싹이 돋아나요', 'stage' => 2];
     } else {
-        return ['icon' => '🌱', 'name' => '씨앗', 'message' => '씨앗이 심어졌어요', 'stage' => 1];
+        return ['name' => '씨앗', 'message' => '🌱 첫 감사를 심어주세요', 'stage' => 1];
     }
 }
 $growth = get_growth_stage($today_participants, $goal_count);
@@ -184,21 +184,56 @@ function get_date_label($date_str) {
             height: 1px;
             background: linear-gradient(to right, transparent, #E8E2F7, transparent);
         }
-        /* 성장 아이콘 애니메이션 */
-        .growth-icon {
-            font-size: 3rem;
-            animation: gentle-bounce 2s ease-in-out infinite;
+        /* 감사나무 스타일 */
+        .gratitude-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
         }
-        @keyframes gentle-bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+        .tree-row {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
         }
-        /* 만개 축하 애니메이션 */
-        .bloom-celebration {
+        .tree-slot {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .tree-slot.empty {
+            opacity: 0.2;
+        }
+        .tree-slot.filled {
+            animation: pop-in 0.3s ease-out;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .tree-trunk {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2px;
+        }
+        .trunk-segment {
+            width: 20px;
+            height: 12px;
+            background: linear-gradient(to right, #8B5A2B, #A0522D, #8B5A2B);
+            border-radius: 2px;
+        }
+        /* 열매 맺힘 축하 애니메이션 */
+        .fruit-celebration {
             position: relative;
             overflow: visible;
         }
-        .floating-heart {
+        .floating-fruit {
             position: absolute;
             font-size: 1.2rem;
             animation: float-up 3s ease-out infinite;
@@ -210,29 +245,19 @@ function get_date_label($date_str) {
             90% { opacity: 1; }
             100% { opacity: 0; transform: translateY(-60px) scale(1); }
         }
-        .floating-heart:nth-child(1) { left: 10%; animation-delay: 0s; }
-        .floating-heart:nth-child(2) { left: 25%; animation-delay: 0.5s; }
-        .floating-heart:nth-child(3) { left: 40%; animation-delay: 1s; }
-        .floating-heart:nth-child(4) { left: 55%; animation-delay: 0.3s; }
-        .floating-heart:nth-child(5) { left: 70%; animation-delay: 0.8s; }
-        .floating-heart:nth-child(6) { left: 85%; animation-delay: 1.2s; }
-        /* 만개 시 특별 효과 */
-        .bloom-glow {
+        .floating-fruit:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .floating-fruit:nth-child(2) { left: 25%; animation-delay: 0.5s; }
+        .floating-fruit:nth-child(3) { left: 40%; animation-delay: 1s; }
+        .floating-fruit:nth-child(4) { left: 55%; animation-delay: 0.3s; }
+        .floating-fruit:nth-child(5) { left: 70%; animation-delay: 0.8s; }
+        .floating-fruit:nth-child(6) { left: 85%; animation-delay: 1.2s; }
+        /* 열매 시 특별 효과 */
+        .fruit-glow {
             animation: glow-pulse 2s ease-in-out infinite;
         }
         @keyframes glow-pulse {
-            0%, 100% { filter: drop-shadow(0 0 5px rgba(177, 156, 217, 0.5)); }
-            50% { filter: drop-shadow(0 0 15px rgba(177, 156, 217, 0.8)); }
-        }
-        /* 성장 단계 인디케이터 */
-        .stage-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-        .stage-dot.active {
-            transform: scale(1.3);
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(220, 80, 80, 0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(220, 80, 80, 0.8)); }
         }
     </style>
     <script>
@@ -273,17 +298,17 @@ function get_date_label($date_str) {
 
 <main class="pt-20 pb-24 max-w-2xl mx-auto">
 
-    <!-- 연속 기록 + 성장 카드 -->
+    <!-- 연속 기록 + 감사나무 카드 -->
     <div class="px-4 py-3">
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-soft-lavender/50 <?php echo $growth['stage'] >= 5 ? 'bloom-celebration' : ''; ?>">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-soft-lavender/50 <?php echo $growth['stage'] >= 5 ? 'fruit-celebration' : ''; ?>">
             <?php if ($growth['stage'] >= 5) { ?>
             <!-- 열매 맺힘 축하 애니메이션 -->
-            <span class="floating-heart">🍎</span>
-            <span class="floating-heart">🍇</span>
-            <span class="floating-heart">🍊</span>
-            <span class="floating-heart">✨</span>
-            <span class="floating-heart">🍎</span>
-            <span class="floating-heart">🍇</span>
+            <span class="floating-fruit">🍎</span>
+            <span class="floating-fruit">🍇</span>
+            <span class="floating-fruit">🍊</span>
+            <span class="floating-fruit">✨</span>
+            <span class="floating-fruit">🍎</span>
+            <span class="floating-fruit">🍇</span>
             <?php } ?>
 
             <!-- 연속 기록 -->
@@ -296,13 +321,45 @@ function get_date_label($date_str) {
             </div>
             <?php } ?>
 
-            <!-- 성장 아이콘 -->
-            <div class="text-center mb-3">
-                <span class="growth-icon <?php echo $growth['stage'] >= 5 ? 'bloom-glow' : ''; ?>"><?php echo $growth['icon']; ?></span>
+            <!-- 감사나무 시각화 -->
+            <?php
+            // 나무 모양 슬롯 배열 (위에서 아래로, 피라미드 형태)
+            // 총 40개 슬롯: 3 + 5 + 7 + 9 + 9 + 7 = 40
+            $tree_rows = [3, 5, 7, 9, 9, 7];
+            $total_slots = array_sum($tree_rows);
+            $filled_count = min($today_participants, $total_slots);
+            $is_fruit = ($growth['stage'] >= 5);
+            $flower_emoji = '🌸';
+            $fruit_emoji = '🍎';
+            $empty_emoji = '·';
+            $slot_index = 0;
+            ?>
+            <div class="gratitude-tree <?php echo $is_fruit ? 'fruit-glow' : ''; ?> mb-3">
+                <?php foreach ($tree_rows as $row_count) { ?>
+                <div class="tree-row">
+                    <?php for ($i = 0; $i < $row_count; $i++) {
+                        $is_filled = ($slot_index < $filled_count);
+                        $slot_index++;
+                    ?>
+                    <div class="tree-slot <?php echo $is_filled ? 'filled' : 'empty'; ?>">
+                        <?php if ($is_filled) {
+                            echo $is_fruit ? $fruit_emoji : $flower_emoji;
+                        } else {
+                            echo $empty_emoji;
+                        } ?>
+                    </div>
+                    <?php } ?>
+                </div>
+                <?php } ?>
+                <!-- 나무 기둥 -->
+                <div class="tree-trunk">
+                    <div class="trunk-segment"></div>
+                    <div class="trunk-segment"></div>
+                </div>
             </div>
 
             <!-- 참여 현황 -->
-            <div class="text-center mb-3">
+            <div class="text-center">
                 <p class="text-lg font-bold text-grace-green">
                     오늘 <span class="text-deep-purple"><?php echo number_format($today_participants); ?></span>명 참여
                 </p>
@@ -312,15 +369,6 @@ function get_date_label($date_str) {
                 ?>
                 <p class="text-xs text-lilac mt-1">🍎 열매까지 <?php echo number_format($remaining); ?>명!</p>
                 <?php } ?>
-            </div>
-
-            <!-- 단계 인디케이터 -->
-            <div class="flex items-center justify-center gap-2">
-                <span class="stage-dot <?php echo $growth['stage'] >= 1 ? 'bg-amber-300 active' : 'bg-gray-200'; ?>" title="씨앗"></span>
-                <span class="stage-dot <?php echo $growth['stage'] >= 2 ? 'bg-green-300 active' : 'bg-gray-200'; ?>" title="새싹"></span>
-                <span class="stage-dot <?php echo $growth['stage'] >= 3 ? 'bg-green-500 active' : 'bg-gray-200'; ?>" title="나무"></span>
-                <span class="stage-dot <?php echo $growth['stage'] >= 4 ? 'bg-pink-400 active' : 'bg-gray-200'; ?>" title="꽃"></span>
-                <span class="stage-dot <?php echo $growth['stage'] >= 5 ? 'bg-red-400 active' : 'bg-gray-200'; ?>" title="열매"></span>
             </div>
         </div>
     </div>
