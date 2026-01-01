@@ -128,10 +128,9 @@ function convert_youtube_to_iframe_index($content) {
         ?>
         <?php if ($slogan && $slogan['wr_content']) { ?>
         <section id="slogan" class="mx-4 mb-3 mt-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl px-4 py-2.5 shadow-sm border border-amber-200">
-            <div class="flex items-center justify-center gap-2">
-                <i class="fa-solid fa-quote-left text-amber-400 text-xs"></i>
+            <div class="flex items-center justify-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded"><?php echo date('Y'); ?>년 표어</span>
                 <p class="text-lg font-bold text-amber-800"><?php echo get_text(strip_tags($slogan['wr_content'])); ?></p>
-                <i class="fa-solid fa-quote-right text-amber-400 text-xs"></i>
                 <?php if ($is_admin) { ?>
                 <a href="<?php echo G5_BBS_URL; ?>/write_slogan.php?wr_id=<?php echo $slogan['wr_id']; ?>" class="ml-1 text-amber-500 hover:text-amber-700">
                     <i class="fa-solid fa-pen text-xs"></i>
@@ -142,9 +141,8 @@ function convert_youtube_to_iframe_index($content) {
         <?php } elseif ($is_admin) { ?>
         <section id="slogan" class="mx-4 mb-3 mt-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl px-4 py-2.5 shadow-sm border border-gray-200">
             <div class="flex items-center justify-center gap-2">
-                <i class="fa-solid fa-quote-left text-gray-300 text-xs"></i>
+                <span class="px-2 py-0.5 bg-gray-400 text-white text-xs font-medium rounded"><?php echo date('Y'); ?>년 표어</span>
                 <p class="text-sm text-gray-500">표어를 등록해주세요</p>
-                <i class="fa-solid fa-quote-right text-gray-300 text-xs"></i>
                 <a href="<?php echo G5_BBS_URL; ?>/write_slogan.php" class="ml-1 px-2 py-1 bg-amber-500 text-white text-xs rounded hover:bg-amber-600">
                     <i class="fa-solid fa-plus"></i>
                 </a>
