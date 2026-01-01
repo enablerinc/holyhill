@@ -62,15 +62,15 @@ while (true) {
     if ($streak_days >= 365) break;
 }
 
-// 단계별 성장 상태 결정
+// 단계별 성장 상태 결정 (감사나무)
 function get_growth_stage($participants, $goal) {
     $ratio = $participants / $goal;
     if ($ratio >= 1) {
-        return ['icon' => '🌺', 'name' => '만개', 'message' => '감사가 만개했어요!', 'stage' => 5];
+        return ['icon' => '🍎🌳🍎', 'name' => '열매', 'message' => '열매가 맺혔어요!', 'stage' => 5];
     } elseif ($ratio >= 0.75) {
-        return ['icon' => '🌸', 'name' => '꽃', 'message' => '곧 만개해요!', 'stage' => 4];
+        return ['icon' => '🌸🌳🌸', 'name' => '꽃', 'message' => '꽃이 피었어요', 'stage' => 4];
     } elseif ($ratio >= 0.5) {
-        return ['icon' => '🌷', 'name' => '꽃봉오리', 'message' => '꽃봉오리가 맺혔어요', 'stage' => 3];
+        return ['icon' => '🌳', 'name' => '나무', 'message' => '나무가 자라요', 'stage' => 3];
     } elseif ($ratio >= 0.25) {
         return ['icon' => '🌿', 'name' => '새싹', 'message' => '새싹이 자라요', 'stage' => 2];
     } else {
@@ -277,13 +277,13 @@ function get_date_label($date_str) {
     <div class="px-4 py-3">
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-soft-lavender/50 <?php echo $growth['stage'] >= 5 ? 'bloom-celebration' : ''; ?>">
             <?php if ($growth['stage'] >= 5) { ?>
-            <!-- 만개 시 떠오르는 하트 -->
-            <span class="floating-heart">💜</span>
-            <span class="floating-heart">🌸</span>
-            <span class="floating-heart">💐</span>
+            <!-- 열매 맺힘 축하 애니메이션 -->
+            <span class="floating-heart">🍎</span>
+            <span class="floating-heart">🍇</span>
+            <span class="floating-heart">🍊</span>
             <span class="floating-heart">✨</span>
-            <span class="floating-heart">🌺</span>
-            <span class="floating-heart">💜</span>
+            <span class="floating-heart">🍎</span>
+            <span class="floating-heart">🍇</span>
             <?php } ?>
 
             <!-- 연속 기록 -->
@@ -310,17 +310,17 @@ function get_date_label($date_str) {
                 <?php if ($growth['stage'] < 5) {
                     $remaining = $goal_count - $today_participants;
                 ?>
-                <p class="text-xs text-lilac mt-1">🌺 만개까지 <?php echo number_format($remaining); ?>명!</p>
+                <p class="text-xs text-lilac mt-1">🍎 열매까지 <?php echo number_format($remaining); ?>명!</p>
                 <?php } ?>
             </div>
 
             <!-- 단계 인디케이터 -->
             <div class="flex items-center justify-center gap-2">
-                <span class="stage-dot <?php echo $growth['stage'] >= 1 ? 'bg-green-300 active' : 'bg-gray-200'; ?>" title="씨앗"></span>
-                <span class="stage-dot <?php echo $growth['stage'] >= 2 ? 'bg-green-400 active' : 'bg-gray-200'; ?>" title="새싹"></span>
-                <span class="stage-dot <?php echo $growth['stage'] >= 3 ? 'bg-pink-300 active' : 'bg-gray-200'; ?>" title="꽃봉오리"></span>
+                <span class="stage-dot <?php echo $growth['stage'] >= 1 ? 'bg-amber-300 active' : 'bg-gray-200'; ?>" title="씨앗"></span>
+                <span class="stage-dot <?php echo $growth['stage'] >= 2 ? 'bg-green-300 active' : 'bg-gray-200'; ?>" title="새싹"></span>
+                <span class="stage-dot <?php echo $growth['stage'] >= 3 ? 'bg-green-500 active' : 'bg-gray-200'; ?>" title="나무"></span>
                 <span class="stage-dot <?php echo $growth['stage'] >= 4 ? 'bg-pink-400 active' : 'bg-gray-200'; ?>" title="꽃"></span>
-                <span class="stage-dot <?php echo $growth['stage'] >= 5 ? 'bg-purple-400 active' : 'bg-gray-200'; ?>" title="만개"></span>
+                <span class="stage-dot <?php echo $growth['stage'] >= 5 ? 'bg-red-400 active' : 'bg-gray-200'; ?>" title="열매"></span>
             </div>
         </div>
     </div>
