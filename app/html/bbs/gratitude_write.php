@@ -1,5 +1,5 @@
 <?php
-include_once('./_common.php');
+include_once(__DIR__.'/_common.php');
 
 // 게시판 설정
 $bo_table = 'diary';
@@ -39,6 +39,14 @@ if (isset($_GET['w']) && $_GET['w'] == 'u' && isset($_GET['wr_id'])) {
     }
 
     $content = $write['wr_content'];
+
+    // 세션에 수정 정보 저장 (write_update.php 에서 검증용)
+    set_session('ss_bo_table', $bo_table);
+    set_session('ss_wr_id', $wr_id);
+} else {
+    // 새 글 작성 시에도 세션 설정
+    set_session('ss_bo_table', $bo_table);
+    set_session('ss_wr_id', 0);
 }
 
 $g5['title'] = $w == 'u' ? '감사일기 수정' : '감사일기 쓰기';

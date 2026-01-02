@@ -1,5 +1,5 @@
 <?php
-include_once('./_common.php');
+include_once(__DIR__.'/_common.php');
 
 $g5['title'] = '감사일기';
 
@@ -62,6 +62,10 @@ while (true) {
     if ($streak_days >= 365) break;
 }
 
+// 선택된 날짜의 참여자 수 (감사나무에 사용)
+$selected_participant_sql = "SELECT COUNT(DISTINCT mb_id) as cnt FROM {$write_table} WHERE wr_is_comment = 0 AND DATE(wr_datetime) = '{$selected_date}' AND mb_id != ''";
+$selected_participants = (int)sql_fetch($selected_participant_sql)['cnt'];
+
 // 단계별 성장 상태 결정 (감사나무)
 function get_growth_stage($participants, $goal) {
     $ratio = $participants / $goal;
@@ -77,7 +81,8 @@ function get_growth_stage($participants, $goal) {
         return ['name' => '씨앗', 'message' => '🌱 첫 감사를 심어주세요', 'stage' => 1];
     }
 }
-$growth = get_growth_stage($today_participants, $goal_count);
+// 선택된 날짜 기준으로 감사나무 성장 단계 계산
+$growth = get_growth_stage($selected_participants, $goal_count);
 
 // 선택된 날짜의 이전/다음 날 (일기가 있는 날짜)
 $prev_date_sql = "SELECT DATE(wr_datetime) as d FROM {$write_table} WHERE wr_is_comment = 0 AND DATE(wr_datetime) < '{$selected_date}' ORDER BY wr_datetime DESC LIMIT 1";
@@ -106,10 +111,6 @@ $list = array();
 while ($row = sql_fetch_array($result)) {
     $list[] = $row;
 }
-
-// 선택된 날짜의 참여자 수
-$selected_participant_sql = "SELECT COUNT(DISTINCT mb_id) as cnt FROM {$write_table} WHERE wr_is_comment = 0 AND DATE(wr_datetime) = '{$selected_date}' AND mb_id != ''";
-$selected_participants = (int)sql_fetch($selected_participant_sql)['cnt'];
 
 // 시간 표시 함수
 function get_time_ago_gratitude($datetime) {
@@ -298,6 +299,53 @@ function get_date_label($date_str) {
 
 <main class="pt-20 pb-24 max-w-2xl mx-auto">
 
+    <!-- 날짜 네비게이션 -->
+    <div class="px-4 py-2">
+        <div class="bg-white rounded-xl p-3 shadow-sm border border-soft-lavender/50">
+            <div class="flex items-center justify-between">
+                <!-- 이전 날짜 -->
+                <?php if ($prev_date) { ?>
+                <a href="?date=<?php echo $prev_date; ?>" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-soft-lavender/50 transition-colors">
+                    <i class="fa-solid fa-chevron-left text-grace-green"></i>
+                </a>
+                <?php } else { ?>
+                <div class="w-10 h-10 flex items-center justify-center">
+                    <i class="fa-solid fa-chevron-left text-gray-300"></i>
+                </div>
+                <?php } ?>
+
+                <!-- 현재 날짜 -->
+                <div class="text-center">
+                    <?php
+                    $selected_date_obj = new DateTime($selected_date);
+                    $day_names = array('일', '월', '화', '수', '목', '금', '토');
+                    $dow = $day_names[$selected_date_obj->format('w')];
+                    $is_today = ($selected_date === date('Y-m-d'));
+                    ?>
+                    <p class="text-base font-bold text-grace-green">
+                        <?php echo $selected_date_obj->format('Y년 n월 j일'); ?> (<?php echo $dow; ?>)
+                    </p>
+                    <?php if ($is_today) { ?>
+                    <span class="text-xs text-lilac font-medium">오늘</span>
+                    <?php } else { ?>
+                    <a href="?" class="text-xs text-deep-purple hover:underline">오늘로 이동</a>
+                    <?php } ?>
+                </div>
+
+                <!-- 다음 날짜 -->
+                <?php if ($next_date && $next_date <= date('Y-m-d')) { ?>
+                <a href="?date=<?php echo $next_date; ?>" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-soft-lavender/50 transition-colors">
+                    <i class="fa-solid fa-chevron-right text-grace-green"></i>
+                </a>
+                <?php } else { ?>
+                <div class="w-10 h-10 flex items-center justify-center">
+                    <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                </div>
+                <?php } ?>
+            </div>
+        </div>
+    </div>
+
     <!-- 감사나무 카드 (가로 레이아웃) -->
     <div class="px-4 py-3">
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-soft-lavender/50 <?php echo $growth['stage'] >= 5 ? 'fruit-celebration' : ''; ?>">
@@ -337,8 +385,9 @@ function get_date_label($date_str) {
 
             $tree_rows = generate_tree_rows($goal_count);
             $total_slots = array_sum($tree_rows);
-            $filled_count = min($today_participants, $goal_count);
+            $filled_count = min($selected_participants, $goal_count);
             $is_fruit = ($growth['stage'] >= 5);
+            $is_viewing_today = ($selected_date === date('Y-m-d'));
             $flower_emoji = '🌸';
             $fruit_emoji = '🍎';
             $empty_emoji = '·';
@@ -389,70 +438,16 @@ function get_date_label($date_str) {
 
                     <!-- 참여 현황 -->
                     <p class="text-base font-bold text-grace-green">
-                        오늘 <span class="text-deep-purple"><?php echo number_format($today_participants); ?></span>명 참여
+                        <?php echo $is_viewing_today ? '오늘' : '이날'; ?> <span class="text-deep-purple"><?php echo number_format($selected_participants); ?></span>명 참여
                     </p>
                     <p class="text-sm text-grace-green/70 mt-1"><?php echo $growth['message']; ?></p>
-                    <?php if ($growth['stage'] < 5) {
-                        $remaining = $goal_count - $today_participants;
+                    <?php if ($growth['stage'] < 5 && $is_viewing_today) {
+                        $remaining = $goal_count - $selected_participants;
                     ?>
                     <p class="text-xs text-lilac mt-1">🍎 열매까지 <?php echo number_format($remaining); ?>명!</p>
                     <?php } ?>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- 날짜 네비게이션 -->
-    <div class="px-4 py-2">
-        <div class="bg-white rounded-xl p-3 shadow-sm border border-soft-lavender/50">
-            <div class="flex items-center justify-between">
-                <!-- 이전 날짜 -->
-                <?php if ($prev_date) { ?>
-                <a href="?date=<?php echo $prev_date; ?>" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-soft-lavender/50 transition-colors">
-                    <i class="fa-solid fa-chevron-left text-grace-green"></i>
-                </a>
-                <?php } else { ?>
-                <div class="w-10 h-10 flex items-center justify-center">
-                    <i class="fa-solid fa-chevron-left text-gray-300"></i>
-                </div>
-                <?php } ?>
-
-                <!-- 현재 날짜 -->
-                <div class="text-center">
-                    <?php
-                    $selected_date_obj = new DateTime($selected_date);
-                    $day_names = array('일', '월', '화', '수', '목', '금', '토');
-                    $dow = $day_names[$selected_date_obj->format('w')];
-                    $is_today = ($selected_date === date('Y-m-d'));
-                    ?>
-                    <p class="text-base font-bold text-grace-green">
-                        <?php echo $selected_date_obj->format('Y년 n월 j일'); ?> (<?php echo $dow; ?>)
-                    </p>
-                    <?php if ($is_today) { ?>
-                    <span class="text-xs text-lilac font-medium">오늘</span>
-                    <?php } else { ?>
-                    <a href="?" class="text-xs text-deep-purple hover:underline">오늘로 이동</a>
-                    <?php } ?>
-                </div>
-
-                <!-- 다음 날짜 -->
-                <?php if ($next_date && $next_date <= date('Y-m-d')) { ?>
-                <a href="?date=<?php echo $next_date; ?>" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-soft-lavender/50 transition-colors">
-                    <i class="fa-solid fa-chevron-right text-grace-green"></i>
-                </a>
-                <?php } else { ?>
-                <div class="w-10 h-10 flex items-center justify-center">
-                    <i class="fa-solid fa-chevron-right text-gray-300"></i>
-                </div>
-                <?php } ?>
-            </div>
-
-            <!-- 선택된 날짜 참여 현황 -->
-            <?php if (!$is_today && $selected_count > 0) { ?>
-            <div class="mt-2 pt-2 border-t border-soft-lavender/30 text-center">
-                <span class="text-sm text-grace-green/70"><?php echo number_format($selected_participants); ?>명이 <?php echo number_format($selected_count); ?>개의 감사를 기록했어요</span>
-            </div>
-            <?php } ?>
         </div>
     </div>
 
