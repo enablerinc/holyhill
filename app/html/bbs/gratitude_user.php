@@ -1,5 +1,5 @@
 <?php
-include_once('./_common.php');
+include_once(__DIR__.'/_common.php');
 
 // 게시판 설정
 $bo_table = 'diary';
@@ -86,6 +86,30 @@ function get_time_ago_user($datetime) {
         return date('Y.m.d', strtotime($datetime));
     }
 }
+
+// 좋아요 미리보기 가져오기 (최대 3명)
+function get_likes_preview($bo_table, $wr_id, $limit = 3) {
+    global $g5;
+    $sql = "SELECT bg.mb_id, m.mb_name, m.mb_nick
+            FROM {$g5['board_good_table']} bg
+            LEFT JOIN {$g5['member_table']} m ON bg.mb_id = m.mb_id
+            WHERE bg.bo_table = '{$bo_table}'
+            AND bg.wr_id = '{$wr_id}'
+            AND bg.bg_flag = 'good'
+            ORDER BY bg.bg_datetime DESC
+            LIMIT {$limit}";
+    $result = sql_query($sql);
+
+    $likers = array();
+    while ($row = sql_fetch_array($result)) {
+        $likers[] = array(
+            'mb_id' => $row['mb_id'],
+            'name' => $row['mb_name'] ? $row['mb_name'] : ($row['mb_nick'] ? $row['mb_nick'] : $row['mb_id']),
+            'photo' => get_profile_image_url($row['mb_id'])
+        );
+    }
+    return $likers;
+}
 ?>
 
 <!DOCTYPE html>
@@ -129,6 +153,62 @@ function get_time_ago_user($datetime) {
         }
         .new-comment {
             animation: slideIn 0.3s ease-out;
+        }
+        /* 좋아요 패널 스타일 */
+        .likes-panel-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .likes-panel-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .likes-panel {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-height: 70vh;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            z-index: 101;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+        .likes-panel.active {
+            transform: translateY(0);
+        }
+        .likes-panel-handle {
+            width: 40px;
+            height: 5px;
+            background: #E0E0E0;
+            border-radius: 3px;
+            margin: 12px auto 8px;
+            cursor: grab;
+        }
+        .likes-panel-handle:active {
+            cursor: grabbing;
+        }
+        .likes-panel-header {
+            padding: 0 20px 12px;
+            border-bottom: 1px solid #E8E2F7;
+            text-align: center;
+        }
+        .likes-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .likes-panel-content::-webkit-scrollbar {
+            display: none;
         }
     </style>
     <script>
@@ -213,6 +293,10 @@ function get_time_ago_user($datetime) {
                 $comment_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1";
                 $comment_count = sql_fetch($comment_count_sql)['cnt'];
 
+                // 좋아요 미리보기 (최대 3명)
+                $likes_preview = get_likes_preview($bo_table, $wr_id, 3);
+                $good_count = (int)$diary['wr_good'];
+
                 // 날짜 포맷
                 $date_display = date('Y년 m월 d일', strtotime($diary['wr_datetime']));
                 $day_of_week = array('일', '월', '화', '수', '목', '금', '토');
@@ -235,11 +319,30 @@ function get_time_ago_user($datetime) {
             <!-- 하단 액션 -->
             <div class="px-5 py-3 border-t border-soft-lavender/30 bg-warm-beige/30">
                 <div class="flex items-center justify-between">
-                    <!-- 좋아요 버튼 -->
-                    <button onclick="toggleGood(<?php echo $wr_id; ?>)" class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-soft-lavender/50 transition-colors" id="good-btn-<?php echo $wr_id; ?>">
-                        <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-lg <?php echo $is_good ? 'text-red-500' : 'text-grace-green/50'; ?>" id="heart-icon-<?php echo $wr_id; ?>"></i>
-                        <span class="text-sm text-grace-green" id="good-count-<?php echo $wr_id; ?>"><?php echo number_format($diary['wr_good']); ?></span>
-                    </button>
+                    <!-- 좋아요 영역 -->
+                    <div class="flex items-center gap-2" id="good-area-<?php echo $wr_id; ?>">
+                        <!-- 하트 아이콘 (토글) -->
+                        <button onclick="toggleGood(<?php echo $wr_id; ?>)" class="flex items-center justify-center w-9 h-9 rounded-full hover:bg-soft-lavender/50 transition-colors" id="good-btn-<?php echo $wr_id; ?>">
+                            <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-lg <?php echo $is_good ? 'text-red-500' : 'text-grace-green/50'; ?>" id="heart-icon-<?php echo $wr_id; ?>"></i>
+                        </button>
+                        <!-- 프사들 + 숫자 (패널 열기) -->
+                        <?php if ($good_count > 0) { ?>
+                        <button onclick="showLikesPanel('<?php echo $bo_table; ?>', <?php echo $wr_id; ?>)" class="flex items-center gap-1.5 px-2 py-1 rounded-full hover:bg-soft-lavender/50 transition-colors">
+                            <div class="flex -space-x-1.5" id="likes-preview-<?php echo $wr_id; ?>">
+                                <?php foreach ($likes_preview as $liker) { ?>
+                                <img src="<?php echo $liker['photo']; ?>" alt="<?php echo $liker['name']; ?>" class="w-6 h-6 rounded-full object-cover border-2 border-white">
+                                <?php } ?>
+                            </div>
+                            <?php if ($good_count > count($likes_preview)) { ?>
+                            <span class="text-xs text-grace-green/70" id="good-extra-<?php echo $wr_id; ?>">+<?php echo number_format($good_count - count($likes_preview)); ?>명</span>
+                            <?php } elseif ($good_count == 1) { ?>
+                            <span class="text-xs text-grace-green/70">1명</span>
+                            <?php } ?>
+                        </button>
+                        <?php } else { ?>
+                        <span class="text-xs text-grace-green/50" id="good-count-text-<?php echo $wr_id; ?>">0</span>
+                        <?php } ?>
+                    </div>
 
                     <!-- 댓글 토글 버튼 -->
                     <button onclick="toggleComments(<?php echo $wr_id; ?>)" class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-soft-lavender/50 transition-colors" id="comment-toggle-<?php echo $wr_id; ?>">
@@ -538,6 +641,153 @@ function deleteDiary(wrId) {
             location.href = '<?php echo G5_BBS_URL; ?>/gratitude.php';
         }
     });
+}
+
+// ============================================
+// 좋아요 목록 패널
+// ============================================
+let likesPanel = null;
+let likesPanelOverlay = null;
+let panelStartY = 0;
+let panelCurrentY = 0;
+let isDragging = false;
+
+// 패널 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    // 패널 HTML 추가
+    const panelHTML = `
+        <div class="likes-panel-overlay" id="likes-overlay"></div>
+        <div class="likes-panel" id="likes-panel">
+            <div class="likes-panel-handle" id="likes-handle"></div>
+            <div class="likes-panel-header">
+                <h3 class="text-base font-bold text-grace-green">좋아요</h3>
+            </div>
+            <div class="likes-panel-content" id="likes-content">
+                <div class="text-center py-8">
+                    <i class="fa-solid fa-spinner fa-spin text-lilac text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', panelHTML);
+
+    likesPanel = document.getElementById('likes-panel');
+    likesPanelOverlay = document.getElementById('likes-overlay');
+    const handle = document.getElementById('likes-handle');
+
+    // 오버레이 클릭시 닫기
+    likesPanelOverlay.addEventListener('click', hideLikesPanel);
+
+    // 스와이프로 닫기 (터치)
+    handle.addEventListener('touchstart', handleTouchStart, { passive: true });
+    likesPanel.addEventListener('touchmove', handleTouchMove, { passive: false });
+    likesPanel.addEventListener('touchend', handleTouchEnd);
+
+    // 마우스 드래그로 닫기
+    handle.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+});
+
+function handleTouchStart(e) {
+    isDragging = true;
+    panelStartY = e.touches[0].clientY;
+    likesPanel.style.transition = 'none';
+}
+
+function handleTouchMove(e) {
+    if (!isDragging) return;
+    panelCurrentY = e.touches[0].clientY;
+    const diff = panelCurrentY - panelStartY;
+    if (diff > 0) {
+        likesPanel.style.transform = `translateY(${diff}px)`;
+        e.preventDefault();
+    }
+}
+
+function handleTouchEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    likesPanel.style.transition = 'transform 0.3s ease-out';
+    const diff = panelCurrentY - panelStartY;
+    if (diff > 100) {
+        hideLikesPanel();
+    } else {
+        likesPanel.style.transform = 'translateY(0)';
+    }
+}
+
+function handleMouseDown(e) {
+    isDragging = true;
+    panelStartY = e.clientY;
+    likesPanel.style.transition = 'none';
+    e.preventDefault();
+}
+
+function handleMouseMove(e) {
+    if (!isDragging) return;
+    panelCurrentY = e.clientY;
+    const diff = panelCurrentY - panelStartY;
+    if (diff > 0) {
+        likesPanel.style.transform = `translateY(${diff}px)`;
+    }
+}
+
+function handleMouseUp() {
+    if (!isDragging) return;
+    isDragging = false;
+    likesPanel.style.transition = 'transform 0.3s ease-out';
+    const diff = panelCurrentY - panelStartY;
+    if (diff > 100) {
+        hideLikesPanel();
+    } else {
+        likesPanel.style.transform = 'translateY(0)';
+    }
+}
+
+// 좋아요 목록 패널 열기
+function showLikesPanel(boTable, wrId) {
+    const content = document.getElementById('likes-content');
+    content.innerHTML = '<div class="text-center py-8"><i class="fa-solid fa-spinner fa-spin text-lilac text-2xl"></i></div>';
+
+    likesPanelOverlay.classList.add('active');
+    likesPanel.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // 좋아요 목록 불러오기
+    fetch('<?php echo G5_BBS_URL; ?>/likes_list_ajax.php?bo_table=' + boTable + '&wr_id=' + wrId)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.likes.length > 0) {
+                let html = '<div class="space-y-3">';
+                data.likes.forEach(user => {
+                    html += `
+                        <div class="flex items-center gap-3">
+                            <img src="${user.photo}" alt="${user.name}" class="w-11 h-11 rounded-full object-cover border-2 border-soft-lavender">
+                            <div class="flex-1">
+                                <p class="font-semibold text-grace-green">${user.name}</p>
+                                <p class="text-xs text-grace-green/50">${user.time_ago}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+            } else {
+                content.innerHTML = '<div class="text-center py-8 text-grace-green/50">아직 좋아요가 없습니다</div>';
+            }
+        })
+        .catch(err => {
+            content.innerHTML = '<div class="text-center py-8 text-red-500">불러오기 실패</div>';
+        });
+}
+
+// 좋아요 목록 패널 닫기
+function hideLikesPanel() {
+    likesPanelOverlay.classList.remove('active');
+    likesPanel.classList.remove('active');
+    likesPanel.style.transform = '';
+    document.body.style.overflow = '';
 }
 </script>
 
