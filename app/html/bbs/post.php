@@ -493,7 +493,7 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 100;
+            z-index: 100000;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s, visibility 0.3s;
@@ -510,7 +510,7 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
             max-height: 70vh;
             background: white;
             border-radius: 20px 20px 0 0;
-            z-index: 101;
+            z-index: 100001;
             transform: translateY(100%);
             transition: transform 0.3s ease-out;
             display: flex;
