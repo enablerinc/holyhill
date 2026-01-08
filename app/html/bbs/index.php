@@ -532,16 +532,6 @@ function convert_youtube_to_iframe_index($content) {
                 $today_writers_result = sql_query($today_writers_sql);
         ?>
         <section id="gratitude-section" class="px-4 py-4">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-book text-lilac"></i>
-                    <h2 class="text-base font-semibold text-gray-800">오늘의 감사</h2>
-                </div>
-                <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="text-sm text-purple-600 hover:text-purple-800 font-medium">
-                    전체 보기 →
-                </a>
-            </div>
-
             <!-- 내 감사일기 카드 -->
             <div class="bg-gradient-to-r from-soft-lavender/50 to-lilac/30 rounded-2xl p-4 mb-4 border border-lilac/20">
                 <?php if ($my_today_diary) { ?>
@@ -603,6 +593,9 @@ function convert_youtube_to_iframe_index($content) {
                             <?php } ?>
                         </div>
                         <span class="text-xs text-grace-green/60">오늘 <?php echo $today_writers_count; ?>명이 감사를 기록했어요</span>
+                        <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="ml-auto text-xs text-purple-600 hover:text-purple-800 font-medium">
+                            전체보기 →
+                        </a>
                     </div>
                 </div>
                 <?php } ?>
@@ -742,23 +735,21 @@ function convert_youtube_to_iframe_index($content) {
             ?>
 
             <?php if ($online_count > 0) { ?>
-            <div class="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+            <div class="flex flex-wrap gap-2">
                 <?php
                 while ($online = sql_fetch_array($online_result)) {
                     $online_photo = get_profile_image_url($online['mb_id']);
                     $online_nick = $online['mb_nick'] ? $online['mb_nick'] : '회원';
                 ?>
                 <a href="<?php echo G5_BBS_URL; ?>/user_profile.php?mb_id=<?php echo $online['mb_id']; ?>"
-                   class="flex flex-col items-center gap-1 min-w-[56px] cursor-pointer hover:opacity-80 transition-opacity">
+                   class="flex items-center gap-1.5 px-2 py-1 bg-gray-50 hover:bg-green-50 rounded-full transition-colors cursor-pointer">
                     <div class="relative">
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 p-0.5">
-                            <img src="<?php echo $online_photo; ?>"
-                                 class="w-full h-full rounded-full object-cover border-2 border-white"
-                                 alt="<?php echo $online_nick; ?>">
-                        </div>
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        <img src="<?php echo $online_photo; ?>"
+                             class="w-7 h-7 rounded-full object-cover border border-green-400"
+                             alt="<?php echo $online_nick; ?>">
+                        <div class="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
                     </div>
-                    <span class="text-xs text-gray-600 font-medium"><?php echo cut_str($online_nick, 5); ?></span>
+                    <span class="text-xs text-gray-700 font-medium"><?php echo cut_str($online_nick, 6); ?></span>
                 </a>
                 <?php } ?>
             </div>

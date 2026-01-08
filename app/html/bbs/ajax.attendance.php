@@ -48,24 +48,36 @@ function hasAttendedToday($mb_id, $g5) {
     return $row['cnt'] > 0;
 }
 
-// 오늘의 출석 순위 조회
+// 오늘의 출석 순위 조회 (동일 시간은 공동 등수)
 function getTodayAttendanceRank($mb_id, $g5) {
     $today_start = date('Y-m-d 00:00:00');
     $today_end = date('Y-m-d 23:59:59');
 
-    $sql = "SELECT mb_id, po_datetime
+    $sql = "SELECT mb_id, po_datetime, TIME(po_datetime) as attend_time_only
             FROM {$g5['point_table']}
             WHERE po_content LIKE '%첫로그인%'
             AND po_datetime >= '{$today_start}'
             AND po_datetime <= '{$today_end}'
-            ORDER BY po_datetime ASC";
+            ORDER BY TIME(po_datetime) ASC";
     $result = sql_query($sql);
 
+    $prev_time = '';
     $rank = 0;
+    $display_rank = 0;
+    $target_rank = 0;
+
     while ($row = sql_fetch_array($result)) {
         $rank++;
+        $current_time = $row['attend_time_only'];
+
+        // 이전 시간과 다르면 새로운 등수
+        if ($current_time !== $prev_time) {
+            $display_rank = $rank;
+            $prev_time = $current_time;
+        }
+
         if ($row['mb_id'] == $mb_id) {
-            return $rank;
+            return $display_rank;
         }
     }
     return 0;
@@ -108,24 +120,37 @@ function getTodayAttendanceList($g5, $limit = 50) {
     $today_start = date('Y-m-d 00:00:00');
     $today_end = date('Y-m-d 23:59:59');
 
-    $sql = "SELECT p.mb_id, m.mb_name, m.mb_nick, p.po_datetime as attend_time
+    // 시분초까지 정렬하고, 동일 시간일 경우 이름순 정렬
+    $sql = "SELECT p.mb_id, m.mb_name, m.mb_nick, p.po_datetime as attend_time,
+                   TIME(p.po_datetime) as attend_time_only
             FROM {$g5['point_table']} p
             JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
             WHERE p.po_content LIKE '%첫로그인%'
             AND p.po_datetime >= '{$today_start}'
             AND p.po_datetime <= '{$today_end}'
-            ORDER BY p.po_datetime ASC
+            ORDER BY TIME(p.po_datetime) ASC, m.mb_name ASC
             LIMIT {$limit}";
     $result = sql_query($sql);
 
     $list = array();
+    $prev_time = '';
     $rank = 0;
+    $display_rank = 0;
+
     while ($row = sql_fetch_array($result)) {
         $rank++;
+        $current_time = $row['attend_time_only'];
+
+        // 이전 시간과 같으면 공동 등수, 다르면 새로운 등수
+        if ($current_time !== $prev_time) {
+            $display_rank = $rank;
+            $prev_time = $current_time;
+        }
+
         $profile_img = get_profile_image_url($row['mb_id']);
 
         $list[] = array(
-            'rank' => $rank,
+            'rank' => $display_rank,
             'mb_id' => $row['mb_id'],
             'mb_name' => get_text($row['mb_name']),
             'mb_nick' => get_text($row['mb_nick']),
