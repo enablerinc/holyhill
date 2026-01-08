@@ -675,7 +675,7 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                 <div class="flex items-center gap-3" id="good-area">
                     <!-- 하트 아이콘 (토글) -->
                     <button onclick="toggleGood()" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
-                        <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-red-500 text-2xl" id="heartIcon"></i>
+                        <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-2xl <?php echo $is_good ? 'text-red-500' : 'text-gray-400'; ?>" id="heartIcon"></i>
                     </button>
                     <!-- 프사들 + 숫자 (패널 열기) -->
                     <?php if ($good_count > 0) { ?>
@@ -1332,8 +1332,11 @@ function toggleGood() {
     .then(r => r.json())
     .then(data => {
         if (data.result) {
-            document.getElementById('heartIcon').classList.toggle('fa-regular');
-            document.getElementById('heartIcon').classList.toggle('fa-solid');
+            const heartIcon = document.getElementById('heartIcon');
+            heartIcon.classList.toggle('fa-regular');
+            heartIcon.classList.toggle('fa-solid');
+            heartIcon.classList.toggle('text-gray-400');
+            heartIcon.classList.toggle('text-red-500');
             document.getElementById('goodCount').textContent = '좋아요 ' + data.count + '개';
         }
     });

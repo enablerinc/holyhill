@@ -937,6 +937,7 @@ function convert_youtube_to_iframe_index($content) {
 
         const iconClass = getNotificationIcon(notification.no_type);
         const timeAgo = getTimeAgo(notification.no_datetime);
+        const messagePreview = notification.message_preview || '';
 
         div.innerHTML = `
             <div class="flex items-start gap-3">
@@ -947,6 +948,7 @@ function convert_youtube_to_iframe_index($content) {
                     <p class="text-sm ${notification.no_is_read == '0' ? 'font-semibold' : 'font-normal'} text-gray-800 mb-1">
                         ${notification.no_content}
                     </p>
+                    ${messagePreview ? `<p class="text-xs text-gray-600 mb-1 truncate">"${messagePreview}"</p>` : ''}
                     <p class="text-xs text-gray-500">${timeAgo}</p>
                 </div>
                 ${notification.no_is_read == '0' ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-purple-600 rounded-full"></div></div>' : ''}

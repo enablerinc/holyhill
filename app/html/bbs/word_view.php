@@ -501,10 +501,6 @@ function toggleGood() {
                 var heartIcon = $('#heart-icon');
                 heartIcon.toggleClass('fa-regular fa-solid');
                 heartIcon.toggleClass('text-gray-400 text-red-500');
-                // 페이지 새로고침하여 프로필 사진 업데이트
-                if (response.count > 0) {
-                    location.reload();
-                }
             }
         },
         error: function() {

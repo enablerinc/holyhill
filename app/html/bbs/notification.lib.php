@@ -76,6 +76,34 @@ function get_notifications($mb_id, $limit = 20, $offset = 0) {
     $notifications = array();
 
     while ($row = sql_fetch_array($result)) {
+        // 메시지 미리보기 추가
+        $row['message_preview'] = '';
+
+        if ($row['no_bo_table'] && $row['no_wr_id']) {
+            $write_table = $g5['write_prefix'] . $row['no_bo_table'];
+
+            // 댓글인 경우 댓글 내용, 아니면 원글 내용
+            $target_id = $row['no_comment_id'] ? $row['no_comment_id'] : $row['no_wr_id'];
+
+            $write_sql = "SELECT wr_subject, wr_content FROM {$write_table} WHERE wr_id = '{$target_id}'";
+            $write_row = sql_fetch($write_sql);
+
+            if ($write_row) {
+                // 댓글이면 내용, 원글이면 제목 또는 내용
+                if ($row['no_comment_id']) {
+                    $preview = strip_tags($write_row['wr_content']);
+                } else {
+                    $preview = $write_row['wr_subject'] ? $write_row['wr_subject'] : strip_tags($write_row['wr_content']);
+                }
+                // 50자로 자르기
+                $preview = trim(preg_replace('/\s+/', ' ', $preview));
+                if (mb_strlen($preview, 'UTF-8') > 50) {
+                    $preview = mb_substr($preview, 0, 50, 'UTF-8') . '...';
+                }
+                $row['message_preview'] = $preview;
+            }
+        }
+
         $notifications[] = $row;
     }
 
