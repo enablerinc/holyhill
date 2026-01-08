@@ -120,7 +120,7 @@ if ($my_monthly_points >= EXCELLENT_MEMBER_POINT && $top_rank == 0) {
     $hof_badges['excellent_member'] = $my_monthly_points;
 }
 
-// 3. 1등 출석왕 (가장 먼저 출석 1위) 체크
+// 3. 1등 출석왕 (가장 먼저 출석 1위 - 동시간 출석자는 공동 1등) 체크
 $first_login_sql = "
     SELECT
         p.mb_id,
@@ -129,8 +129,8 @@ $first_login_sql = "
     WHERE p.po_content LIKE '%첫로그인%'
     AND p.po_datetime >= '{$start_date}'
     AND p.po_datetime <= '{$end_date}'
-    AND p.po_datetime = (
-        SELECT MIN(p2.po_datetime)
+    AND TIME(p.po_datetime) = (
+        SELECT MIN(TIME(p2.po_datetime))
         FROM {$g5['point_table']} p2
         WHERE p2.po_content LIKE '%첫로그인%'
         AND DATE(p2.po_datetime) = DATE(p.po_datetime)
@@ -307,7 +307,7 @@ if ($dawn_rank > 0) {
     $hof_badges['dawn'] = array('rank' => $dawn_rank, 'count' => $dawn_count);
 }
 
-// 8. 오늘의 골든타임 (첫 출석자) 체크
+// 8. 오늘의 골든타임 (첫 출석자 - 동시간 출석자는 공동 골든타임) 체크
 $today_start = date('Y-m-d 00:00:00');
 $today_end = date('Y-m-d 23:59:59');
 $golden_sql = "
@@ -316,12 +316,20 @@ $golden_sql = "
     WHERE po_content LIKE '%첫로그인%'
     AND po_datetime >= '{$today_start}'
     AND po_datetime <= '{$today_end}'
-    ORDER BY po_datetime ASC
-    LIMIT 1
+    AND TIME(po_datetime) = (
+        SELECT MIN(TIME(p2.po_datetime))
+        FROM {$g5['point_table']} p2
+        WHERE p2.po_content LIKE '%첫로그인%'
+        AND p2.po_datetime >= '{$today_start}'
+        AND p2.po_datetime <= '{$today_end}'
+    )
 ";
-$golden_result = sql_fetch($golden_sql);
-if ($golden_result && $golden_result['mb_id'] == $mb['mb_id']) {
-    $hof_badges['golden_time'] = date('H:i:s', strtotime($golden_result['login_time']));
+$golden_result = sql_query($golden_sql);
+while ($golden_row = sql_fetch_array($golden_result)) {
+    if ($golden_row['mb_id'] == $mb['mb_id']) {
+        $hof_badges['golden_time'] = date('H:i:s', strtotime($golden_row['login_time']));
+        break;
+    }
 }
 
 // 프로필 이미지 경로 - 캐시 버스팅 적용

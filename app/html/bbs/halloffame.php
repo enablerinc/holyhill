@@ -269,7 +269,7 @@ if ($prev_month < 1) {
 $prev_start_date = sprintf('%04d-%02d-01 00:00:00', $prev_year, $prev_month);
 $prev_end_date = date('Y-m-t 23:59:59', strtotime($prev_start_date));
 
-// 5-1. 1등 출석왕 (매일 가장 먼저 출석한 횟수)
+// 5-1. 1등 출석왕 (매일 가장 먼저 출석한 횟수 - 동시간 출석자는 공동 1등)
 $first_login_sql = "
     SELECT
         p.mb_id,
@@ -281,8 +281,8 @@ $first_login_sql = "
     WHERE p.po_content LIKE '%첫로그인%'
     AND p.po_datetime >= '{$start_date}'
     AND p.po_datetime <= '{$end_date}'
-    AND p.po_datetime = (
-        SELECT MIN(p2.po_datetime)
+    AND TIME(p.po_datetime) = (
+        SELECT MIN(TIME(p2.po_datetime))
         FROM {$g5['point_table']} p2
         WHERE p2.po_content LIKE '%첫로그인%'
         AND DATE(p2.po_datetime) = DATE(p.po_datetime)
@@ -290,7 +290,7 @@ $first_login_sql = "
         AND p2.po_datetime <= '{$end_date}'
     )
     GROUP BY p.mb_id
-    ORDER BY first_count DESC
+    ORDER BY first_count DESC, m.mb_name ASC
     LIMIT 5
 ";
 $first_login_result = sql_query($first_login_sql);
@@ -460,7 +460,7 @@ while ($row = sql_fetch_array($dawn_result)) {
     $dawn_members[] = $row;
 }
 
-// 5-6. 골든타임 출석자 (오늘의 첫 출석자)
+// 5-6. 골든타임 출석자 (오늘의 첫 출석자 - 동시간 출석자는 공동 골든타임)
 $today_start = date('Y-m-d 00:00:00');
 $today_end = date('Y-m-d 23:59:59');
 $golden_time_sql = "
@@ -474,11 +474,21 @@ $golden_time_sql = "
     WHERE p.po_content LIKE '%첫로그인%'
     AND p.po_datetime >= '{$today_start}'
     AND p.po_datetime <= '{$today_end}'
-    ORDER BY p.po_datetime ASC
-    LIMIT 1
+    AND TIME(p.po_datetime) = (
+        SELECT MIN(TIME(p2.po_datetime))
+        FROM {$g5['point_table']} p2
+        WHERE p2.po_content LIKE '%첫로그인%'
+        AND p2.po_datetime >= '{$today_start}'
+        AND p2.po_datetime <= '{$today_end}'
+    )
+    ORDER BY m.mb_name ASC
 ";
-$golden_result = sql_fetch($golden_time_sql);
-$golden_time_member = $golden_result ? $golden_result : null;
+$golden_result = sql_query($golden_time_sql);
+$golden_time_members = array();
+while ($row = sql_fetch_array($golden_result)) {
+    $golden_time_members[] = $row;
+}
+$golden_time_member = count($golden_time_members) > 0 ? $golden_time_members[0] : null;
 
 // 프로필 이미지 가져오기 함수
 function getProfileImage($mb_id) {
@@ -677,29 +687,35 @@ function getProfileImage($mb_id) {
             <h3 class="text-lg font-semibold text-grace-green">이달의 출석 성산인</h3>
         </div>
 
-        <!-- 골든타임 출석자 (오늘의 첫 출석자) - 특별 표시 -->
-        <?php if ($golden_time_member && $current_year == date('Y') && $current_month == date('n')): ?>
+        <!-- 골든타임 출석자 (오늘의 첫 출석자 - 공동 골든타임 지원) - 특별 표시 -->
+        <?php if (count($golden_time_members) > 0 && $current_year == date('Y') && $current_month == date('n')): ?>
         <div class="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500 rounded-2xl p-4 mb-4 shadow-lg relative overflow-hidden">
             <div class="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10"></div>
             <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full -ml-8 -mb-8"></div>
-            <div class="relative flex items-center gap-4">
-                <div class="relative">
-                    <div class="w-16 h-16 bg-white rounded-full p-1 shadow-lg">
-                        <img src="<?php echo getProfileImage($golden_time_member['mb_id']); ?>" class="w-full h-full rounded-full object-cover">
-                    </div>
-                    <div class="absolute -top-1 -right-1 w-7 h-7 bg-yellow-300 rounded-full flex items-center justify-center shadow-md animate-pulse">
-                        <i class="fa-solid fa-bolt text-yellow-700 text-sm"></i>
-                    </div>
+            <div class="relative">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xs bg-white/30 text-white px-2 py-0.5 rounded-full font-medium">오늘의 골든타임</span>
+                    <?php if (count($golden_time_members) > 1): ?>
+                    <span class="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">공동 <?php echo count($golden_time_members); ?>명</span>
+                    <?php endif; ?>
                 </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-xs bg-white/30 text-white px-2 py-0.5 rounded-full font-medium">오늘의 골든타임</span>
+                <div class="flex flex-wrap gap-3">
+                    <?php foreach ($golden_time_members as $gtm): ?>
+                    <div class="flex items-center gap-3 bg-white/20 rounded-xl p-2 pr-4">
+                        <div class="relative">
+                            <div class="w-12 h-12 bg-white rounded-full p-0.5 shadow-lg">
+                                <img src="<?php echo getProfileImage($gtm['mb_id']); ?>" class="w-full h-full rounded-full object-cover">
+                            </div>
+                            <div class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-300 rounded-full flex items-center justify-center shadow-md animate-pulse">
+                                <i class="fa-solid fa-bolt text-yellow-700 text-xs"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white"><?php echo get_text($gtm['mb_name']); ?></h4>
+                            <p class="text-white/80 text-xs"><?php echo date('H:i:s', strtotime($gtm['login_time'])); ?></p>
+                        </div>
                     </div>
-                    <h4 class="font-bold text-white text-lg"><?php echo get_text($golden_time_member['mb_name']); ?></h4>
-                    <p class="text-white/80 text-sm"><?php echo date('H:i:s', strtotime($golden_time_member['login_time'])); ?> 첫 출석!</p>
-                </div>
-                <div class="text-right">
-                    <i class="fa-solid fa-star text-yellow-200 text-3xl"></i>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
