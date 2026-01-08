@@ -62,17 +62,14 @@ function getTodayAttendanceRank($mb_id, $g5) {
     $result = sql_query($sql);
 
     $prev_time = '';
-    $rank = 0;
     $display_rank = 0;
-    $target_rank = 0;
 
     while ($row = sql_fetch_array($result)) {
-        $rank++;
         $current_time = $row['attend_time_only'];
 
-        // 이전 시간과 다르면 새로운 등수
+        // 이전 시간과 다르면 새로운 등수 (공동 등수 후 다음 등수로 - 1,1,2,3 방식)
         if ($current_time !== $prev_time) {
-            $display_rank = $rank;
+            $display_rank++;
             $prev_time = $current_time;
         }
 
@@ -134,16 +131,14 @@ function getTodayAttendanceList($g5, $limit = 50) {
 
     $list = array();
     $prev_time = '';
-    $rank = 0;
     $display_rank = 0;
 
     while ($row = sql_fetch_array($result)) {
-        $rank++;
         $current_time = $row['attend_time_only'];
 
-        // 이전 시간과 같으면 공동 등수, 다르면 새로운 등수
+        // 이전 시간과 같으면 공동 등수, 다르면 새로운 등수 (공동 등수 후 다음 등수로 - 1,1,2,3 방식)
         if ($current_time !== $prev_time) {
-            $display_rank = $rank;
+            $display_rank++;
             $prev_time = $current_time;
         }
 
