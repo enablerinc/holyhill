@@ -770,19 +770,24 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
             <!-- 댓글 -->
             <div class="p-4">
                 <?php
-                // 댓글 페이지네이션 설정
-                $comments_per_page = 50;
-                // 실제 DB에서 댓글 수 조회 (wr_comment 값이 정확하지 않을 수 있음)
+                // 댓글 페이지네이션 설정 (루트 댓글 기준)
+                $root_comments_per_page = 30;
+
+                // 루트 댓글 수 조회 (wr_comment_parent = 0인 것만)
+                $root_comment_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 AND wr_comment_parent = 0");
+                $total_root_comments = $root_comment_count['cnt'] ? (int)$root_comment_count['cnt'] : 0;
+                $total_comment_pages = max(1, ceil($total_root_comments / $root_comments_per_page));
+
+                // 전체 댓글 수 (루트 + 대댓글 모두)
                 $actual_comment_count = sql_fetch("SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1");
                 $total_comments_count = $actual_comment_count['cnt'] ? (int)$actual_comment_count['cnt'] : 0;
-                $total_comment_pages = max(1, ceil($total_comments_count / $comments_per_page));
 
                 // 기본값: 마지막 페이지 (최신 댓글)
                 $comment_page = isset($_GET['comment_page']) ? (int)$_GET['comment_page'] : $total_comment_pages;
                 if ($comment_page < 1) $comment_page = 1;
                 if ($comment_page > $total_comment_pages) $comment_page = $total_comment_pages;
 
-                $comment_offset = ($comment_page - 1) * $comments_per_page;
+                $comment_offset = ($comment_page - 1) * $root_comments_per_page;
 
                 // 페이지 번호 계산 (최대 5개 표시)
                 $start_page = max(1, $comment_page - 2);
@@ -800,21 +805,54 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
 
                 <div id="comment-list">
                 <?php
-                // 페이지에 해당하는 댓글 가져오기
-                $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 ORDER BY wr_id ASC LIMIT {$comment_offset}, {$comments_per_page}");
+                // 1단계: 현재 페이지의 루트 댓글 ID들 가져오기
+                $root_ids = array();
+                $root_result = sql_query("SELECT wr_id FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 AND wr_comment_parent = 0 ORDER BY wr_id ASC LIMIT {$comment_offset}, {$root_comments_per_page}");
+                while ($r = sql_fetch_array($root_result)) {
+                    $root_ids[] = $r['wr_id'];
+                }
 
                 // 댓글을 배열로 변환하고 계층 구조 생성
                 $all_comments = array();
                 $children_map = array(); // 부모ID => 자식 댓글 배열
 
-                while ($c = sql_fetch_array($comment_result)) {
-                    $all_comments[$c['wr_id']] = $c;
-                    $parent_id = (int)$c['wr_comment_parent'];
+                if (count($root_ids) > 0) {
+                    $root_ids_str = implode(',', $root_ids);
 
-                    if (!isset($children_map[$parent_id])) {
-                        $children_map[$parent_id] = array();
+                    // 2단계: 루트 댓글들 가져오기
+                    $comment_result = sql_query("SELECT * FROM {$write_table} WHERE wr_id IN ({$root_ids_str}) ORDER BY wr_id ASC");
+                    while ($c = sql_fetch_array($comment_result)) {
+                        $all_comments[$c['wr_id']] = $c;
+                        if (!isset($children_map[0])) {
+                            $children_map[0] = array();
+                        }
+                        $children_map[0][] = $c;
                     }
-                    $children_map[$parent_id][] = $c;
+
+                    // 3단계: 모든 대댓글을 가져와서 부모가 현재 페이지에 속하는지 확인
+                    $all_replies_result = sql_query("SELECT * FROM {$write_table} WHERE wr_parent = '{$wr_id}' AND wr_is_comment = 1 AND wr_comment_parent != 0 ORDER BY wr_id ASC");
+                    $pending_replies = array();
+                    while ($c = sql_fetch_array($all_replies_result)) {
+                        $pending_replies[$c['wr_id']] = $c;
+                    }
+
+                    // 반복적으로 부모가 있는 대댓글들을 추가
+                    $added = true;
+                    while ($added) {
+                        $added = false;
+                        foreach ($pending_replies as $reply_id => $reply) {
+                            $parent_id = (int)$reply['wr_comment_parent'];
+                            if (isset($all_comments[$parent_id])) {
+                                $all_comments[$reply_id] = $reply;
+                                if (!isset($children_map[$parent_id])) {
+                                    $children_map[$parent_id] = array();
+                                }
+                                $children_map[$parent_id][] = $reply;
+                                unset($pending_replies[$reply_id]);
+                                $added = true;
+                            }
+                        }
+                    }
                 }
 
                 // 재귀적으로 댓글 렌더링하는 함수
