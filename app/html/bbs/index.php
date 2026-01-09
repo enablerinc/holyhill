@@ -710,16 +710,16 @@ function convert_youtube_to_iframe_index($content) {
             <?php } ?>
         </section>
 
-        <!-- 6. 현재 활동중인 사용자 (맨 아래) -->
+        <!-- 6. 실시간 접속자 (맨 아래) -->
         <section id="online-users" class="bg-white px-4 py-4 mb-4 rounded-2xl mx-4 shadow-warm">
             <div class="flex items-center gap-2 mb-3">
                 <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <h3 class="text-sm font-semibold text-gray-700">현재 활동중인 사용자</h3>
+                <h3 class="text-sm font-semibold text-gray-700">실시간 접속자</h3>
             </div>
             <?php
-            // 실시간 접속중인 회원 (g5_login 테이블 사용)
+            // 실시간 접속중인 회원 (g5_login 테이블 사용 - mb_id 기준 추적)
             $online_sql = "
-                SELECT l.mb_id, m.mb_nick, l.lo_datetime
+                SELECT l.mb_id, m.mb_name, m.mb_nick, l.lo_datetime
                 FROM {$g5['login_table']} l
                 JOIN {$g5['member_table']} m ON l.mb_id = m.mb_id
                 WHERE l.mb_id != ''
@@ -735,17 +735,17 @@ function convert_youtube_to_iframe_index($content) {
                 <?php
                 while ($online = sql_fetch_array($online_result)) {
                     $online_photo = get_profile_image_url($online['mb_id']);
-                    $online_nick = $online['mb_nick'] ? $online['mb_nick'] : '회원';
+                    $online_name = $online['mb_name'] ? $online['mb_name'] : ($online['mb_nick'] ? $online['mb_nick'] : '회원');
                 ?>
                 <a href="<?php echo G5_BBS_URL; ?>/user_profile.php?mb_id=<?php echo $online['mb_id']; ?>"
                    class="flex items-center gap-1.5 px-2 py-1 bg-gray-50 hover:bg-green-50 rounded-full transition-colors cursor-pointer">
                     <div class="relative">
                         <img src="<?php echo $online_photo; ?>"
                              class="w-7 h-7 rounded-full object-cover border border-green-400"
-                             alt="<?php echo $online_nick; ?>">
+                             alt="<?php echo $online_name; ?>">
                         <div class="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
                     </div>
-                    <span class="text-xs text-gray-700 font-medium"><?php echo cut_str($online_nick, 6); ?></span>
+                    <span class="text-xs text-gray-700 font-medium"><?php echo cut_str($online_name, 6); ?></span>
                 </a>
                 <?php } ?>
             </div>
