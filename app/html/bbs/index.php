@@ -1187,6 +1187,15 @@ function convert_youtube_to_iframe_index($content) {
         });
     };
 
+    // 시간 포맷팅 (밀리세컨즈 강조) - 결과 팝업용
+    function formatResultTime(timeStr) {
+        if (timeStr && timeStr.includes('.')) {
+            const [time, ms] = timeStr.split('.');
+            return `${time}<span class="text-purple-600 font-semibold">.${ms}</span>`;
+        }
+        return timeStr || '';
+    }
+
     // 출석 결과 표시
     function showAttendanceResult(result) {
         let html = '';
@@ -1248,7 +1257,7 @@ function convert_youtube_to_iframe_index($content) {
                     </div>
                     <h3 class="text-2xl font-bold text-gray-800 mb-2">${result.message}</h3>
                     <p class="text-lg ${rankClass} font-bold mb-1">${result.rank}등으로 출석!</p>
-                    <p class="text-sm text-gray-500 mb-4">${result.attend_time} 출석 · +${result.point}P</p>
+                    <p class="text-sm text-gray-500 mb-4">${formatResultTime(result.attend_time)} 출석 · +${result.point}P</p>
                     <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mb-4">
                         <div class="grid grid-cols-2 gap-4 text-center">
                             <div>
@@ -1315,6 +1324,15 @@ function convert_youtube_to_iframe_index($content) {
     }
 
     // 출석자 목록 렌더링
+    // 시간 포맷팅 (밀리세컨즈 강조)
+    function formatAttendTime(timeStr) {
+        if (timeStr.includes('.')) {
+            const [time, ms] = timeStr.split('.');
+            return `${time}<span class="text-purple-500 font-medium">.${ms}</span>`;
+        }
+        return timeStr;
+    }
+
     function renderAttendanceList(list, totalCount) {
         attendanceListCount.textContent = `오늘 ${totalCount}명 출석`;
 
@@ -1349,7 +1367,7 @@ function convert_youtube_to_iframe_index($content) {
                     <img src="${item.profile_img}" class="w-10 h-10 rounded-full object-cover" alt="${item.mb_name}">
                     <div class="flex-1 min-w-0">
                         <p class="font-semibold text-gray-800">${item.mb_name}</p>
-                        <p class="text-xs text-gray-500">${item.attend_time} 출석</p>
+                        <p class="text-xs text-gray-500">${formatAttendTime(item.attend_time)} 출석</p>
                     </div>
                 </div>
             `;

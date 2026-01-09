@@ -4,6 +4,7 @@
  * - 출석 가능 시간: 04:30 ~ 23:59
  * - 하루에 한 번만 출석 가능
  * - 출석 시 포인트 지급
+ * - 밀리세컨즈 단위로 순위 구분
  */
 
 include_once('./_common.php');
@@ -48,24 +49,45 @@ function hasAttendedToday($mb_id, $g5) {
     return $row['cnt'] > 0;
 }
 
-// 오늘의 출석 순위 조회 (동일 시간은 공동 등수)
+// po_datetime_ms 컬럼 존재 여부 확인
+function hasMillisecondColumn($g5) {
+    static $has_ms_column = null;
+    if ($has_ms_column === null) {
+        $check = sql_query("SHOW COLUMNS FROM {$g5['point_table']} LIKE 'po_datetime_ms'");
+        $has_ms_column = sql_num_rows($check) > 0;
+    }
+    return $has_ms_column;
+}
+
+// 오늘의 출석 순위 조회 (밀리세컨즈까지 동일해야 공동 등수)
 function getTodayAttendanceRank($mb_id, $g5) {
     $today_start = date('Y-m-d 00:00:00');
     $today_end = date('Y-m-d 23:59:59');
+    $has_ms = hasMillisecondColumn($g5);
 
-    $sql = "SELECT mb_id, po_datetime, TIME(po_datetime) as attend_time_only
-            FROM {$g5['point_table']}
-            WHERE po_content LIKE '%첫로그인%'
-            AND po_datetime >= '{$today_start}'
-            AND po_datetime <= '{$today_end}'
-            ORDER BY TIME(po_datetime) ASC";
+    if ($has_ms) {
+        $sql = "SELECT mb_id, po_datetime, po_datetime_ms,
+                       CONCAT(TIME(po_datetime), '.', LPAD(po_datetime_ms, 3, '0')) as attend_time_full
+                FROM {$g5['point_table']}
+                WHERE po_content LIKE '%첫로그인%'
+                AND po_datetime >= '{$today_start}'
+                AND po_datetime <= '{$today_end}'
+                ORDER BY po_datetime ASC, po_datetime_ms ASC";
+    } else {
+        $sql = "SELECT mb_id, po_datetime, TIME(po_datetime) as attend_time_full
+                FROM {$g5['point_table']}
+                WHERE po_content LIKE '%첫로그인%'
+                AND po_datetime >= '{$today_start}'
+                AND po_datetime <= '{$today_end}'
+                ORDER BY TIME(po_datetime) ASC";
+    }
     $result = sql_query($sql);
 
     $prev_time = '';
     $display_rank = 0;
 
     while ($row = sql_fetch_array($result)) {
-        $current_time = $row['attend_time_only'];
+        $current_time = $row['attend_time_full'];
 
         // 이전 시간과 다르면 새로운 등수 (공동 등수 후 다음 등수로 - 1,1,2,3 방식)
         if ($current_time !== $prev_time) {
@@ -112,21 +134,36 @@ function getConsecutiveDays($mb_id, $g5) {
     return $consecutive;
 }
 
-// 오늘의 전체 출석자 목록 조회
+// 오늘의 전체 출석자 목록 조회 (밀리세컨즈 포함)
 function getTodayAttendanceList($g5, $limit = 50) {
     $today_start = date('Y-m-d 00:00:00');
     $today_end = date('Y-m-d 23:59:59');
+    $has_ms = hasMillisecondColumn($g5);
 
-    // 시분초까지 정렬하고, 동일 시간일 경우 이름순 정렬
-    $sql = "SELECT p.mb_id, m.mb_name, m.mb_nick, p.po_datetime as attend_time,
-                   TIME(p.po_datetime) as attend_time_only
-            FROM {$g5['point_table']} p
-            JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
-            WHERE p.po_content LIKE '%첫로그인%'
-            AND p.po_datetime >= '{$today_start}'
-            AND p.po_datetime <= '{$today_end}'
-            ORDER BY TIME(p.po_datetime) ASC, m.mb_name ASC
-            LIMIT {$limit}";
+    if ($has_ms) {
+        // 밀리세컨즈까지 정렬, 동일 시간(ms포함)일 경우 이름순 정렬
+        $sql = "SELECT p.mb_id, m.mb_name, m.mb_nick, p.po_datetime as attend_time,
+                       p.po_datetime_ms,
+                       CONCAT(TIME(p.po_datetime), '.', LPAD(p.po_datetime_ms, 3, '0')) as attend_time_full
+                FROM {$g5['point_table']} p
+                JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
+                WHERE p.po_content LIKE '%첫로그인%'
+                AND p.po_datetime >= '{$today_start}'
+                AND p.po_datetime <= '{$today_end}'
+                ORDER BY p.po_datetime ASC, p.po_datetime_ms ASC, m.mb_name ASC
+                LIMIT {$limit}";
+    } else {
+        $sql = "SELECT p.mb_id, m.mb_name, m.mb_nick, p.po_datetime as attend_time,
+                       0 as po_datetime_ms,
+                       TIME(p.po_datetime) as attend_time_full
+                FROM {$g5['point_table']} p
+                JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
+                WHERE p.po_content LIKE '%첫로그인%'
+                AND p.po_datetime >= '{$today_start}'
+                AND p.po_datetime <= '{$today_end}'
+                ORDER BY TIME(p.po_datetime) ASC, m.mb_name ASC
+                LIMIT {$limit}";
+    }
     $result = sql_query($sql);
 
     $list = array();
@@ -134,7 +171,7 @@ function getTodayAttendanceList($g5, $limit = 50) {
     $display_rank = 0;
 
     while ($row = sql_fetch_array($result)) {
-        $current_time = $row['attend_time_only'];
+        $current_time = $row['attend_time_full'];
 
         // 이전 시간과 같으면 공동 등수, 다르면 새로운 등수 (공동 등수 후 다음 등수로 - 1,1,2,3 방식)
         if ($current_time !== $prev_time) {
@@ -143,13 +180,21 @@ function getTodayAttendanceList($g5, $limit = 50) {
         }
 
         $profile_img = get_profile_image_url($row['mb_id']);
+        $ms = (int)$row['po_datetime_ms'];
+
+        // 시간 표시: HH:MM:SS.mmm
+        $time_display = date('H:i:s', strtotime($row['attend_time']));
+        if ($has_ms) {
+            $time_display .= '.' . str_pad($ms, 3, '0', STR_PAD_LEFT);
+        }
 
         $list[] = array(
             'rank' => $display_rank,
             'mb_id' => $row['mb_id'],
             'mb_name' => get_text($row['mb_name']),
             'mb_nick' => get_text($row['mb_nick']),
-            'attend_time' => date('H:i:s', strtotime($row['attend_time'])),
+            'attend_time' => $time_display,
+            'attend_time_ms' => $ms,
             'profile_img' => $profile_img
         );
     }
@@ -170,6 +215,12 @@ function getTodayAttendanceCount($g5) {
             AND p.po_datetime <= '{$today_end}'";
     $row = sql_fetch($sql);
     return (int)$row['cnt'];
+}
+
+// 현재 밀리세컨즈 가져오기
+function getCurrentMilliseconds() {
+    list($usec, $sec) = explode(' ', microtime());
+    return (int)(floatval($usec) * 1000);
 }
 
 switch ($action) {
@@ -205,15 +256,34 @@ switch ($action) {
             exit;
         }
 
+        // 밀리세컨즈 기록 (insert_point 호출 직전에 캡처)
+        $ms = getCurrentMilliseconds();
+
         // 출석 처리 (포인트 지급)
         $point = $config['cf_login_point'] ? $config['cf_login_point'] : 10;
         insert_point($member['mb_id'], $point, G5_TIME_YMD.' 첫로그인', '@login', $member['mb_id'], G5_TIME_YMD);
+
+        // 밀리세컨즈 컬럼이 있으면 업데이트
+        if (hasMillisecondColumn($g5)) {
+            $today = G5_TIME_YMD;
+            sql_query("UPDATE {$g5['point_table']}
+                       SET po_datetime_ms = {$ms}
+                       WHERE mb_id = '{$member['mb_id']}'
+                       AND po_content LIKE '%{$today}%첫로그인%'
+                       ORDER BY po_id DESC
+                       LIMIT 1");
+        }
 
         // 출석 후 정보 조회
         $rank = getTodayAttendanceRank($member['mb_id'], $g5);
         $consecutive = getConsecutiveDays($member['mb_id'], $g5);
         $total_count = getTodayAttendanceCount($g5);
+
+        // 시간 표시 (밀리세컨즈 포함)
         $attend_time = date('H:i:s');
+        if (hasMillisecondColumn($g5)) {
+            $attend_time .= '.' . str_pad($ms, 3, '0', STR_PAD_LEFT);
+        }
 
         echo json_encode(array(
             'success' => true,
