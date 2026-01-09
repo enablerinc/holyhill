@@ -717,20 +717,16 @@ function convert_youtube_to_iframe_index($content) {
                 <h3 class="text-sm font-semibold text-gray-700">현재 활동중인 사용자</h3>
             </div>
             <?php
-            // 오늘 출석(로그인)한 모든 회원을 최근 활동 순으로 표시
-            $today_login_sql = "
-                SELECT m.mb_id, m.mb_nick,
-                    GREATEST(
-                        COALESCE(m.mb_today_login, '1000-01-01 00:00:00'),
-                        COALESCE((SELECT MAX(wr_datetime) FROM {$g5['write_prefix']}gallery WHERE mb_id = m.mb_id), '1000-01-01 00:00:00'),
-                        COALESCE((SELECT MAX(wr_datetime) FROM {$g5['write_prefix']}word WHERE mb_id = m.mb_id), '1000-01-01 00:00:00')
-                    ) as last_activity
-                FROM {$g5['member_table']} m
-                WHERE m.mb_id != ''
-                AND DATE(m.mb_today_login) = CURDATE()
-                ORDER BY last_activity DESC
+            // 실시간 접속중인 회원 (g5_login 테이블 사용)
+            $online_sql = "
+                SELECT l.mb_id, m.mb_nick, l.lo_datetime
+                FROM {$g5['login_table']} l
+                JOIN {$g5['member_table']} m ON l.mb_id = m.mb_id
+                WHERE l.mb_id != ''
+                AND l.mb_id != '{$config['cf_admin']}'
+                ORDER BY l.lo_datetime DESC
             ";
-            $online_result = sql_query($today_login_sql);
+            $online_result = sql_query($online_sql);
             $online_count = sql_num_rows($online_result);
             ?>
 
