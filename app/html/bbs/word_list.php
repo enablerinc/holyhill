@@ -273,5 +273,6 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 
 <?php include_once(G5_BBS_PATH.'/bottom_nav.php'); ?>
 
+<?php echo html_end(); // 접속자 추적 ?>
 </body>
 </html>

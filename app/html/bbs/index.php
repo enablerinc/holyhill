@@ -1431,5 +1431,6 @@ function convert_youtube_to_iframe_index($content) {
 <?php } ?>
 </script>
 
+<?php echo html_end(); // 접속자 추적을 위해 필수 ?>
 </body>
 </html>

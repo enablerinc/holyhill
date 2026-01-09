@@ -1022,5 +1022,6 @@ function uploadProfileImage(input) {
 }
 </script>
 
+<?php echo html_end(); // 접속자 추적 ?>
 </body>
 </html>
