@@ -1022,6 +1022,13 @@ function uploadProfileImage(input) {
 }
 </script>
 
-<?php echo html_end(); // 접속자 추적 ?>
+<?php
+// 접속자 추적을 위한 설정
+if (!isset($g5['lo_location'])) {
+    $g5['lo_location'] = addslashes($g5['title'] ?? '페이지');
+    $g5['lo_url'] = addslashes($_SERVER['REQUEST_URI'] ?? '');
+}
+echo html_end();
+?>
 </body>
 </html>
