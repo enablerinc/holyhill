@@ -674,26 +674,24 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
             <div class="p-4">
                 <div class="flex items-center gap-3" id="good-area">
                     <!-- 하트 아이콘 (토글) -->
-                    <button onclick="toggleGood()" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
+                    <button onclick="toggleGood()" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors" id="good-btn">
                         <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-2xl <?php echo $is_good ? 'text-red-500' : 'text-gray-400'; ?>" id="heartIcon"></i>
                     </button>
                     <!-- 프사들 + 숫자 (패널 열기) -->
-                    <?php if ($good_count > 0) { ?>
-                    <button onclick="showLikesPanel('<?php echo $bo_table; ?>', <?php echo $wr_id; ?>)" class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors">
-                        <div class="flex -space-x-1.5" id="likes-preview">
-                            <?php foreach ($likes_preview as $liker) { ?>
-                            <img src="<?php echo $liker['photo']; ?>" alt="<?php echo $liker['name']; ?>" class="w-6 h-6 rounded-full object-cover border-2 border-white">
-                            <?php } ?>
-                        </div>
-                        <?php if ($good_count > count($likes_preview)) { ?>
-                        <span class="text-sm text-gray-600" id="good-extra">+<?php echo number_format($good_count - count($likes_preview)); ?>명</span>
-                        <?php } elseif ($good_count == 1) { ?>
-                        <span class="text-sm text-gray-600">1명</span>
+                    <div id="likes-preview-area">
+                        <?php if ($good_count > 0) { ?>
+                        <button onclick="showLikesPanel('<?php echo $bo_table; ?>', <?php echo $wr_id; ?>)" class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors">
+                            <div class="flex -space-x-1.5">
+                                <?php foreach ($likes_preview as $liker) { ?>
+                                <img src="<?php echo $liker['photo']; ?>" alt="<?php echo $liker['name']; ?>" class="w-6 h-6 rounded-full object-cover border-2 border-white">
+                                <?php } ?>
+                            </div>
+                            <span class="text-sm text-gray-600"><?php echo $good_count > 3 ? '+'.number_format($good_count - 3).'명' : number_format($good_count).'명'; ?></span>
+                        </button>
+                        <?php } else { ?>
+                        <span class="text-sm text-gray-400">0</span>
                         <?php } ?>
-                    </button>
-                    <?php } else { ?>
-                    <span class="text-sm text-gray-400" id="goodCount">0</span>
-                    <?php } ?>
+                    </div>
                 </div>
             </div>
 
@@ -1320,10 +1318,6 @@ function toggleGood() {
     return;
     <?php } ?>
 
-    console.log('toggleGood 함수 실행됨');
-    console.log('요청 URL:', '<?php echo G5_BBS_URL; ?>/ajax.good.php');
-    console.log('요청 데이터:', 'bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>');
-
     fetch('<?php echo G5_BBS_URL; ?>/ajax.good.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -1332,12 +1326,32 @@ function toggleGood() {
     .then(r => r.json())
     .then(data => {
         if (data.result) {
+            // 1. 하트 아이콘 토글
             const heartIcon = document.getElementById('heartIcon');
-            heartIcon.classList.toggle('fa-regular');
-            heartIcon.classList.toggle('fa-solid');
-            heartIcon.classList.toggle('text-gray-400');
-            heartIcon.classList.toggle('text-red-500');
-            document.getElementById('goodCount').textContent = '좋아요 ' + data.count + '개';
+            if (data.is_good) {
+                heartIcon.classList.remove('fa-regular', 'text-gray-400');
+                heartIcon.classList.add('fa-solid', 'text-red-500');
+            } else {
+                heartIcon.classList.remove('fa-solid', 'text-red-500');
+                heartIcon.classList.add('fa-regular', 'text-gray-400');
+            }
+
+            // 2. 좋아요 프리뷰 영역 업데이트
+            const previewArea = document.getElementById('likes-preview-area');
+            if (data.count > 0) {
+                let photosHtml = data.likes_preview.map(u =>
+                    `<img src="${u.photo}" alt="${u.name}" class="w-6 h-6 rounded-full object-cover border-2 border-white">`
+                ).join('');
+                let countText = data.count > 3 ? `+${(data.count - 3).toLocaleString()}명` : `${data.count.toLocaleString()}명`;
+                previewArea.innerHTML = `
+                    <button onclick="showLikesPanel('<?php echo $bo_table; ?>', <?php echo $wr_id; ?>)" class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors">
+                        <div class="flex -space-x-1.5">${photosHtml}</div>
+                        <span class="text-sm text-gray-600">${countText}</span>
+                    </button>
+                `;
+            } else {
+                previewArea.innerHTML = `<span class="text-sm text-gray-400">0</span>`;
+            }
         }
     });
 }

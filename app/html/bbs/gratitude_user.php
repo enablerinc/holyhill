@@ -326,22 +326,20 @@ function get_likes_preview($bo_table, $wr_id, $limit = 3) {
                             <i class="<?php echo $is_good ? 'fa-solid' : 'fa-regular'; ?> fa-heart text-lg <?php echo $is_good ? 'text-red-500' : 'text-grace-green/50'; ?>" id="heart-icon-<?php echo $wr_id; ?>"></i>
                         </button>
                         <!-- 프사들 + 숫자 (패널 열기) -->
-                        <?php if ($good_count > 0) { ?>
-                        <button onclick="showLikesPanel('<?php echo $bo_table; ?>', <?php echo $wr_id; ?>)" class="flex items-center gap-1.5 px-2 py-1 rounded-full hover:bg-soft-lavender/50 transition-colors">
-                            <div class="flex -space-x-1.5" id="likes-preview-<?php echo $wr_id; ?>">
-                                <?php foreach ($likes_preview as $liker) { ?>
-                                <img src="<?php echo $liker['photo']; ?>" alt="<?php echo $liker['name']; ?>" class="w-6 h-6 rounded-full object-cover border-2 border-white">
-                                <?php } ?>
-                            </div>
-                            <?php if ($good_count > count($likes_preview)) { ?>
-                            <span class="text-xs text-grace-green/70" id="good-extra-<?php echo $wr_id; ?>">+<?php echo number_format($good_count - count($likes_preview)); ?>명</span>
-                            <?php } elseif ($good_count == 1) { ?>
-                            <span class="text-xs text-grace-green/70">1명</span>
+                        <div id="likes-preview-area-<?php echo $wr_id; ?>">
+                            <?php if ($good_count > 0) { ?>
+                            <button onclick="showLikesPanel('<?php echo $bo_table; ?>', <?php echo $wr_id; ?>)" class="flex items-center gap-1.5 px-2 py-1 rounded-full hover:bg-soft-lavender/50 transition-colors">
+                                <div class="flex -space-x-1.5">
+                                    <?php foreach ($likes_preview as $liker) { ?>
+                                    <img src="<?php echo $liker['photo']; ?>" alt="<?php echo $liker['name']; ?>" class="w-6 h-6 rounded-full object-cover border-2 border-white">
+                                    <?php } ?>
+                                </div>
+                                <span class="text-xs text-grace-green/70"><?php echo $good_count > 3 ? '+'.number_format($good_count - 3).'명' : number_format($good_count).'명'; ?></span>
+                            </button>
+                            <?php } else { ?>
+                            <span class="text-xs text-grace-green/50">0</span>
                             <?php } ?>
-                        </button>
-                        <?php } else { ?>
-                        <span class="text-xs text-grace-green/50" id="good-count-text-<?php echo $wr_id; ?>">0</span>
-                        <?php } ?>
+                        </div>
                     </div>
 
                     <!-- 댓글 토글 버튼 -->
@@ -494,15 +492,32 @@ function toggleGood(wrId) {
     .then(r => r.json())
     .then(data => {
         if (data.result) {
+            // 1. 하트 아이콘 토글
             const icon = document.getElementById('heart-icon-' + wrId);
-            const count = document.getElementById('good-count-' + wrId);
+            if (data.is_good) {
+                icon.classList.remove('fa-regular', 'text-grace-green/50');
+                icon.classList.add('fa-solid', 'text-red-500');
+            } else {
+                icon.classList.remove('fa-solid', 'text-red-500');
+                icon.classList.add('fa-regular', 'text-grace-green/50');
+            }
 
-            icon.classList.toggle('fa-regular');
-            icon.classList.toggle('fa-solid');
-            icon.classList.toggle('text-grace-green/50');
-            icon.classList.toggle('text-red-500');
-
-            count.textContent = data.count;
+            // 2. 좋아요 프리뷰 영역 업데이트
+            const previewArea = document.getElementById('likes-preview-area-' + wrId);
+            if (data.count > 0) {
+                let photosHtml = data.likes_preview.map(u =>
+                    `<img src="${u.photo}" alt="${u.name}" class="w-6 h-6 rounded-full object-cover border-2 border-white">`
+                ).join('');
+                let countText = data.count > 3 ? `+${(data.count - 3).toLocaleString()}명` : `${data.count.toLocaleString()}명`;
+                previewArea.innerHTML = `
+                    <button onclick="showLikesPanel('${boTable}', ${wrId})" class="flex items-center gap-1.5 px-2 py-1 rounded-full hover:bg-soft-lavender/50 transition-colors">
+                        <div class="flex -space-x-1.5">${photosHtml}</div>
+                        <span class="text-xs text-grace-green/70">${countText}</span>
+                    </button>
+                `;
+            } else {
+                previewArea.innerHTML = `<span class="text-xs text-grace-green/50">0</span>`;
+            }
         }
     });
 }

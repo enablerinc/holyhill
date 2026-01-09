@@ -25,31 +25,31 @@ if (!$board) {
 $write_table = $g5['write_prefix'] . $bo_table;
 
 // 이미 추천했는지 확인
-$sql = "SELECT * FROM {$g5['board_good_table']} 
-        WHERE bo_table = '{$bo_table}' 
-        AND wr_id = '{$wr_id}' 
+$sql = "SELECT * FROM {$g5['board_good_table']}
+        WHERE bo_table = '{$bo_table}'
+        AND wr_id = '{$wr_id}'
         AND mb_id = '{$member['mb_id']}'";
 $row = sql_fetch($sql);
 
 if ($row) {
     // 추천 취소
-    sql_query("DELETE FROM {$g5['board_good_table']} 
-               WHERE bo_table = '{$bo_table}' 
-               AND wr_id = '{$wr_id}' 
+    sql_query("DELETE FROM {$g5['board_good_table']}
+               WHERE bo_table = '{$bo_table}'
+               AND wr_id = '{$wr_id}'
                AND mb_id = '{$member['mb_id']}'");
-    
+
     sql_query("UPDATE {$write_table} SET wr_good = wr_good - 1 WHERE wr_id = '{$wr_id}'");
-    
+
     $result = 'canceled';
 } else {
     // 추천 추가
-    sql_query("INSERT INTO {$g5['board_good_table']} 
+    sql_query("INSERT INTO {$g5['board_good_table']}
                SET bo_table = '{$bo_table}',
                    wr_id = '{$wr_id}',
                    mb_id = '{$member['mb_id']}',
                    bg_flag = 'good',
                    bg_datetime = NOW()");
-    
+
     sql_query("UPDATE {$write_table} SET wr_good = wr_good + 1 WHERE wr_id = '{$wr_id}'");
 
     // 포인트 지급 (추천한 사람에게 10포인트)
@@ -62,12 +62,13 @@ if ($row) {
         $po_content = "{$board['bo_subject']} {$wr_id} 추천 받음";
         insert_point($write['mb_id'], 30, $po_content, $bo_table, $wr_id, '추천받음');
     }
-    
+
     $result = 'success';
 }
 
 // 현재 추천 수 및 좋아요 상태
 $write = sql_fetch("SELECT wr_good FROM {$write_table} WHERE wr_id = '{$wr_id}'");
+$good_count = (int)$write['wr_good'];
 
 // 현재 사용자의 좋아요 상태 확인
 $is_good = false;
@@ -79,9 +80,31 @@ if ($good_check && $good_check['cnt'] > 0) {
     $is_good = true;
 }
 
+// 좋아요 미리보기 (최대 3명)
+$likes_preview = array();
+if ($good_count > 0) {
+    $likes_sql = "SELECT bg.mb_id, m.mb_name, m.mb_nick
+                  FROM {$g5['board_good_table']} bg
+                  LEFT JOIN {$g5['member_table']} m ON bg.mb_id = m.mb_id
+                  WHERE bg.bo_table = '{$bo_table}'
+                  AND bg.wr_id = '{$wr_id}'
+                  AND bg.bg_flag = 'good'
+                  ORDER BY bg.bg_datetime DESC
+                  LIMIT 3";
+    $likes_result = sql_query($likes_sql);
+    while ($liker = sql_fetch_array($likes_result)) {
+        $likes_preview[] = array(
+            'mb_id' => $liker['mb_id'],
+            'name' => $liker['mb_name'] ? $liker['mb_name'] : ($liker['mb_nick'] ? $liker['mb_nick'] : $liker['mb_id']),
+            'photo' => get_profile_image_url($liker['mb_id'])
+        );
+    }
+}
+
 echo json_encode([
     'result' => $result,
-    'count' => (int)$write['wr_good'],
-    'is_good' => $is_good
+    'count' => $good_count,
+    'is_good' => $is_good,
+    'likes_preview' => $likes_preview
 ]);
 ?>
