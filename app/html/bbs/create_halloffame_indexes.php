@@ -46,7 +46,8 @@ if (!index_exists($point_table, 'idx_point_mbid_datetime')) {
         echo "  - idx_point_mbid_datetime 생성 완료\n";
         $success_count++;
     } else {
-        echo "  - idx_point_mbid_datetime 생성 실패\n";
+        $err = mysqli_error($GLOBALS['g5']['connect_db']);
+        echo "  - idx_point_mbid_datetime 생성 실패: {$err}\n";
         $error_count++;
     }
 } else {
@@ -75,7 +76,8 @@ while ($board = sql_fetch_array($board_list)) {
             echo "  - {$write_table}.{$index_name} 생성 완료\n";
             $success_count++;
         } else {
-            echo "  - {$write_table}.{$index_name} 생성 실패\n";
+            $err = mysqli_error($GLOBALS['g5']['connect_db']);
+            echo "  - {$write_table}.{$index_name} 생성 실패: {$err}\n";
             $error_count++;
         }
     } else {
