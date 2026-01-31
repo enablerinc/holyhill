@@ -17,12 +17,36 @@ include_once('./_common.php');
 
 $g5['title'] = '명예의 전당';
 
-// 베스트 성산인 기준 점수 (여기서 변경 가능)
-define('BEST_MEMBER_POINT', 30000);
+// ===========================
+// 베스트 성산인 월별 기준 점수 설정
+// 형식: 'YYYY-MM' => 점수 (해당 월부터 적용)
+// ===========================
+$best_point_history = array(
+    '2025-01' => 30000,   // 2025년 1월: 30,000점
+    '2025-02' => 100000,  // 2025년 2월부터: 100,000점
+);
+
+// 조회 월에 해당하는 기준 점수 계산
+function get_best_member_point($year, $month, $history) {
+    $current_ym = sprintf('%04d-%02d', $year, $month);
+    $applicable_point = 30000; // 기본값
+
+    ksort($history); // 날짜순 정렬
+    foreach ($history as $ym => $point) {
+        if ($current_ym >= $ym) {
+            $applicable_point = $point;
+        }
+    }
+
+    return $applicable_point;
+}
 
 // 현재 년도와 월 설정
 $current_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 $current_month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
+
+// 해당 월의 베스트 성산인 기준 점수
+$best_member_point = get_best_member_point($current_year, $current_month, $best_point_history);
 
 // 해당 월의 시작일과 종료일 계산
 $start_date = sprintf('%04d-%02d-01 00:00:00', $current_year, $current_month);
@@ -129,7 +153,7 @@ $all_members = array_values($all_members);
 $best_members = array();
 $rank = 1;
 for ($i = 0; $i < count($all_members); $i++) {
-    if ($all_members[$i]['points'] >= BEST_MEMBER_POINT) {
+    if ($all_members[$i]['points'] >= $best_member_point) {
         $best_members[] = array_merge($all_members[$i], array('rank' => $rank));
         $rank++;
     }
@@ -567,7 +591,7 @@ function getProfileImage($mb_id) {
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-star text-yellow-500 text-lg"></i>
                 <h3 class="text-lg font-semibold text-grace-green">베스트 성산인</h3>
-                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full"><?php echo number_format(BEST_MEMBER_POINT); ?>점 이상</span>
+                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full"><?php echo number_format($best_member_point); ?>점 이상</span>
             </div>
             <span class="text-xs text-gray-500">총 <?php echo $total_best; ?>명</span>
         </div>
@@ -614,7 +638,7 @@ function getProfileImage($mb_id) {
             <?php else: ?>
                 <div class="bg-white rounded-xl p-8 shadow-warm text-center">
                     <i class="fa-solid fa-star text-gray-300 text-4xl mb-3"></i>
-                    <p class="text-sm text-gray-400">이번 달 <?php echo number_format(BEST_MEMBER_POINT); ?>점 이상 획득한 회원이 없습니다.</p>
+                    <p class="text-sm text-gray-400">이번 달 <?php echo number_format($best_member_point); ?>점 이상 획득한 회원이 없습니다.</p>
                 </div>
             <?php endif; ?>
         </div>

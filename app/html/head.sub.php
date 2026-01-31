@@ -55,6 +55,11 @@ if($config['cf_add_meta'])
     echo $config['cf_add_meta'].PHP_EOL;
 ?>
 <title><?php echo $g5_head_title; ?></title>
+<!-- Favicon -->
+<link rel="shortcut icon" href="<?php echo G5_IMG_URL; ?>/logo.png?v=1" type="image/png">
+<link rel="icon" type="image/png" sizes="32x32" href="<?php echo G5_IMG_URL; ?>/logo.png?v=1">
+<link rel="icon" type="image/png" sizes="16x16" href="<?php echo G5_IMG_URL; ?>/logo.png?v=1">
+<link rel="apple-touch-icon" sizes="180x180" href="<?php echo G5_IMG_URL; ?>/logo.png?v=1">
 <?php
 if (defined('G5_IS_ADMIN')) {
     if(!defined('_THEME_PREVIEW_'))

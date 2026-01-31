@@ -15,8 +15,10 @@ include_once(G5_PATH.'/head.sub.php');
     <title><?php echo $g5['title']; ?></title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?php echo G5_IMG_URL; ?>/logo.png">
-    <link rel="apple-touch-icon" href="<?php echo G5_IMG_URL; ?>/logo.png">
+    <link rel="shortcut icon" href="<?php echo G5_IMG_URL; ?>/logo.png?v=1" type="image/png">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo G5_IMG_URL; ?>/logo.png?v=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo G5_IMG_URL; ?>/logo.png?v=1">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo G5_IMG_URL; ?>/logo.png?v=1">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
