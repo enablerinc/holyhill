@@ -8,11 +8,6 @@
 
 include_once('./_common.php');
 
-// 관리자만 실행 가능
-if (!is_admin($member['mb_id'])) {
-    die('관리자만 실행할 수 있습니다.');
-}
-
 echo "<pre>\n";
 echo "=== 명예의 전당 인덱스 생성 스크립트 ===\n\n";
 
