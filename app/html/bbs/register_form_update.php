@@ -4,6 +4,7 @@ include_once(G5_CAPTCHA_PATH.'/captcha.lib.php');
 include_once(G5_LIB_PATH.'/register.lib.php');
 include_once(G5_LIB_PATH.'/mailer.lib.php');
 include_once(G5_LIB_PATH.'/thumbnail.lib.php');
+include_once(G5_BBS_PATH.'/notification.lib.php');
 
 // 리퍼러 체크
 referer_check();
@@ -279,6 +280,11 @@ if ($w == '') {
 
     // 회원가입 포인트 부여
     insert_point($mb_id, $config['cf_register_point'], '회원가입 축하', '@member', $mb_id, '회원가입');
+
+    // 관리자들에게 신규회원 가입 알림 전송
+    $notification_content = generate_notification_content('new_member', $mb_name);
+    $notification_url = G5_BBS_URL . '/user_profile.php?mb_id=' . urlencode($mb_id);
+    notify_admins('new_member', $mb_id, $notification_content, $notification_url);
 
     // 추천인에게 포인트 부여
     if ($config['cf_use_recommend'] && $mb_recommend)

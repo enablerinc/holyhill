@@ -1,5 +1,6 @@
 <?php
 include_once('./_common.php');
+include_once(G5_BBS_PATH.'/notification.lib.php');
 
 header('Content-Type: application/json');
 
@@ -56,11 +57,16 @@ if ($row) {
     $po_content = "{$board['bo_subject']} {$wr_id} 추천";
     insert_point($member['mb_id'], 10, $po_content, $bo_table, $wr_id, '추천');
 
-    // 작성자에게 포인트 지급 (30포인트)
+    // 작성자에게 포인트 지급 (30포인트) 및 알림 전송
     $write = sql_fetch("SELECT mb_id FROM {$write_table} WHERE wr_id = '{$wr_id}'");
     if ($write['mb_id'] && $write['mb_id'] != $member['mb_id']) {
         $po_content = "{$board['bo_subject']} {$wr_id} 추천 받음";
         insert_point($write['mb_id'], 30, $po_content, $bo_table, $wr_id, '추천받음');
+
+        // 좋아요 알림 전송
+        $notification_content = generate_notification_content('good', $member['mb_nick']);
+        $notification_url = G5_BBS_URL . '/board.php?bo_table=' . $bo_table . '&wr_id=' . $wr_id;
+        create_notification('good', $member['mb_id'], $write['mb_id'], $bo_table, $wr_id, 0, $notification_content, $notification_url);
     }
 
     $result = 'success';

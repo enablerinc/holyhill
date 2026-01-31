@@ -164,7 +164,28 @@ function generate_notification_content($type, $from_nick, $content = '') {
             return "{$from_nick}님이 회원님의 게시글에 좋아요를 눌렀습니다.";
         case 'word':
             return "새로운 말씀이 등록되었습니다.";
+        case 'new_member':
+            return "{$from_nick}님이 새로 가입했습니다.";
         default:
             return $content;
+    }
+}
+
+/**
+ * 관리자들에게 알림 전송
+ * @param string $type 알림 타입
+ * @param string $from_mb_id 알림을 발생시킨 회원 ID
+ * @param string $content 알림 내용
+ * @param string $url 이동할 URL
+ */
+function notify_admins($type, $from_mb_id, $content = '', $url = '') {
+    global $g5;
+
+    // 관리자 목록 조회 (mb_level = 10)
+    $sql = "SELECT mb_id FROM {$g5['member_table']} WHERE mb_level = 10";
+    $result = sql_query($sql);
+
+    while ($admin = sql_fetch_array($result)) {
+        create_notification($type, $from_mb_id, $admin['mb_id'], '', 0, 0, $content, $url);
     }
 }
