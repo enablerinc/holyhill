@@ -149,6 +149,16 @@ function mark_all_notifications_as_read($mb_id) {
 }
 
 /**
+ * 모든 알림 삭제
+ * @param string $mb_id 회원 ID
+ */
+function delete_all_notifications($mb_id) {
+    $sql = " DELETE FROM g5_notifications
+             WHERE no_to_mb_id = '$mb_id' ";
+    return sql_query($sql);
+}
+
+/**
  * 알림 내용 생성
  * @param string $type 알림 타입
  * @param string $from_nick 발생시킨 사람 닉네임

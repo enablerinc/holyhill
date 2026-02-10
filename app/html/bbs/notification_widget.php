@@ -12,9 +12,14 @@ if (!defined('_GNUBOARD_')) exit;
             <h2 class="text-xl font-bold text-gray-800">알림</h2>
             <i id="close-notification" class="fa-solid fa-times text-gray-600 text-xl cursor-pointer hover:text-gray-800"></i>
         </div>
-        <button id="mark-all-read" class="text-sm text-purple-600 hover:text-purple-800 font-medium">
-            모두 읽음 처리
-        </button>
+        <div class="flex items-center justify-between">
+            <button id="mark-all-read" class="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                모두 읽음 처리
+            </button>
+            <button id="delete-all-notifications" class="text-sm text-red-500 hover:text-red-700 font-medium">
+                전체 삭제
+            </button>
+        </div>
     </div>
     <div id="notification-list" class="divide-y divide-gray-100">
         <!-- 알림 목록이 여기에 동적으로 추가됩니다 -->
@@ -212,6 +217,27 @@ if (!defined('_GNUBOARD_')) exit;
         })
         .catch(error => console.error('모두 읽음 처리 오류:', error));
     });
+
+    // 전체 삭제
+    const deleteAllBtn = document.getElementById('delete-all-notifications');
+    if (deleteAllBtn) {
+        deleteAllBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!confirm('모든 알림을 삭제하시겠습니까?\n삭제된 알림은 복구할 수 없습니다.')) return;
+
+            fetch('<?php echo G5_BBS_URL; ?>/notification_api.php?action=delete_all', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                    loadNotificationCount();
+                }
+            })
+            .catch(error => console.error('전체 삭제 오류:', error));
+        });
+    }
 
     // 페이지 로드시 알림 개수 확인
     <?php if ($is_member) { ?>
