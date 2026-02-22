@@ -607,11 +607,29 @@ function convert_youtube_to_iframe_index($content) {
         </section>
 
         <!-- 5. 이달의 베스트 성산인 TOP 15 -->
+        <?php
+        // 베스트 성산인 월별 기준 점수 설정 (halloffame.php와 동일)
+        $best_point_history = array(
+            '2026-02' => 100000,  // 2026년 2월부터: 100,000점
+            // 그 이전은 기본값 30,000점 적용
+        );
+        $best_current_year = date('Y');
+        $best_current_month = date('n');
+        $current_ym = sprintf('%04d-%02d', $best_current_year, $best_current_month);
+        $best_member_point = 30000; // 기본값
+        ksort($best_point_history);
+        foreach ($best_point_history as $ym => $pt) {
+            if ($current_ym >= $ym) {
+                $best_member_point = $pt;
+            }
+        }
+        ?>
         <section id="best-members" class="px-4 py-4">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-trophy text-yellow-500"></i>
                     <h2 class="text-base font-semibold text-gray-800">이달의 베스트 성산인</h2>
+                    <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full"><?php echo number_format($best_member_point); ?>점</span>
                 </div>
                 <a href="<?php echo G5_BBS_URL; ?>/halloffame.php"
                    class="text-sm text-purple-600 hover:text-purple-800 font-medium">
@@ -651,7 +669,6 @@ function convert_youtube_to_iframe_index($content) {
                 <div class="space-y-3">
                     <?php
                     $rank = 1;
-                    $best_member_point = 30000; // 베스트 성산인 기준 점수
                     while ($best = sql_fetch_array($best_result)) {
                         // 프로필 이미지 - 캐시 버스팅 적용
                         $profile_img = get_profile_image_url($best['mb_id']);
