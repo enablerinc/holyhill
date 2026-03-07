@@ -227,6 +227,12 @@ if ($w == 'c') // 댓글 입력
     // 포인트 부여
     insert_point($member['mb_id'], $board['bo_comment_point'], "{$board['bo_subject']} {$wr_id}-{$comment_id} 댓글쓰기", $bo_table, $comment_id, '댓글');
 
+    // 게시글 작성자에게도 댓글 포인트 지급 (자기 글에 자기가 댓글 단 경우 제외)
+    if ($wr['mb_id'] && $wr['mb_id'] != $member['mb_id']) {
+        insert_point($wr['mb_id'], $board['bo_comment_point'],
+                     "{$board['bo_subject']} {$wr_id}-{$comment_id} 댓글받기", $bo_table, $comment_id, '댓글받기');
+    }
+
     // 알림 생성
     if ($comment_id && $mb_id) {
         // 디버깅 로그

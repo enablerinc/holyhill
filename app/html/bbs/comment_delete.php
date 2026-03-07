@@ -49,6 +49,15 @@ if ($result) {
     // 포인트 회수
     if ($board['bo_comment_point']) {
         delete_point($comment['mb_id'], $bo_table, $comment_id, '댓글');
+
+        // 게시글 작성자의 댓글받기 포인트도 회수
+        $parent_write = sql_fetch("SELECT mb_id FROM {$write_table} WHERE wr_id = '{$wr_id}' AND wr_is_comment = 0");
+        if ($parent_write['mb_id'] && $parent_write['mb_id'] != $comment['mb_id']) {
+            if (!delete_point($parent_write['mb_id'], $bo_table, $comment_id, '댓글받기')) {
+                insert_point($parent_write['mb_id'], $board['bo_comment_point'] * (-1),
+                             "{$board['bo_subject']} {$wr_id}-{$comment_id} 댓글받기취소");
+            }
+        }
     }
 
     echo json_encode(['success' => true]);
