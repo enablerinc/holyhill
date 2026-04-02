@@ -12,11 +12,19 @@ services:
       TZ: Asia/Seoul
     # MariaDB가 world-writable 설정 파일을 무시하지 않도록
     # 컨테이너 내부 my.cnf 퍼미션을 강제 수정 후 기동
-    command: >
-      sh -c "
-        find /etc/mysql -name '*.cnf' -exec chmod 644 {} + 2>/dev/null;
-        exec docker-entrypoint.sh mariadbd
-      "
+    # MariaDB 서버 파라미터도 mariadbd 인자로 전달
+    command:
+      - sh
+      - -c
+      - |
+        find /etc/mysql -name '*.cnf' -exec chmod 644 {} + 2>/dev/null
+        exec docker-entrypoint.sh mariadbd \
+          --character-set-server=utf8mb4 \
+          --collation-server=utf8mb4_unicode_ci \
+          --max_connections=100 \
+          --innodb_buffer_pool_size=256M \
+          --innodb_log_file_size=128M \
+          --innodb_flush_log_at_trx_commit=2
     volumes:
       - ../data/db:/var/lib/mysql
       - ./initdb:/docker-entrypoint-initdb.d:ro
