@@ -617,6 +617,7 @@ function convert_youtube_to_iframe_index($content) {
         // 베스트 성산인 월별 기준 점수 설정 (halloffame.php와 동일)
         $best_point_history = array(
             '2026-02' => 100000,  // 2026년 2월부터: 100,000점
+            '2026-04' => 200000,  // 2026년 4월부터: 200,000점
             // 그 이전은 기본값 30,000점 적용
         );
         $best_current_year = date('Y');

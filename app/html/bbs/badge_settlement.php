@@ -33,8 +33,20 @@ $start_date = sprintf('%04d-%02d-01 00:00:00', $settle_year, $settle_month);
 $end_date = date('Y-m-t 23:59:59', strtotime($start_date));
 $days_in_month = (int)date('t', strtotime($start_date));
 
-// 베스트 성산인 기준 점수
-define('BEST_MEMBER_POINT', 30000);
+// 베스트 성산인 기준 점수 (월별 동적 적용)
+$best_point_history = array(
+    '2026-02' => 100000,  // 2026년 2월부터: 100,000점
+    '2026-04' => 200000,  // 2026년 4월부터: 200,000점
+);
+$best_member_point_threshold = 30000; // 기본값
+ksort($best_point_history);
+$settle_ym = sprintf('%04d-%02d', $settle_year, $settle_month);
+foreach ($best_point_history as $ym => $pt) {
+    if ($settle_ym >= $ym) {
+        $best_member_point_threshold = $pt;
+    }
+}
+define('BEST_MEMBER_POINT', $best_member_point_threshold);
 define('EXCELLENT_MEMBER_POINT', 1000);
 
 $result_log = array();
@@ -43,7 +55,7 @@ $result_log[] = "기간: {$start_date} ~ {$end_date}";
 $result_log[] = "";
 
 // ===========================
-// 1. 베스트 성산인 (3만점 이상 상위 3명)
+// 1. 베스트 성산인 (기준점수 이상 상위 3명)
 // ===========================
 $result_log[] = "[1] 베스트 성산인 결산";
 
