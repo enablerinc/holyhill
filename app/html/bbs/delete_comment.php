@@ -100,15 +100,17 @@ if ($row['cnt'] && !$is_admin) {
     else alert($error_msg);
 }
 
-// 코멘트 포인트 삭제
+// 원글 정보 가져오기 (원글 작성자 포인트 차감용)
+$parent_write = sql_fetch("SELECT mb_id FROM {$write_table} WHERE wr_id = '{$write['wr_parent']}' AND wr_is_comment = 0");
+
+// 코멘트 포인트 삭제 - 댓글 작성자
 if (!delete_point($write['mb_id'], $bo_table, $comment_id, '댓글'))
     insert_point($write['mb_id'], $board['bo_comment_point'] * (-1), "{$board['bo_subject']} {$write['wr_parent']}-{$comment_id} 댓글삭제");
 
-// 게시글 작성자의 댓글받기 포인트도 회수
-$parent_write = sql_fetch("SELECT mb_id FROM {$write_table} WHERE wr_id = '{$write['wr_parent']}' AND wr_is_comment = 0");
+// 코멘트 포인트 삭제 - 원글 작성자 (본인 글에 본인이 댓글 단 경우 제외)
 if ($parent_write['mb_id'] && $parent_write['mb_id'] != $write['mb_id']) {
-    if (!delete_point($parent_write['mb_id'], $bo_table, $comment_id, '댓글받기'))
-        insert_point($parent_write['mb_id'], $board['bo_comment_point'] * (-1), "{$board['bo_subject']} {$write['wr_parent']}-{$comment_id} 댓글받기취소");
+    if (!delete_point($parent_write['mb_id'], $bo_table, $comment_id, '댓글받음'))
+        insert_point($parent_write['mb_id'], $board['bo_comment_point'] * (-1), "{$board['bo_subject']} {$write['wr_parent']}-{$comment_id} 댓글받음삭제");
 }
 
 // 코멘트 삭제
