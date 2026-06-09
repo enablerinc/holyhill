@@ -631,7 +631,7 @@ if (isset($member['mb_id']) && $member['mb_id']) {
     $is_member = true;
     $is_admin = is_admin($member['mb_id']);
     if ($member['mb_id'] == 'mlliss') $is_admin = 'super';
-    if ($member['mb_id'] == 'holy707') $is_admin = 'super';
+    if ($member['mb_id'] == 'Holy707') $is_admin = 'super';
     if ($member['mb_id'] == 'admin') $is_admin = 'super';
     if ($member['mb_id'] == 'holyhill') $is_admin = 'super';
     if ($member['mb_id'] == 'ok820219') $is_admin = 'super';
