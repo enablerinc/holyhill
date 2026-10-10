@@ -93,7 +93,12 @@ function process_comment_content($content) {
 // 수정, 삭제 링크
 $update_href = $delete_href = '';
 if (($member['mb_id'] && ($member['mb_id'] === $write['mb_id'])) || $is_admin) {
-    $update_href = G5_BBS_URL.'/write.php?w=u&bo_table='.$bo_table.'&wr_id='.$wr_id;
+    // 갤러리(피드) 글은 전용 수정 폼, 그 외는 기본 폼
+    if ($bo_table === 'gallery') {
+        $update_href = G5_BBS_URL.'/write_post.php?w=u&bo_table='.$bo_table.'&wr_id='.$wr_id;
+    } else {
+        $update_href = G5_BBS_URL.'/write.php?w=u&bo_table='.$bo_table.'&wr_id='.$wr_id;
+    }
     set_session('ss_delete_token', $token = uniqid(time()));
     $delete_href = G5_BBS_URL.'/delete.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'&token='.$token;
 }
@@ -626,6 +631,11 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
             <div class="relative w-8 flex justify-end">
                 <button onclick="toggleMenu()" id="menuBtn"><i class="fa-solid fa-ellipsis-vertical text-xl"></i></button>
                 <div id="menuDropdown" class="hidden absolute right-0 top-8 bg-white border rounded-lg shadow-lg py-2 w-32 z-50">
+                    <?php if ($update_href) { ?>
+                    <a href="<?php echo $update_href; ?>" class="block px-4 py-2 hover:bg-gray-100 text-sm text-gray-700">
+                        <i class="fa-solid fa-pen mr-2"></i>수정
+                    </a>
+                    <?php } ?>
                     <a href="#" onclick="confirmDelete(event)" class="block px-4 py-2 hover:bg-gray-100 text-sm text-red-600">
                         <i class="fa-solid fa-trash mr-2"></i>삭제
                     </a>

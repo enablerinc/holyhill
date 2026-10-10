@@ -44,7 +44,8 @@ if (isset($_GET['w']) && $_GET['w'] == 'u' && isset($_GET['wr_id'])) {
     }
 
     $subject = get_text($write['wr_subject']);
-    $content = $write['wr_content'];
+    // textarea에 안전하게 넣기 위해 이스케이프 (브라우저가 제출 시 원문으로 복원)
+    $content = get_text($write['wr_content']);
 
     // 공지사항 여부 체크
     $notice_array = explode(',', $board['bo_notice']);
@@ -60,8 +61,8 @@ if (isset($_GET['w']) && $_GET['w'] == 'u' && isset($_GET['wr_id'])) {
     }
 }
 
-// 액션 URL
-$action_url = G5_BBS_URL.'/write_update.php';
+// 액션 URL (수정은 토큰 재매핑을 처리하는 전용 핸들러로)
+$action_url = ($w == 'u') ? G5_BBS_URL.'/post_edit_update.php' : G5_BBS_URL.'/write_update.php';
 
 // 파일 업로드 개수
 $file_count = 10;
@@ -85,6 +86,8 @@ $profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : 'https:/
         var g5_bbs_url = "<?php echo G5_BBS_URL; ?>";
         var g5_is_member = "<?php echo $is_member ? '1' : ''; ?>";
         var g5_is_admin = "<?php echo $is_admin ? '1' : ''; ?>";
+        // 수정 모드에서 기존 첨부 개수 (새 파일 토큰 번호는 이 값 이후로 매김)
+        var ORIG_FILE_COUNT = <?php echo ($w == 'u') ? (int)count($file) : 0; ?>;
     </script>
     <script src="<?php echo G5_JS_URL; ?>/common.js"></script>
     <style>
@@ -218,21 +221,41 @@ $profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : 'https:/
                     </div>
                 </div>
 
-                <!-- 기존 이미지 (수정 모드) -->
+                <!-- 기존 첨부 (수정 모드) -->
                 <?php if($w == 'u' && count($file) > 0) { ?>
                 <div class="px-4 py-3 border-t border-gray-100 bg-gray-50">
-                    <p class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <p class="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
                         <i class="fa-solid fa-folder-open text-gray-500"></i>
-                        기존 업로드 이미지
+                        기존 첨부파일
                     </p>
+                    <p class="text-xs text-gray-400 mb-3">삭제에 체크하면 본문의 해당 번호 표시도 자동 정리됩니다. 번호는 본문의 [이미지N] 등과 연결됩니다.</p>
                     <div class="grid grid-cols-5 gap-2">
                         <?php
+                        // 확장자 기반 타입 분류 (post.php 표시 규칙과 동일)
+                        $wp_img = array('jpg','jpeg','png','gif','webp','bmp','svg');
+                        $wp_vid = array('mp4','webm','mov','avi','mkv','ogg');
+                        $wp_aud = array('mp3','m4a','wav','flac','aac','wma');
                         foreach($file as $i => $f) {
-                            if($f['bf_file'] && $f['bf_type'] >= 1 && $f['bf_type'] <= 3) {
-                                $file_path = G5_DATA_URL.'/file/'.$bo_table.'/'.$f['bf_file'];
+                            if(!$f['bf_file']) continue;
+                            $ordinal = $i + 1; // bf_no 순서상의 본문 번호
+                            $ext = strtolower(pathinfo($f['bf_file'], PATHINFO_EXTENSION));
+                            if (in_array($ext, $wp_img) || ($f['bf_type'] >= 1 && $f['bf_type'] <= 3)) { $wp_type = 'image'; $wp_label = '이미지'; }
+                            else if (in_array($ext, $wp_vid)) { $wp_type = 'video'; $wp_label = '동영상'; }
+                            else if (in_array($ext, $wp_aud)) { $wp_type = 'audio'; $wp_label = '음원'; }
+                            else { $wp_type = 'file'; $wp_label = '파일'; }
+                            $file_path = G5_DATA_URL.'/file/'.$bo_table.'/'.$f['bf_file'];
+                            $src_name = !empty($f['bf_source']) ? $f['bf_source'] : $f['bf_file'];
                         ?>
                         <div class="relative aspect-square bg-gray-200 rounded-lg overflow-hidden group">
-                            <img src="<?php echo $file_path; ?>" class="w-full h-full object-cover">
+                            <?php if ($wp_type === 'image') { ?>
+                                <img src="<?php echo $file_path; ?>" class="w-full h-full object-cover">
+                            <?php } else { ?>
+                                <div class="w-full h-full flex flex-col items-center justify-center text-gray-500 p-1">
+                                    <i class="fa-solid <?php echo $wp_type==='video' ? 'fa-film' : ($wp_type==='audio' ? 'fa-music' : 'fa-file'); ?> text-xl mb-1"></i>
+                                    <span class="text-[9px] text-center truncate w-full px-1"><?php echo htmlspecialchars($src_name); ?></span>
+                                </div>
+                            <?php } ?>
+                            <span class="absolute bottom-1 left-1 bg-black bg-opacity-60 text-white text-[10px] px-1.5 py-0.5 rounded">[<?php echo $wp_label.$ordinal; ?>]</span>
                             <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <label class="flex items-center gap-1 text-white cursor-pointer px-3 py-1 bg-red-500 rounded-full text-xs font-medium">
                                     <input type="checkbox" name="bf_file_del[<?php echo $f['bf_no']; ?>]" value="1" class="rounded">
@@ -240,10 +263,7 @@ $profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : 'https:/
                                 </label>
                             </div>
                         </div>
-                        <?php
-                            }
-                        }
-                        ?>
+                        <?php } ?>
                     </div>
                 </div>
                 <?php } ?>
@@ -651,20 +671,24 @@ function insertMediaToContent(index) {
     const file = uploadedFiles[index];
     const fileType = getFileType(file);
 
+    // 수정 모드에서는 기존 첨부 개수만큼 번호를 밀어 기존 토큰과 충돌 방지
+    const base = (typeof ORIG_FILE_COUNT !== 'undefined' ? ORIG_FILE_COUNT : 0);
+    const num = base + index + 1;
+
     // 파일 타입에 따른 placeholder 생성
     let mediaPlaceholder;
     switch (fileType) {
         case 'audio':
-            mediaPlaceholder = `[음원${index + 1}]\n\n`;
+            mediaPlaceholder = `[음원${num}]\n\n`;
             break;
         case 'video':
-            mediaPlaceholder = `[동영상${index + 1}]\n\n`;
+            mediaPlaceholder = `[동영상${num}]\n\n`;
             break;
         case 'document':
-            mediaPlaceholder = `[파일${index + 1}]\n\n`;
+            mediaPlaceholder = `[파일${num}]\n\n`;
             break;
         default:
-            mediaPlaceholder = `[이미지${index + 1}]\n\n`;
+            mediaPlaceholder = `[이미지${num}]\n\n`;
     }
 
     // 커서 위치에 삽입
