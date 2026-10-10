@@ -305,6 +305,33 @@ function restore_youtube_iframes($content) {
     return $content;
 }
 
+// 일반 URL을 클릭 가능한 링크로 변환 + 미리보기 카드 컨테이너 삽입
+// 주의: get_text()로 이스케이프된 뒤, 이미지/영상/파일 태그가 생성되기 "전" 단계에서 호출해야 함
+// (유튜브 URL은 이미 플레이스홀더로 치환되어 여기서 매칭되지 않음)
+function autolink_urls($content) {
+    static $seen = array();
+    return preg_replace_callback('#https?://[^\s<]+#i', function ($m) use (&$seen) {
+        $raw = $m[0];
+        // URL 끝에 붙은 문장부호 제거
+        $trail = '';
+        while (preg_match('/[.,!?)\]}]$/u', $raw)) {
+            $trail = substr($raw, -1) . $trail;
+            $raw = substr($raw, 0, -1);
+        }
+        if ($raw === '') return $m[0];
+        $url = html_entity_decode($raw, ENT_QUOTES, 'UTF-8'); // &amp; → & 복원
+        $href = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+        $link = '<a href="' . $href . '" target="_blank" rel="noopener noreferrer" class="lp-link text-blue-600 underline break-all">' . $raw . '</a>';
+        // 동일 URL은 카드 1회만
+        $card = '';
+        if (!isset($seen[$url])) {
+            $seen[$url] = true;
+            $card = '<div class="link-preview" data-lp-url="' . $href . '"></div>';
+        }
+        return $link . $trail . $card;
+    }, $content);
+}
+
 // 본문에서 [이미지N]을 실제 이미지로 변환
 function replace_image_placeholders($content, $media_files, $bo_table) {
     $content = preg_replace_callback('/\[이미지(\d+)\]/', function($matches) use ($media_files, $bo_table) {
@@ -406,6 +433,8 @@ $raw_content = $write['wr_content'];
 $raw_content = extract_youtube_urls($raw_content);
 // 2. 텍스트 정리
 $processed_content = get_text($raw_content);
+// 2-1. 일반 URL 자동 링크 + 미리보기 카드 (미디어 태그 생성 전에 처리)
+$processed_content = autolink_urls($processed_content);
 // 3. 이미지 변환
 $processed_content = replace_image_placeholders($processed_content, $media_files, $bo_table);
 // 4. 동영상 변환
@@ -537,6 +566,44 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
             overflow-y: auto;
             padding: 16px 20px;
             -webkit-overflow-scrolling: touch;
+        }
+        /* 링크 미리보기 카드 */
+        .link-preview { margin: 10px 0; }
+        .lp-card {
+            display: flex;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            background: #fff;
+            transition: background 0.15s;
+        }
+        .lp-card:hover { background: #f9fafb; }
+        .lp-card-img {
+            flex: 0 0 96px;
+            width: 96px;
+            background-size: cover;
+            background-position: center;
+            background-color: #f3f4f6;
+        }
+        .lp-card-body {
+            padding: 10px 12px;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .lp-card-site { font-size: 12px; color: #9ca3af; margin-bottom: 2px; }
+        .lp-card-title {
+            font-size: 14px; font-weight: 600; color: #111827;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .lp-card-desc {
+            font-size: 12px; color: #6b7280; margin-top: 3px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -1687,6 +1754,33 @@ document.addEventListener('keydown', function(e) {
         closeImageViewer();
         hideLikesPanel();
     }
+});
+
+// 링크 미리보기 카드 지연 로딩
+document.addEventListener('DOMContentLoaded', function() {
+    function lpEscape(s) {
+        const d = document.createElement('div');
+        d.textContent = s || '';
+        return d.innerHTML;
+    }
+    document.querySelectorAll('.link-preview[data-lp-url]').forEach(function(el) {
+        const url = el.getAttribute('data-lp-url');
+        if (!url) { el.remove(); return; }
+        fetch('<?php echo G5_BBS_URL; ?>/link_preview_ajax.php?url=' + encodeURIComponent(url))
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d || !d.ok || (!d.title && !d.image)) { el.remove(); return; }
+                const imgHtml = d.image
+                    ? '<div class="lp-card-img" style="background-image:url(\'' + encodeURI(d.image).replace(/'/g, '%27') + '\')"></div>'
+                    : '';
+                const siteHtml = d.site ? '<div class="lp-card-site">' + lpEscape(d.site) + '</div>' : '';
+                const titleHtml = d.title ? '<div class="lp-card-title">' + lpEscape(d.title) + '</div>' : '';
+                const descHtml = d.description ? '<div class="lp-card-desc">' + lpEscape(d.description) + '</div>' : '';
+                el.innerHTML = '<a href="' + encodeURI(d.url) + '" target="_blank" rel="noopener noreferrer" class="lp-card">'
+                    + imgHtml + '<div class="lp-card-body">' + siteHtml + titleHtml + descHtml + '</div></a>';
+            })
+            .catch(function() { el.remove(); });
+    });
 });
 </script>
 
