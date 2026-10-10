@@ -63,6 +63,15 @@ switch ($action) {
         ]);
         break;
 
+    case 'delete_all':
+        // 모든 알림 삭제
+        $result = delete_all_notifications($member['mb_id']);
+        echo json_encode([
+            'success' => $result ? true : false,
+            'message' => $result ? '모든 알림을 삭제했습니다.' : '처리 중 오류가 발생했습니다.'
+        ]);
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => '잘못된 요청입니다.']);
         break;

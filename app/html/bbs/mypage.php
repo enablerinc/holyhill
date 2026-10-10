@@ -121,22 +121,24 @@ if ($my_monthly_points >= EXCELLENT_MEMBER_POINT && $top_rank == 0) {
 }
 
 // 3. 1등 출석왕 (가장 먼저 출석 1위 - 동시간 출석자는 공동 1등) 체크
+// 최적화: 상관 서브쿼리를 JOIN으로 변경
 $first_login_sql = "
     SELECT
         p.mb_id,
         COUNT(*) as first_count
     FROM {$g5['point_table']} p
+    JOIN (
+        SELECT DATE(po_datetime) as login_date, MIN(TIME(po_datetime)) as first_time
+        FROM {$g5['point_table']}
+        WHERE po_content LIKE '%첫로그인%'
+        AND po_datetime >= '{$start_date}'
+        AND po_datetime <= '{$end_date}'
+        GROUP BY DATE(po_datetime)
+    ) first_times ON DATE(p.po_datetime) = first_times.login_date
+                  AND TIME(p.po_datetime) = first_times.first_time
     WHERE p.po_content LIKE '%첫로그인%'
     AND p.po_datetime >= '{$start_date}'
     AND p.po_datetime <= '{$end_date}'
-    AND TIME(p.po_datetime) = (
-        SELECT MIN(TIME(p2.po_datetime))
-        FROM {$g5['point_table']} p2
-        WHERE p2.po_content LIKE '%첫로그인%'
-        AND DATE(p2.po_datetime) = DATE(p.po_datetime)
-        AND p2.po_datetime >= '{$start_date}'
-        AND p2.po_datetime <= '{$end_date}'
-    )
     GROUP BY p.mb_id
     ORDER BY first_count DESC, p.mb_id ASC
     LIMIT 3
@@ -187,22 +189,28 @@ if ($attend_rank > 0) {
 }
 
 // 5. 연속 출석 챔피언 (상위 3위) 체크
-function getConsecutiveDaysForMember($mb_id, $g5) {
-    $sql = "
-        SELECT DISTINCT DATE(po_datetime) as login_date
-        FROM {$g5['point_table']}
-        WHERE mb_id = '{$mb_id}'
-        AND po_content LIKE '%첫로그인%'
-        ORDER BY login_date DESC
-    ";
-    $result = sql_query($sql);
-    $dates = array();
-    while ($row = sql_fetch_array($result)) {
-        $dates[] = $row['login_date'];
-    }
+// 최적화: N+1 쿼리 해결 - 한 번의 쿼리로 모든 활성 회원의 로그인 날짜를 가져온 후 PHP에서 계산
+$all_login_sql = "
+    SELECT p.mb_id, DATE(p.po_datetime) as login_date
+    FROM {$g5['point_table']} p
+    WHERE p.po_content LIKE '%첫로그인%'
+    AND p.po_datetime >= DATE_SUB(NOW(), INTERVAL 180 DAY)
+    GROUP BY p.mb_id, DATE(p.po_datetime)
+    ORDER BY p.mb_id, login_date DESC
+";
+$all_login_result = sql_query($all_login_sql);
 
-    if (empty($dates)) return 0;
+// 회원별 출석 날짜 그룹핑
+$member_logins = array();
+while ($row = sql_fetch_array($all_login_result)) {
+    $member_logins[$row['mb_id']][] = $row['login_date'];
+}
 
+// 연속 출석 일수 계산 (PHP에서 한번에 처리)
+$consecutive_members = array();
+$my_consecutive = 0;
+
+foreach ($member_logins as $mid => $dates) {
     $consecutive = 1;
     $max_consecutive = 1;
 
@@ -219,32 +227,21 @@ function getConsecutiveDaysForMember($mb_id, $g5) {
         }
     }
 
-    return $max_consecutive;
-}
+    if ($mid == $mb['mb_id']) {
+        $my_consecutive = $max_consecutive;
+    }
 
-$my_consecutive = getConsecutiveDaysForMember($mb['mb_id'], $g5);
-
-// 상위 연속 출석자 조회
-$active_members_sql = "
-    SELECT DISTINCT p.mb_id
-    FROM {$g5['point_table']} p
-    WHERE p.po_content LIKE '%첫로그인%'
-    AND p.po_datetime >= DATE_SUB(NOW(), INTERVAL 60 DAY)
-";
-$active_result = sql_query($active_members_sql);
-$consecutive_members = array();
-while ($row = sql_fetch_array($active_result)) {
-    $consecutive_days = getConsecutiveDaysForMember($row['mb_id'], $g5);
-    if ($consecutive_days >= 3) {
+    if ($max_consecutive >= 3) {
         $consecutive_members[] = array(
-            'mb_id' => $row['mb_id'],
-            'consecutive_days' => $consecutive_days
+            'mb_id' => $mid,
+            'consecutive_days' => $max_consecutive
         );
     }
 }
+
 usort($consecutive_members, function($a, $b) {
     if ($b['consecutive_days'] == $a['consecutive_days']) {
-        return strcmp($a['mb_id'], $b['mb_id']); // 동점일 때 mb_id로 정렬
+        return strcmp($a['mb_id'], $b['mb_id']);
     }
     return $b['consecutive_days'] - $a['consecutive_days'];
 });
@@ -308,21 +305,22 @@ if ($dawn_rank > 0) {
 }
 
 // 8. 오늘의 골든타임 (첫 출석자 - 동시간 출석자는 공동 골든타임) 체크
+// 최적화: 상관 서브쿼리를 JOIN으로 변경
 $today_start = date('Y-m-d 00:00:00');
 $today_end = date('Y-m-d 23:59:59');
 $golden_sql = "
-    SELECT mb_id, po_datetime as login_time
-    FROM {$g5['point_table']}
-    WHERE po_content LIKE '%첫로그인%'
-    AND po_datetime >= '{$today_start}'
-    AND po_datetime <= '{$today_end}'
-    AND TIME(po_datetime) = (
-        SELECT MIN(TIME(p2.po_datetime))
-        FROM {$g5['point_table']} p2
-        WHERE p2.po_content LIKE '%첫로그인%'
-        AND p2.po_datetime >= '{$today_start}'
-        AND p2.po_datetime <= '{$today_end}'
-    )
+    SELECT p.mb_id, p.po_datetime as login_time
+    FROM {$g5['point_table']} p
+    JOIN (
+        SELECT MIN(TIME(po_datetime)) as first_time
+        FROM {$g5['point_table']}
+        WHERE po_content LIKE '%첫로그인%'
+        AND po_datetime >= '{$today_start}'
+        AND po_datetime <= '{$today_end}'
+    ) gt ON TIME(p.po_datetime) = gt.first_time
+    WHERE p.po_content LIKE '%첫로그인%'
+    AND p.po_datetime >= '{$today_start}'
+    AND p.po_datetime <= '{$today_end}'
 ";
 $golden_result = sql_query($golden_sql);
 while ($golden_row = sql_fetch_array($golden_result)) {
@@ -757,37 +755,40 @@ $my_comments_list = array_slice($my_comments_list, 0, 5);
 
         <div class="space-y-3">
             <?php
-            // 최근 게시물 조회 - 각 게시판에서 개별적으로 조회
+            // 최근 게시물 조회 - 최적화: information_schema로 테이블 확인 후 UNION ALL로 한번에 조회
             $recent_posts = array();
-            $board_list = sql_query("SELECT bo_table FROM {$g5['board_table']} LIMIT 10");
 
-            while ($board = sql_fetch_array($board_list)) {
+            // 존재하는 게시판 테이블 목록을 한번에 조회
+            $valid_boards_sql = "
+                SELECT b.bo_table
+                FROM {$g5['board_table']} b
+                JOIN information_schema.tables t
+                    ON t.table_schema = DATABASE()
+                    AND t.table_name = CONCAT('{$g5['write_prefix']}', b.bo_table)
+                LIMIT 10
+            ";
+            $valid_boards_result = sql_query($valid_boards_sql);
+
+            $union_parts = array();
+            while ($board = sql_fetch_array($valid_boards_result)) {
                 $bo_table = $board['bo_table'];
                 $write_table = $g5['write_prefix'] . $bo_table;
+                $escaped_bo = sql_real_escape_string($bo_table);
+                $union_parts[] = "(SELECT wr_id, wr_subject, wr_datetime, '{$escaped_bo}' as bo_table
+                    FROM {$write_table}
+                    WHERE mb_id = '{$mb['mb_id']}'
+                    ORDER BY wr_datetime DESC
+                    LIMIT 3)";
+            }
 
-                // 테이블 존재 여부 확인
-                $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
-                if (!sql_num_rows($table_check)) {
-                    continue;
-                }
-
-                // 컬럼 존재 여부 확인
-                $column_check = sql_query("SHOW COLUMNS FROM {$write_table} WHERE Field IN ('wr_subject', 'wr_datetime')", false);
-                if (sql_num_rows($column_check) < 2) {
-                    continue;
-                }
-
-                $sql = "SELECT wr_id, wr_subject, wr_datetime FROM {$write_table}
-                        WHERE mb_id = '{$mb['mb_id']}'
-                        ORDER BY wr_datetime DESC
-                        LIMIT 3";
-                $result = sql_query($sql, false);
-
-                if ($result) {
-                    while ($row = sql_fetch_array($result)) {
-                        if (isset($row['wr_datetime']) && isset($row['wr_subject']) && $row['wr_datetime'] && $row['wr_subject']) {
+            if (count($union_parts) > 0) {
+                $union_sql = implode(" UNION ALL ", $union_parts) . " ORDER BY wr_datetime DESC LIMIT 3";
+                $union_result = sql_query($union_sql, false);
+                if ($union_result) {
+                    while ($row = sql_fetch_array($union_result)) {
+                        if ($row['wr_datetime'] && $row['wr_subject']) {
                             $recent_posts[] = array(
-                                'bo_table' => $bo_table,
+                                'bo_table' => $row['bo_table'],
                                 'wr_id' => $row['wr_id'],
                                 'wr_subject' => $row['wr_subject'],
                                 'wr_datetime' => $row['wr_datetime']
@@ -796,14 +797,6 @@ $my_comments_list = array_slice($my_comments_list, 0, 5);
                     }
                 }
             }
-
-            // 날짜순으로 정렬
-            usort($recent_posts, function($a, $b) {
-                return strtotime($b['wr_datetime']) - strtotime($a['wr_datetime']);
-            });
-
-            // 최대 3개만 표시
-            $recent_posts = array_slice($recent_posts, 0, 3);
 
             if (count($recent_posts) > 0) {
                 foreach ($recent_posts as $recent) {

@@ -98,9 +98,14 @@ function convert_youtube_to_iframe_index($content) {
                 <h2 class="text-xl font-bold text-gray-800">알림</h2>
                 <i id="close-notification" class="fa-solid fa-times text-gray-600 text-xl cursor-pointer hover:text-gray-800"></i>
             </div>
-            <button id="mark-all-read" class="text-sm text-purple-600 hover:text-purple-800 font-medium">
-                모두 읽음 처리
-            </button>
+            <div class="flex items-center justify-between">
+                <button id="mark-all-read" class="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                    모두 읽음 처리
+                </button>
+                <button id="delete-all-notifications" class="text-sm text-red-500 hover:text-red-700 font-medium">
+                    전체 삭제
+                </button>
+            </div>
         </div>
         <div id="notification-list" class="divide-y divide-gray-100">
             <!-- 알림 목록이 여기에 동적으로 추가됩니다 -->
@@ -280,10 +285,16 @@ function convert_youtube_to_iframe_index($content) {
                 }
                 ?>
                 <div class="<?php echo $has_youtube ? '' : 'text-center'; ?>">
-                    <h3 class="text-sm font-medium text-purple-900 mb-3 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-book-bible text-purple-600"></i>
-                        생명말씀
-                    </h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-purple-900 flex items-center gap-2">
+                            <i class="fa-solid fa-book-bible text-purple-600"></i>
+                            생명말씀
+                        </h3>
+                        <a href="<?php echo G5_BBS_URL; ?>/word_list.php"
+                           class="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                            전체 보기 →
+                        </a>
+                    </div>
                     <?php if ($has_youtube) { ?>
                     <a href="<?php echo G5_BBS_URL; ?>/word_view.php?wr_id=<?php echo $word['wr_id']; ?>"
                        class="block mb-3">
@@ -297,19 +308,14 @@ function convert_youtube_to_iframe_index($content) {
                         </p>
                     </a>
                     <?php } ?>
-                    <div class="flex items-center justify-center gap-3">
-                        <a href="<?php echo G5_BBS_URL; ?>/word_list.php"
-                           class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
-                            전체 보기 →
-                        </a>
-                        <?php if ($is_admin) { ?>
-                        <span class="text-gray-300">|</span>
+                    <?php if ($is_admin) { ?>
+                    <div class="flex items-center justify-center">
                         <a href="<?php echo G5_BBS_URL; ?>/write_word.php"
                            class="inline-block text-sm text-purple-600 hover:text-purple-800 font-medium">
                             <i class="fa-solid fa-plus text-xs"></i> 새 말씀 등록
                         </a>
-                        <?php } ?>
                     </div>
+                    <?php } ?>
                 </div>
                 <?php
             } else {
@@ -607,11 +613,30 @@ function convert_youtube_to_iframe_index($content) {
         </section>
 
         <!-- 5. 이달의 베스트 성산인 TOP 15 -->
+        <?php
+        // 베스트 성산인 월별 기준 점수 설정 (halloffame.php와 동일)
+        $best_point_history = array(
+            '2026-02' => 100000,  // 2026년 2월부터: 100,000점
+            '2026-04' => 200000,  // 2026년 4월부터: 200,000점
+            // 그 이전은 기본값 30,000점 적용
+        );
+        $best_current_year = date('Y');
+        $best_current_month = date('n');
+        $current_ym = sprintf('%04d-%02d', $best_current_year, $best_current_month);
+        $best_member_point = 30000; // 기본값
+        ksort($best_point_history);
+        foreach ($best_point_history as $ym => $pt) {
+            if ($current_ym >= $ym) {
+                $best_member_point = $pt;
+            }
+        }
+        ?>
         <section id="best-members" class="px-4 py-4">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-trophy text-yellow-500"></i>
                     <h2 class="text-base font-semibold text-gray-800">이달의 베스트 성산인</h2>
+                    <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full"><?php echo number_format($best_member_point); ?>점</span>
                 </div>
                 <a href="<?php echo G5_BBS_URL; ?>/halloffame.php"
                    class="text-sm text-purple-600 hover:text-purple-800 font-medium">
@@ -651,7 +676,6 @@ function convert_youtube_to_iframe_index($content) {
                 <div class="space-y-3">
                     <?php
                     $rank = 1;
-                    $best_member_point = 30000; // 베스트 성산인 기준 점수
                     while ($best = sql_fetch_array($best_result)) {
                         // 프로필 이미지 - 캐시 버스팅 적용
                         $profile_img = get_profile_image_url($best['mb_id']);
@@ -1031,6 +1055,24 @@ function convert_youtube_to_iframe_index($content) {
             }
         })
         .catch(error => console.error('모두 읽음 처리 오류:', error));
+    });
+
+    // 전체 삭제
+    const deleteAllBtn = document.getElementById('delete-all-notifications');
+    deleteAllBtn.addEventListener('click', function() {
+        if (!confirm('모든 알림을 삭제하시겠습니까?\n삭제된 알림은 복구할 수 없습니다.')) return;
+
+        fetch('<?php echo G5_BBS_URL; ?>/notification_api.php?action=delete_all', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadNotifications();
+                loadNotificationCount();
+            }
+        })
+        .catch(error => console.error('전체 삭제 오류:', error));
     });
 
     // 페이지 로드시 알림 개수 확인

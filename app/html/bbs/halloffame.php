@@ -1,24 +1,80 @@
 <?php
+/**
+ * 명예의 전당 페이지
+ *
+ * [성능 최적화 완료]
+ * - N+1 쿼리 문제 해결: UNION ALL로 한번에 집계
+ * - 상관 서브쿼리를 JOIN으로 변경
+ * - 연속 출석 계산 최적화: 단일 쿼리로 모든 데이터 조회
+ *
+ * [권장 인덱스] - 추가 성능 향상을 위해 아래 인덱스 생성 권장:
+ * ALTER TABLE g5_point ADD INDEX idx_point_datetime_content (po_datetime, po_content(20));
+ * ALTER TABLE g5_point ADD INDEX idx_point_mbid_datetime (mb_id, po_datetime);
+ * -- 각 게시판 테이블(g5_write_*)에 대해:
+ * -- ALTER TABLE g5_write_xxx ADD INDEX idx_write_mbid_datetime (mb_id, wr_datetime, wr_is_comment);
+ */
 include_once('./_common.php');
 
 $g5['title'] = '명예의 전당';
 
-// 베스트 성산인 기준 점수 (여기서 변경 가능)
-define('BEST_MEMBER_POINT', 30000);
+// ===========================
+// 베스트 성산인 월별 기준 점수 설정
+// 형식: 'YYYY-MM' => 점수 (해당 월부터 적용)
+// ===========================
+$best_point_history = array(
+    '2026-02' => 100000,  // 2026년 2월부터: 100,000점
+    '2026-04' => 200000,  // 2026년 4월부터: 200,000점
+    // 그 이전은 기본값 30,000점 적용
+);
+
+// 조회 월에 해당하는 기준 점수 계산
+function get_best_member_point($year, $month, $history) {
+    $current_ym = sprintf('%04d-%02d', $year, $month);
+    $applicable_point = 30000; // 기본값
+
+    ksort($history); // 날짜순 정렬
+    foreach ($history as $ym => $point) {
+        if ($current_ym >= $ym) {
+            $applicable_point = $point;
+        }
+    }
+
+    return $applicable_point;
+}
 
 // 현재 년도와 월 설정
 $current_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 $current_month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
+
+// 해당 월의 베스트 성산인 기준 점수
+$best_member_point = get_best_member_point($current_year, $current_month, $best_point_history);
 
 // 해당 월의 시작일과 종료일 계산
 $start_date = sprintf('%04d-%02d-01 00:00:00', $current_year, $current_month);
 $end_date = date('Y-m-t 23:59:59', strtotime($start_date));
 
 // ===========================
-// 1. 회원별 월간 포인트 집계 및 게시글/댓글 수 계산
+// 0. 게시판 테이블 목록 미리 조회 (성능 최적화)
+// ===========================
+$valid_write_tables = array();
+$board_list_result = sql_query("SELECT bo_table FROM {$g5['board_table']}");
+while ($board = sql_fetch_array($board_list_result)) {
+    $bo_table = $board['bo_table'];
+    $write_table = $g5['write_prefix'] . $bo_table;
+    // information_schema로 테이블 존재 확인 (더 빠름)
+    $table_check = sql_fetch("SELECT 1 FROM information_schema.tables
+                              WHERE table_schema = DATABASE()
+                              AND table_name = '{$write_table}' LIMIT 1");
+    if ($table_check) {
+        $valid_write_tables[] = $write_table;
+    }
+}
+
+// ===========================
+// 1. 회원별 월간 포인트 집계 및 게시글/댓글 수 계산 (최적화)
 // ===========================
 
-// 회원별 월간 포인트 합계
+// 1-1. 회원별 월간 포인트 합계
 $member_points_sql = "
     SELECT
         m.mb_id,
@@ -37,57 +93,60 @@ $member_points_sql = "
 
 $member_points_result = sql_query($member_points_sql);
 $all_members = array();
+$member_ids = array();
 
 while ($row = sql_fetch_array($member_points_result)) {
     $mb_id = $row['mb_id'];
-
-    // 프로필 이미지 경로 - 캐시 버스팅 적용
-    $profile_img = get_profile_image_url($mb_id);
-
-    // 모든 게시판에서 회원의 게시글 수 및 댓글 수 조회
-    $post_count = 0;
-    $comment_count = 0;
-
-    $board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
-    while ($board = sql_fetch_array($board_list)) {
-        $bo_table = $board['bo_table'];
-        $write_table = $g5['write_prefix'] . $bo_table;
-
-        // 테이블 존재 여부 확인
-        $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
-        if (!sql_num_rows($table_check)) continue;
-
-        // 게시글 수 (댓글 제외) - 해당 월만
-        $post_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
-                     WHERE mb_id = '{$mb_id}' AND wr_is_comment = 0
-                     AND wr_datetime >= '{$start_date}'
-                     AND wr_datetime <= '{$end_date}'";
-        $post_result = sql_fetch($post_sql);
-        if ($post_result) {
-            $post_count += (int)$post_result['cnt'];
-        }
-
-        // 댓글 수 - 해당 월만
-        $comment_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
-                        WHERE mb_id = '{$mb_id}' AND wr_is_comment = 1
-                        AND wr_datetime >= '{$start_date}'
-                        AND wr_datetime <= '{$end_date}'";
-        $comment_result = sql_fetch($comment_sql);
-        if ($comment_result) {
-            $comment_count += (int)$comment_result['cnt'];
-        }
-    }
-
-    $all_members[] = array(
+    $member_ids[] = "'" . sql_real_escape_string($mb_id) . "'";
+    $all_members[$mb_id] = array(
         'mb_id' => $mb_id,
         'name' => get_text($row['mb_name']),
         'nick' => get_text($row['mb_nick']),
         'points' => (int)$row['monthly_points'],
-        'avatar' => $profile_img,
-        'post_count' => $post_count,
-        'comment_count' => $comment_count
+        'avatar' => get_profile_image_url($mb_id),
+        'post_count' => 0,
+        'comment_count' => 0
     );
 }
+
+// 1-2. 모든 게시판에서 회원별 게시글/댓글 수 한번에 집계 (UNION ALL 사용)
+if (count($member_ids) > 0 && count($valid_write_tables) > 0) {
+    $member_ids_str = implode(',', $member_ids);
+
+    // UNION ALL로 모든 게시판 데이터를 한번에 조회
+    $union_parts = array();
+    foreach ($valid_write_tables as $write_table) {
+        $union_parts[] = "
+            SELECT mb_id, wr_is_comment
+            FROM {$write_table}
+            WHERE mb_id IN ({$member_ids_str})
+            AND wr_datetime >= '{$start_date}'
+            AND wr_datetime <= '{$end_date}'
+        ";
+    }
+
+    if (count($union_parts) > 0) {
+        $union_sql = "
+            SELECT
+                mb_id,
+                SUM(CASE WHEN wr_is_comment = 0 THEN 1 ELSE 0 END) as post_count,
+                SUM(CASE WHEN wr_is_comment = 1 THEN 1 ELSE 0 END) as comment_count
+            FROM (" . implode(" UNION ALL ", $union_parts) . ") AS combined
+            GROUP BY mb_id
+        ";
+
+        $stats_result = sql_query($union_sql);
+        while ($stat = sql_fetch_array($stats_result)) {
+            if (isset($all_members[$stat['mb_id']])) {
+                $all_members[$stat['mb_id']]['post_count'] = (int)$stat['post_count'];
+                $all_members[$stat['mb_id']]['comment_count'] = (int)$stat['comment_count'];
+            }
+        }
+    }
+}
+
+// 배열을 순서대로 변환
+$all_members = array_values($all_members);
 
 // ===========================
 // 2. 베스트 성산인 (3만점 이상)
@@ -95,7 +154,7 @@ while ($row = sql_fetch_array($member_points_result)) {
 $best_members = array();
 $rank = 1;
 for ($i = 0; $i < count($all_members); $i++) {
-    if ($all_members[$i]['points'] >= BEST_MEMBER_POINT) {
+    if ($all_members[$i]['points'] >= $best_member_point) {
         $best_members[] = array_merge($all_members[$i], array('rank' => $rank));
         $rank++;
     }
@@ -137,106 +196,54 @@ if (sql_num_rows($diary_exists) > 0) {
 }
 
 // ===========================
-// 3. 이달의 활동 통계
+// 3. 이달의 활동 통계 (최적화 - UNION ALL 사용)
 // ===========================
 
-// 총 게시물 수 (해당 월)
 $total_posts = 0;
-$board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
-while ($board = sql_fetch_array($board_list)) {
-    $bo_table = $board['bo_table'];
-    $write_table = $g5['write_prefix'] . $bo_table;
-
-    $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
-    if (!sql_num_rows($table_check)) continue;
-
-    $posts_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
-                  WHERE wr_is_comment = 0
-                  AND wr_datetime >= '{$start_date}'
-                  AND wr_datetime <= '{$end_date}'";
-    $posts_result = sql_fetch($posts_sql);
-    if ($posts_result) {
-        $total_posts += (int)$posts_result['cnt'];
-    }
-}
-
-// diary 테이블 게시물 추가 (별도 집계)
-$diary_table = $g5['write_prefix'] . 'diary';
-$diary_table_check = sql_query("SHOW TABLES LIKE '{$diary_table}'", false);
-if (sql_num_rows($diary_table_check)) {
-    $diary_posts_sql = "SELECT COUNT(*) as cnt FROM {$diary_table}
-                        WHERE wr_is_comment = 0
-                        AND wr_datetime >= '{$start_date}'
-                        AND wr_datetime <= '{$end_date}'";
-    $diary_posts_result = sql_fetch($diary_posts_sql);
-    if ($diary_posts_result) {
-        $total_posts += (int)$diary_posts_result['cnt'];
-    }
-}
-
-// 총 댓글 수 (해당 월)
 $total_comments = 0;
-$board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
-while ($board = sql_fetch_array($board_list)) {
-    $bo_table = $board['bo_table'];
-    $write_table = $g5['write_prefix'] . $bo_table;
-
-    $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
-    if (!sql_num_rows($table_check)) continue;
-
-    $comments_sql = "SELECT COUNT(*) as cnt FROM {$write_table}
-                     WHERE wr_is_comment = 1
-                     AND wr_datetime >= '{$start_date}'
-                     AND wr_datetime <= '{$end_date}'";
-    $comments_result = sql_fetch($comments_sql);
-    if ($comments_result) {
-        $total_comments += (int)$comments_result['cnt'];
-    }
-}
-
-// diary 테이블 댓글 추가
-if (sql_num_rows($diary_table_check)) {
-    $diary_comments_sql = "SELECT COUNT(*) as cnt FROM {$diary_table}
-                           WHERE wr_is_comment = 1
-                           AND wr_datetime >= '{$start_date}'
-                           AND wr_datetime <= '{$end_date}'";
-    $diary_comments_result = sql_fetch($diary_comments_sql);
-    if ($diary_comments_result) {
-        $total_comments += (int)$diary_comments_result['cnt'];
-    }
-}
-
-// 아멘 총합 (해당 월) - wr_good 컬럼 합계
 $total_amens = 0;
-$board_list = sql_query("SELECT bo_table FROM {$g5['board_table']}");
-while ($board = sql_fetch_array($board_list)) {
-    $bo_table = $board['bo_table'];
-    $write_table = $g5['write_prefix'] . $bo_table;
 
-    $table_check = sql_query("SHOW TABLES LIKE '{$write_table}'", false);
-    if (!sql_num_rows($table_check)) continue;
-
-    // wr_good 컬럼이 있는지 확인
-    $column_check = sql_query("SHOW COLUMNS FROM {$write_table} WHERE Field = 'wr_good'", false);
-    if (!sql_num_rows($column_check)) continue;
-
-    $amens_sql = "SELECT COALESCE(SUM(wr_good), 0) as total FROM {$write_table}
-                  WHERE wr_datetime >= '{$start_date}'
-                  AND wr_datetime <= '{$end_date}'";
-    $amens_result = sql_fetch($amens_sql);
-    if ($amens_result) {
-        $total_amens += (int)$amens_result['total'];
+// wr_good 컬럼이 있는 테이블 목록 조회
+$tables_with_good = array();
+foreach ($valid_write_tables as $write_table) {
+    $col_check = sql_fetch("SELECT 1 FROM information_schema.columns
+                            WHERE table_schema = DATABASE()
+                            AND table_name = '{$write_table}'
+                            AND column_name = 'wr_good' LIMIT 1");
+    if ($col_check) {
+        $tables_with_good[] = $write_table;
     }
 }
 
-// diary 테이블 좋아요 추가
-if (sql_num_rows($diary_table_check)) {
-    $diary_amens_sql = "SELECT COALESCE(SUM(wr_good), 0) as total FROM {$diary_table}
-                        WHERE wr_datetime >= '{$start_date}'
-                        AND wr_datetime <= '{$end_date}'";
-    $diary_amens_result = sql_fetch($diary_amens_sql);
-    if ($diary_amens_result) {
-        $total_amens += (int)$diary_amens_result['total'];
+// 한번의 UNION ALL 쿼리로 게시물, 댓글 수 집계
+if (count($valid_write_tables) > 0) {
+    $union_stats = array();
+    foreach ($valid_write_tables as $write_table) {
+        $has_good = in_array($write_table, $tables_with_good);
+        $good_col = $has_good ? "COALESCE(SUM(wr_good), 0)" : "0";
+        $union_stats[] = "
+            SELECT
+                SUM(CASE WHEN wr_is_comment = 0 THEN 1 ELSE 0 END) as posts,
+                SUM(CASE WHEN wr_is_comment = 1 THEN 1 ELSE 0 END) as comments,
+                {$good_col} as amens
+            FROM {$write_table}
+            WHERE wr_datetime >= '{$start_date}'
+            AND wr_datetime <= '{$end_date}'
+        ";
+    }
+
+    $stats_sql = "
+        SELECT
+            SUM(posts) as total_posts,
+            SUM(comments) as total_comments,
+            SUM(amens) as total_amens
+        FROM (" . implode(" UNION ALL ", $union_stats) . ") AS combined_stats
+    ";
+    $stats_result = sql_fetch($stats_sql);
+    if ($stats_result) {
+        $total_posts = (int)$stats_result['total_posts'];
+        $total_comments = (int)$stats_result['total_comments'];
+        $total_amens = (int)$stats_result['total_amens'];
     }
 }
 
@@ -269,7 +276,7 @@ if ($prev_month < 1) {
 $prev_start_date = sprintf('%04d-%02d-01 00:00:00', $prev_year, $prev_month);
 $prev_end_date = date('Y-m-t 23:59:59', strtotime($prev_start_date));
 
-// 5-1. 1등 출석왕 (매일 가장 먼저 출석한 횟수 - 동시간 출석자는 공동 1등)
+// 5-1. 1등 출석왕 (최적화 - 서브쿼리를 JOIN으로 변경)
 $first_login_sql = "
     SELECT
         p.mb_id,
@@ -278,17 +285,18 @@ $first_login_sql = "
         COUNT(*) as first_count
     FROM {$g5['point_table']} p
     JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
+    JOIN (
+        SELECT DATE(po_datetime) as login_date, MIN(TIME(po_datetime)) as first_time
+        FROM {$g5['point_table']}
+        WHERE po_content LIKE '%첫로그인%'
+        AND po_datetime >= '{$start_date}'
+        AND po_datetime <= '{$end_date}'
+        GROUP BY DATE(po_datetime)
+    ) first_times ON DATE(p.po_datetime) = first_times.login_date
+                  AND TIME(p.po_datetime) = first_times.first_time
     WHERE p.po_content LIKE '%첫로그인%'
     AND p.po_datetime >= '{$start_date}'
     AND p.po_datetime <= '{$end_date}'
-    AND TIME(p.po_datetime) = (
-        SELECT MIN(TIME(p2.po_datetime))
-        FROM {$g5['point_table']} p2
-        WHERE p2.po_content LIKE '%첫로그인%'
-        AND DATE(p2.po_datetime) = DATE(p.po_datetime)
-        AND p2.po_datetime >= '{$start_date}'
-        AND p2.po_datetime <= '{$end_date}'
-    )
     GROUP BY p.mb_id
     ORDER BY first_count DESC, m.mb_name ASC
     LIMIT 5
@@ -374,22 +382,38 @@ while ($row = sql_fetch_array($perfect_result)) {
     $perfect_attendance_members[] = $row;
 }
 
-// 5-4. 최장 연속 출석자 계산
-function getConsecutiveDays($mb_id, $g5) {
-    $sql = "
-        SELECT DISTINCT DATE(po_datetime) as login_date
-        FROM {$g5['point_table']}
-        WHERE mb_id = '{$mb_id}'
-        AND po_content LIKE '%첫로그인%'
-        ORDER BY login_date DESC
-    ";
-    $result = sql_query($sql);
-    $dates = array();
-    while ($row = sql_fetch_array($result)) {
-        $dates[] = $row['login_date'];
-    }
+// 5-4. 최장 연속 출석자 계산 (최적화 - 한번에 모든 데이터 조회)
+// 활성 회원들의 모든 출석 기록을 한번에 가져옴
+$all_login_sql = "
+    SELECT p.mb_id, m.mb_name, m.mb_nick, DATE(p.po_datetime) as login_date
+    FROM {$g5['point_table']} p
+    JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
+    WHERE p.po_content LIKE '%첫로그인%'
+    AND p.po_datetime >= DATE_SUB(NOW(), INTERVAL 180 DAY)
+    GROUP BY p.mb_id, DATE(p.po_datetime)
+    ORDER BY p.mb_id, login_date DESC
+";
+$all_login_result = sql_query($all_login_sql);
 
-    if (empty($dates)) return 0;
+// 회원별 출석 날짜 그룹핑
+$member_logins = array();
+$member_info = array();
+while ($row = sql_fetch_array($all_login_result)) {
+    $mb_id = $row['mb_id'];
+    if (!isset($member_logins[$mb_id])) {
+        $member_logins[$mb_id] = array();
+        $member_info[$mb_id] = array(
+            'mb_name' => $row['mb_name'],
+            'mb_nick' => $row['mb_nick']
+        );
+    }
+    $member_logins[$mb_id][] = $row['login_date'];
+}
+
+// 연속 출석 일수 계산 (PHP에서 한번에 처리)
+$consecutive_members = array();
+foreach ($member_logins as $mb_id => $dates) {
+    if (count($dates) < 3) continue;
 
     $consecutive = 1;
     $max_consecutive = 1;
@@ -407,27 +431,12 @@ function getConsecutiveDays($mb_id, $g5) {
         }
     }
 
-    return $max_consecutive;
-}
-
-// 활성 회원들의 연속 출석 계산
-$active_members_sql = "
-    SELECT DISTINCT p.mb_id, m.mb_name, m.mb_nick
-    FROM {$g5['point_table']} p
-    JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
-    WHERE p.po_content LIKE '%첫로그인%'
-    AND p.po_datetime >= DATE_SUB(NOW(), INTERVAL 60 DAY)
-";
-$active_result = sql_query($active_members_sql);
-$consecutive_members = array();
-while ($row = sql_fetch_array($active_result)) {
-    $consecutive_days = getConsecutiveDays($row['mb_id'], $g5);
-    if ($consecutive_days >= 3) {
+    if ($max_consecutive >= 3) {
         $consecutive_members[] = array(
-            'mb_id' => $row['mb_id'],
-            'mb_name' => $row['mb_name'],
-            'mb_nick' => $row['mb_nick'],
-            'consecutive_days' => $consecutive_days
+            'mb_id' => $mb_id,
+            'mb_name' => $member_info[$mb_id]['mb_name'],
+            'mb_nick' => $member_info[$mb_id]['mb_nick'],
+            'consecutive_days' => $max_consecutive
         );
     }
 }
@@ -460,7 +469,7 @@ while ($row = sql_fetch_array($dawn_result)) {
     $dawn_members[] = $row;
 }
 
-// 5-6. 골든타임 출석자 (오늘의 첫 출석자 - 동시간 출석자는 공동 골든타임)
+// 5-6. 골든타임 출석자 (최적화 - 서브쿼리를 JOIN으로 변경)
 $today_start = date('Y-m-d 00:00:00');
 $today_end = date('Y-m-d 23:59:59');
 $golden_time_sql = "
@@ -471,16 +480,16 @@ $golden_time_sql = "
         p.po_datetime as login_time
     FROM {$g5['point_table']} p
     JOIN {$g5['member_table']} m ON p.mb_id = m.mb_id
+    JOIN (
+        SELECT MIN(TIME(po_datetime)) as first_time
+        FROM {$g5['point_table']}
+        WHERE po_content LIKE '%첫로그인%'
+        AND po_datetime >= '{$today_start}'
+        AND po_datetime <= '{$today_end}'
+    ) gt ON TIME(p.po_datetime) = gt.first_time
     WHERE p.po_content LIKE '%첫로그인%'
     AND p.po_datetime >= '{$today_start}'
     AND p.po_datetime <= '{$today_end}'
-    AND TIME(p.po_datetime) = (
-        SELECT MIN(TIME(p2.po_datetime))
-        FROM {$g5['point_table']} p2
-        WHERE p2.po_content LIKE '%첫로그인%'
-        AND p2.po_datetime >= '{$today_start}'
-        AND p2.po_datetime <= '{$today_end}'
-    )
     ORDER BY m.mb_name ASC
 ";
 $golden_result = sql_query($golden_time_sql);
@@ -583,7 +592,7 @@ function getProfileImage($mb_id) {
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-star text-yellow-500 text-lg"></i>
                 <h3 class="text-lg font-semibold text-grace-green">베스트 성산인</h3>
-                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full"><?php echo number_format(BEST_MEMBER_POINT); ?>점 이상</span>
+                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full"><?php echo number_format($best_member_point); ?>점 이상</span>
             </div>
             <span class="text-xs text-gray-500">총 <?php echo $total_best; ?>명</span>
         </div>
@@ -630,7 +639,7 @@ function getProfileImage($mb_id) {
             <?php else: ?>
                 <div class="bg-white rounded-xl p-8 shadow-warm text-center">
                     <i class="fa-solid fa-star text-gray-300 text-4xl mb-3"></i>
-                    <p class="text-sm text-gray-400">이번 달 <?php echo number_format(BEST_MEMBER_POINT); ?>점 이상 획득한 회원이 없습니다.</p>
+                    <p class="text-sm text-gray-400">이번 달 <?php echo number_format($best_member_point); ?>점 이상 획득한 회원이 없습니다.</p>
                 </div>
             <?php endif; ?>
         </div>
