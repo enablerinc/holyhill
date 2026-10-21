@@ -137,6 +137,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
 <main id="main-content" class="pt-16 pb-20">
     <div class="max-w-2xl mx-auto">
 
+        <?php include(G5_BBS_PATH.'/word_notice_section.php'); ?>
+
         <?php if (count($list) > 0) { ?>
         <!-- 말씀 목록 -->
         <section class="space-y-4 px-4 py-4">

@@ -182,6 +182,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
         </form>
     </section>
 
+    <?php include(G5_BBS_PATH.'/word_notice_section.php'); ?>
+
     <!-- 게시물 목록 -->
     <section class="px-4 py-4">
         <?php

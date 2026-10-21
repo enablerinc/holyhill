@@ -227,6 +227,12 @@ sql_query("UPDATE {$write_table} SET
     wr_file = '{$total_files}'
     WHERE wr_id = '{$wr_id}'");
 
+// 9. 공지 지정/해제 (관리자만, 비관리자는 기존 상태 유지)
+if ($is_admin) {
+    $bo_notice = board_notice($board['bo_notice'], $wr_id, !empty($_POST['notice']));
+    sql_query("UPDATE {$g5['board_table']} SET bo_notice = '{$bo_notice}' WHERE bo_table = '{$bo_table}'");
+}
+
 delete_cache_latest($bo_table);
 
 goto_url($return_url);
