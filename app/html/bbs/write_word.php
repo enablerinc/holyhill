@@ -43,7 +43,8 @@ if (isset($_GET['w']) && $_GET['w'] == 'u' && isset($_GET['wr_id'])) {
     }
 
     $subject = get_text($write['wr_subject']);
-    $content = $write['wr_content'];
+    // textarea에 안전하게 넣기 위해 이스케이프 (브라우저가 제출 시 원문으로 복원)
+    $content = get_text($write['wr_content']);
 
     // 첨부파일 정보 가져오기
     $file_sql = "SELECT * FROM {$g5['board_file_table']}
@@ -55,8 +56,8 @@ if (isset($_GET['w']) && $_GET['w'] == 'u' && isset($_GET['wr_id'])) {
     }
 }
 
-// 액션 URL
-$action_url = G5_BBS_URL.'/write_update.php';
+// 액션 URL (수정은 토큰 재매핑을 처리하는 전용 핸들러로)
+$action_url = ($w == 'u') ? G5_BBS_URL.'/post_edit_update.php' : G5_BBS_URL.'/write_update.php';
 
 // 파일 업로드 개수
 $file_count = 10;
@@ -80,6 +81,8 @@ $profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : 'https:/
         var g5_bbs_url = "<?php echo G5_BBS_URL; ?>";
         var g5_is_member = "<?php echo $is_member ? '1' : ''; ?>";
         var g5_is_admin = "<?php echo $is_admin ? '1' : ''; ?>";
+        // 수정 모드에서 기존 첨부 개수 (새 파일 토큰 번호는 이 값 이후로 매김)
+        var ORIG_FILE_COUNT = <?php echo ($w == 'u') ? (int)count($file) : 0; ?>;
     </script>
     <script src="<?php echo G5_JS_URL; ?>/common.js"></script>
     <style>
@@ -203,18 +206,21 @@ $profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : 'https:/
                 <!-- 기존 이미지 (수정 모드) -->
                 <?php if($w == 'u' && count($file) > 0) { ?>
                 <div class="px-4 py-3 border-t border-gray-100 bg-gray-50">
-                    <p class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <p class="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
                         <i class="fa-solid fa-folder-open text-gray-500"></i>
                         기존 업로드 이미지
                     </p>
+                    <p class="text-xs text-gray-400 mb-3">삭제에 체크하면 본문의 해당 번호 표시도 자동 정리됩니다.</p>
                     <div class="grid grid-cols-5 gap-2">
                         <?php
                         foreach($file as $i => $f) {
                             if($f['bf_file'] && $f['bf_type'] >= 1 && $f['bf_type'] <= 3) {
+                                $ordinal = $i + 1; // bf_no 순서상의 본문 번호
                                 $file_path = G5_DATA_URL.'/file/'.$bo_table.'/'.$f['bf_file'];
                         ?>
                         <div class="relative aspect-square bg-gray-200 rounded-lg overflow-hidden group">
                             <img src="<?php echo $file_path; ?>" class="w-full h-full object-cover">
+                            <span class="absolute bottom-1 left-1 bg-black bg-opacity-60 text-white text-[10px] px-1.5 py-0.5 rounded">[이미지<?php echo $ordinal; ?>]</span>
                             <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <label class="flex items-center gap-1 text-white cursor-pointer px-3 py-1 bg-red-500 rounded-full text-xs font-medium">
                                     <input type="checkbox" name="bf_file_del[<?php echo $f['bf_no']; ?>]" value="1" class="rounded">
@@ -434,8 +440,10 @@ function insertImageToContent(index) {
         return;
     }
 
+    // 수정 모드에서는 기존 첨부 개수만큼 번호를 밀어 기존 토큰과 충돌 방지
+    const base = (typeof ORIG_FILE_COUNT !== 'undefined' ? ORIG_FILE_COUNT : 0);
     // 이미지 placeholder 생성
-    const imagePlaceholder = `[이미지${index + 1}]\n\n`;
+    const imagePlaceholder = `[이미지${base + index + 1}]\n\n`;
 
     // 커서 위치에 삽입
     const startPos = contentTextarea.selectionStart;

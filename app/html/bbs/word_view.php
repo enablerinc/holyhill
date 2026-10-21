@@ -248,6 +248,10 @@ if ($good_count > 0) {
 <!-- 메뉴 드롭다운 -->
 <?php if ($can_delete) { ?>
 <div id="action-menu" class="hidden fixed top-14 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+    <a href="<?php echo G5_BBS_URL; ?>/write_word.php?w=u&wr_id=<?php echo $wr_id; ?>"
+       class="block px-4 py-3 text-sm text-grace-green hover:bg-soft-lavender/50">
+        <i class="fa-solid fa-pen mr-2"></i>수정하기
+    </a>
     <a href="<?php echo G5_BBS_URL; ?>/delete.php?bo_table=<?php echo $bo_table; ?>&wr_id=<?php echo $wr_id; ?>&token=<?php echo $delete_token; ?>"
        onclick="return confirm('정말 삭제하시겠습니까?');"
        class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50">
