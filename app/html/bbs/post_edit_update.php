@@ -17,7 +17,14 @@ if (!$bo_table || !$wr_id) {
     alert('잘못된 접근입니다.');
 }
 
-$return_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+// 게시판별 상세 보기 페이지로 복귀
+if ($bo_table === 'word') {
+    $return_url = G5_BBS_URL.'/word_view.php?wr_id='.$wr_id;
+} else if ($bo_table === 'diary') {
+    $return_url = G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($member['mb_id']).'&wr_id='.$wr_id;
+} else {
+    $return_url = G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id;
+}
 
 $write = sql_fetch("SELECT * FROM {$write_table} WHERE wr_id = '{$wr_id}' AND wr_is_comment = 0");
 if (!$write['wr_id']) {
@@ -219,6 +226,12 @@ sql_query("UPDATE {$write_table} SET
     wr_seo_title = '{$wr_seo_title}',
     wr_file = '{$total_files}'
     WHERE wr_id = '{$wr_id}'");
+
+// 9. 공지 지정/해제 (관리자만, 비관리자는 기존 상태 유지)
+if ($is_admin) {
+    $bo_notice = board_notice($board['bo_notice'], $wr_id, !empty($_POST['notice']));
+    sql_query("UPDATE {$g5['board_table']} SET bo_notice = '{$bo_notice}' WHERE bo_table = '{$bo_table}'");
+}
 
 delete_cache_latest($bo_table);
 
