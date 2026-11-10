@@ -39,6 +39,12 @@ function convert_youtube_to_iframe_index($content) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $g5['title']; ?></title>
+    <link rel="manifest" href="<?php echo holyhill_url_path(G5_BBS_URL.'/manifest.php'); ?>">
+    <link rel="apple-touch-icon" href="<?php echo holyhill_url_path(G5_IMG_URL.'/apple-touch-icon.png'); ?>">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="성산교회">
     <script src="https://cdn.tailwindcss.com"></script>
     <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -96,7 +102,10 @@ function convert_youtube_to_iframe_index($content) {
         <div class="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
             <div class="flex items-center justify-between mb-2">
                 <h2 class="text-xl font-bold text-gray-800">알림</h2>
-                <i id="close-notification" class="fa-solid fa-times text-gray-600 text-xl cursor-pointer hover:text-gray-800"></i>
+                <div class="flex items-center gap-4">
+                    <a href="<?php echo G5_BBS_URL; ?>/notification_settings.php" class="text-gray-600 hover:text-purple-600" title="알림 설정" aria-label="알림 설정"><i class="fa-solid fa-gear text-lg"></i></a>
+                    <i id="close-notification" class="fa-solid fa-times text-gray-600 text-xl cursor-pointer hover:text-gray-800"></i>
+                </div>
             </div>
             <div class="flex items-center justify-between">
                 <button id="mark-all-read" class="text-sm text-purple-600 hover:text-purple-800 font-medium">

@@ -51,6 +51,8 @@ function create_notification($type, $from_mb_id, $to_mb_id, $bo_table = '', $wr_
         error_log("알림 생성 SQL 실패: " . sql_error());
     } else {
         error_log("알림 생성 성공: type=$type, to=$to_mb_id");
+        // 푸시 알림 (설정 확인·발송은 페이지 응답 후 extend/push.extend.php 에서)
+        if (function_exists('holyhill_push_queue')) holyhill_push_queue($to_mb_id, $type);
     }
     return $result;
 }

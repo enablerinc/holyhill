@@ -915,6 +915,14 @@ $my_comments_list = array_slice($my_comments_list, 0, 5);
                 <i class="fa-solid fa-chevron-right text-gray-400 text-sm"></i>
             </a>
 
+            <a href="<?php echo G5_BBS_URL; ?>/notification_settings.php" class="w-full flex items-center justify-between p-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-bell text-grace-green"></i>
+                    <span class="text-sm text-grace-green">알림 설정</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-400 text-sm"></i>
+            </a>
+
             <a href="<?php echo G5_BBS_URL; ?>/point.php" class="w-full flex items-center justify-between p-4 border-b border-gray-100">
                 <div class="flex items-center gap-3">
                     <i class="fa-solid fa-coins text-grace-green"></i>

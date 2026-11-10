@@ -3,6 +3,7 @@
  * 알림 위젯 - 모든 페이지에서 사용 가능
  */
 if (!defined('_GNUBOARD_')) exit;
+include_once(G5_BBS_PATH.'/pwa_tags.php');
 ?>
 
 <!-- 알림 패널 -->
@@ -10,7 +11,10 @@ if (!defined('_GNUBOARD_')) exit;
     <div class="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
         <div class="flex items-center justify-between mb-2">
             <h2 class="text-xl font-bold text-gray-800">알림</h2>
-            <i id="close-notification" class="fa-solid fa-times text-gray-600 text-xl cursor-pointer hover:text-gray-800"></i>
+            <div class="flex items-center gap-4">
+                <a href="<?php echo G5_BBS_URL; ?>/notification_settings.php" class="text-gray-600 hover:text-purple-600" title="알림 설정" aria-label="알림 설정"><i class="fa-solid fa-gear text-lg"></i></a>
+                <i id="close-notification" class="fa-solid fa-times text-gray-600 text-xl cursor-pointer hover:text-gray-800"></i>
+            </div>
         </div>
         <div class="flex items-center justify-between">
             <button id="mark-all-read" class="text-sm text-purple-600 hover:text-purple-800 font-medium">

@@ -46,6 +46,7 @@ $nav_new = function_exists('holyhill_new_counts') ? holyhill_new_counts() : arra
 $nav_dot = '<span class="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" aria-label="새 글 있음"></span>';
 ?>
 
+<?php include_once(G5_BBS_PATH.'/pwa_tags.php'); ?>
 <nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40">
     <div class="flex items-center justify-around py-4">
         <!-- 홈 -->
