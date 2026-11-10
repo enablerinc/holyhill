@@ -50,13 +50,12 @@ if ($result) {
     if ($board['bo_comment_point']) {
         delete_point($comment['mb_id'], $bo_table, $comment_id, '댓글');
 
-        // 게시글 작성자의 댓글받기 포인트도 회수
+        // 게시글 작성자가 받은 포인트 회수 (지급된 기록만 회수, 5자 미만이라 미지급이면 차감 없음)
+        // '댓글받기'는 이전 방식으로 지급된 기록
         $parent_write = sql_fetch("SELECT mb_id FROM {$write_table} WHERE wr_id = '{$wr_id}' AND wr_is_comment = 0");
         if ($parent_write['mb_id'] && $parent_write['mb_id'] != $comment['mb_id']) {
-            if (!delete_point($parent_write['mb_id'], $bo_table, $comment_id, '댓글받기')) {
-                insert_point($parent_write['mb_id'], $board['bo_comment_point'] * (-1),
-                             "{$board['bo_subject']} {$wr_id}-{$comment_id} 댓글받기취소");
-            }
+            delete_point($parent_write['mb_id'], $bo_table, $comment_id, '댓글받음');
+            delete_point($parent_write['mb_id'], $bo_table, $comment_id, '댓글받기');
         }
     }
 
