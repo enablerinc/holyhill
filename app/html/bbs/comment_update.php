@@ -47,9 +47,18 @@ $result = sql_query("UPDATE {$write_table} SET
     WHERE wr_id = '{$comment_id}'");
 
 if ($result) {
+    // 수정으로 새로 언급된 사람에게만 멘션 알림
+    $mention_post = sql_fetch("SELECT mb_id FROM {$write_table} WHERE wr_id = '{$wr_id}' AND wr_is_comment = 0");
+    $mention_url = ($bo_table === 'diary' && $mention_post)
+        ? G5_BBS_URL.'/gratitude_user.php?mb_id='.urlencode($mention_post['mb_id']).'&wr_id='.$wr_id
+        : G5_BBS_URL.'/post.php?bo_table='.$bo_table.'&wr_id='.$wr_id.'#c_'.$comment_id;
+    holyhill_mention_notify($content, isset($_POST['mention_ids']) ? $_POST['mention_ids'] : '', $member['mb_id'],
+                            $bo_table, $wr_id, $comment_id, $mention_url,
+                            array($mention_post ? $mention_post['mb_id'] : ''), $comment['wr_content']);
+
     echo json_encode([
         'success' => true,
-        'content' => htmlspecialchars($content)
+        'content' => holyhill_mention_highlight(nl2br(htmlspecialchars($content)))
     ]);
 } else {
     echo json_encode(['success' => false, 'message' => '댓글 수정에 실패했습니다.']);

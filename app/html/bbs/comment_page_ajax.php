@@ -169,7 +169,7 @@ function render_comment_ajax($comment, $depth, $children_map, $g5, $is_member, $
                         <div class="font-semibold text-xs"><?php echo $c_nick; ?></div>
                         <div class="text-xs text-gray-400"><?php echo get_time_ago_ajax($c['wr_datetime']); ?></div>
                     </div>
-                    <div class="text-sm comment-content-<?php echo $c['wr_id']; ?>"><?php echo process_comment_content_ajax(nl2br(get_text($c['wr_content']))); ?></div>
+                    <div class="text-sm comment-content-<?php echo $c['wr_id']; ?>"><?php echo process_comment_content_ajax(holyhill_mention_highlight(nl2br(get_text($c['wr_content'])))); ?></div>
                 </div>
                 <div class="flex gap-2 mt-1 ml-3">
                     <?php if ($is_member) { ?>

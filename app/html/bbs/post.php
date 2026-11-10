@@ -965,7 +965,7 @@ $next_thumbnail = $next_post ? get_post_thumbnail($next_post['wr_id'], $bo_table
                                         <div class="font-semibold text-xs"><?php echo $c_nick; ?></div>
                                         <div class="text-xs text-gray-400"><?php echo get_time_ago($c['wr_datetime']); ?></div>
                                     </div>
-                                    <div class="text-sm comment-content-<?php echo $c['wr_id']; ?>"><?php echo process_comment_content(nl2br(get_text($c['wr_content']))); ?></div>
+                                    <div class="text-sm comment-content-<?php echo $c['wr_id']; ?>"><?php echo process_comment_content(holyhill_mention_highlight(nl2br(get_text($c['wr_content'])))); ?></div>
                                 </div>
                                 <div class="flex gap-2 mt-1 ml-3">
                                     <?php if ($is_member) { ?>
@@ -1210,6 +1210,7 @@ function submitReply(parentCommentId) {
     formData.append('wr_content', input.value.trim());
     formData.append('parent_comment_id', parentCommentId);
     formData.append('token', tokenInput.value);
+    if (window.HolyhillMention) formData.append('mention_ids', HolyhillMention.ids(input));
 
     const submitBtn = replyForm.querySelector('button');
     const originalContent = submitBtn.innerHTML;
@@ -1362,6 +1363,7 @@ function saveComment(commentId) {
     const formData = new FormData();
     formData.append('comment_id', commentId);
     formData.append('content', newContent);
+    if (window.HolyhillMention) formData.append('mention_ids', HolyhillMention.ids(textarea));
     formData.append('bo_table', '<?php echo $bo_table; ?>');
     formData.append('wr_id', '<?php echo $wr_id; ?>');
 
@@ -1375,7 +1377,7 @@ function saveComment(commentId) {
             // 수정된 내용으로 업데이트
             const contentDiv = document.querySelector('.comment-content-' + commentId);
             if (contentDiv) {
-                contentDiv.innerHTML = newContent.replace(/\n/g, '<br>');
+                contentDiv.innerHTML = window.HolyhillMention ? HolyhillMention.render(newContent) : newContent.replace(/\n/g, '<br>');
             }
             alert('댓글이 수정되었습니다.');
         } else {
@@ -1951,5 +1953,6 @@ if (!isset($g5['lo_location'])) {
 }
 echo html_end();
 ?>
+<?php include_once(G5_BBS_PATH.'/mention_tags.php'); ?>
 </body>
 </html>

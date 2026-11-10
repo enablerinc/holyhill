@@ -411,7 +411,7 @@ if ($good_count > 0) {
                                     </button>
                                     <?php } ?>
                                 </div>
-                                <p class="text-sm text-gray-700 leading-relaxed"><?php echo nl2br(get_text($comment['wr_content'])); ?></p>
+                                <p class="text-sm text-gray-700 leading-relaxed"><?php echo holyhill_mention_highlight(nl2br(get_text($comment['wr_content']))); ?></p>
                                 <span class="text-xs text-gray-500 mt-1 inline-block">
                                     <?php echo date('Y-m-d H:i', strtotime($comment['wr_datetime'])); ?>
                                 </span>
@@ -813,5 +813,6 @@ if (!isset($g5['lo_location'])) {
 }
 echo html_end();
 ?>
+<?php include_once(G5_BBS_PATH.'/mention_tags.php'); ?>
 </body>
 </html>

@@ -54,7 +54,7 @@ while ($row = sql_fetch_array($result)) {
 
     $new_comments[] = array(
         'wr_id' => $row['wr_id'],
-        'content' => $row['wr_content'],
+        'content' => holyhill_mention_highlight(nl2br(get_text($row['wr_content']))),
         'name' => $row['wr_name'],
         'photo' => $c_photo,
         'datetime' => $time_str,

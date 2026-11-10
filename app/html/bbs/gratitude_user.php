@@ -403,7 +403,7 @@ function get_likes_preview($bo_table, $wr_id, $limit = 3) {
                                         <span class="font-semibold text-sm text-grace-green"><?php echo $c_nick; ?></span>
                                         <span class="text-xs text-grace-green/40"><?php echo get_time_ago_user($comment['wr_datetime']); ?></span>
                                     </div>
-                                    <p class="text-sm text-grace-green/80"><?php echo nl2br(get_text($comment['wr_content'])); ?></p>
+                                    <p class="text-sm text-grace-green/80"><?php echo holyhill_mention_highlight(nl2br(get_text($comment['wr_content']))); ?></p>
                                 </div>
                                 <?php if (($is_member && $member['mb_id'] === $comment['mb_id']) || $is_admin) { ?>
                                 <div class="flex gap-2 mt-1 ml-4">
@@ -565,6 +565,7 @@ function submitComment(wrId) {
     formData.append('wr_id', wrId);
     formData.append('wr_content', content);
     formData.append('token', commentToken);
+    if (window.HolyhillMention) formData.append('mention_ids', HolyhillMention.ids(input));
 
     fetch('<?php echo G5_BBS_URL; ?>/comment_write_ajax.php', {
         method: 'POST',
@@ -817,5 +818,6 @@ if (!isset($g5['lo_location'])) {
 }
 echo html_end();
 ?>
+<?php include_once(G5_BBS_PATH.'/mention_tags.php'); ?>
 </body>
 </html>

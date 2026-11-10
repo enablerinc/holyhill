@@ -273,6 +273,13 @@ if ($w == 'c') // 댓글 입력
         error_log("알림 조건 실패: comment_id=$comment_id, mb_id=$mb_id");
     }
 
+    // 멘션 알림 (이미 댓글/답글 알림을 받는 사람은 제외)
+    if ($comment_id && $mb_id) {
+        $mention_skip = ($tmp_comment_reply && isset($reply_array['mb_id'])) ? array($reply_array['mb_id']) : array($wr['mb_id']);
+        holyhill_mention_notify($wr_content, isset($_POST['mention_ids']) ? $_POST['mention_ids'] : '', $mb_id,
+                                $bo_table, $wr_id, $comment_id, $notification_url, $mention_skip);
+    }
+
     // 메일발송 사용
     if ($config['cf_email_use'] && $board['bo_use_email'])
     {
@@ -455,7 +462,7 @@ if ($is_ajax && $w == 'c') {
         'success' => true,
         'comment_id' => $comment_id,
         'wr_name' => get_text($wr_name),
-        'wr_content' => nl2br(get_text($wr_content)),
+        'wr_content' => holyhill_mention_highlight(nl2br(get_text($wr_content))),
         'profile_img' => $profile_img_url,
         'delete_token' => $delete_token,
         'datetime' => $datetime,

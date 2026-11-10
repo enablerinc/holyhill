@@ -128,6 +128,13 @@ if ($parent_comment_id > 0 && isset($parent_comment) && $parent_comment['mb_id']
     create_notification('comment', $member['mb_id'], $write['mb_id'], $bo_table, $wr_id, $comment_id, $notification_content, $notification_url);
 }
 
+// 멘션 알림 (이미 댓글/답글 알림을 받는 사람은 제외)
+$mention_skip = array();
+if ($parent_comment_id > 0 && isset($parent_comment)) $mention_skip[] = $parent_comment['mb_id'];
+else $mention_skip[] = $write['mb_id'];
+holyhill_mention_notify($wr_content, isset($_POST['mention_ids']) ? $_POST['mention_ids'] : '', $member['mb_id'],
+                        $bo_table, $wr_id, $comment_id, $notification_url, $mention_skip);
+
 // ✅ 새 토큰 생성
 $new_token = get_random_token_string();
 set_session('ss_comment_token', $new_token);
@@ -140,7 +147,7 @@ echo json_encode([
     'new_token' => $new_token,  // ✅ 새 토큰 전달
     'comment' => [
         'id' => $comment_id,
-        'content' => htmlspecialchars($wr_content),
+        'content' => holyhill_mention_highlight(nl2br(htmlspecialchars($wr_content))),
         'nick' => $member['mb_name'],  // 이름 사용
         'photo' => $c_photo,
         'datetime' => '방금 전'
