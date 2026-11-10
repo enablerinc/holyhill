@@ -258,54 +258,6 @@ function convert_youtube_to_iframe_index($content) {
         } // is_member
         ?>
 
-        <?php
-        // 공지사항 조회 (gallery 게시판)
-        $notice_board = sql_fetch("SELECT * FROM {$g5['board_table']} WHERE bo_table = 'gallery'");
-        $notice_list = array();
-        if ($notice_board && $notice_board['bo_notice']) {
-            $notice_ids = explode(',', $notice_board['bo_notice']);
-            $notice_ids = array_filter(array_map('intval', $notice_ids));
-            if (!empty($notice_ids)) {
-                $notice_ids_str = implode(',', $notice_ids);
-                $notice_sql = "SELECT * FROM {$g5['write_prefix']}gallery WHERE wr_id IN ({$notice_ids_str}) ORDER BY FIELD(wr_id, {$notice_ids_str})";
-                $notice_result = sql_query($notice_sql);
-                while ($notice_row = sql_fetch_array($notice_result)) {
-                    $notice_list[] = $notice_row;
-                }
-            }
-        }
-        ?>
-
-        <?php if (!empty($notice_list)) { ?>
-        <!-- 공지사항 섹션 -->
-        <section id="announcements" class="px-4 pb-4">
-            <div class="flex items-center gap-2 mb-3">
-                <i class="fa-solid fa-bullhorn text-amber-500"></i>
-                <h2 class="text-base font-semibold text-gray-800">공지사항</h2>
-            </div>
-            <div class="space-y-2">
-                <?php foreach ($notice_list as $notice) {
-                    $notice_href = G5_BBS_URL.'/post.php?bo_table=gallery&amp;wr_id='.$notice['wr_id'];
-                    $notice_date = date('Y.m.d', strtotime($notice['wr_datetime']));
-                ?>
-                <a href="<?php echo $notice_href; ?>" class="block">
-                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 hover:bg-amber-100 transition-colors">
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500 text-white">
-                                공지
-                            </span>
-                            <h3 class="flex-1 font-medium text-gray-900 text-sm line-clamp-1">
-                                <?php echo get_text($notice['wr_subject']); ?>
-                            </h3>
-                            <span class="text-xs text-gray-500 flex-shrink-0"><?php echo $notice_date; ?></span>
-                        </div>
-                    </div>
-                </a>
-                <?php } ?>
-            </div>
-        </section>
-        <?php } ?>
-
         <!-- 2. 생명말씀 위젯 -->
         <section id="daily-word" class="mx-4 mb-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg">
             <?php
@@ -390,7 +342,59 @@ function convert_youtube_to_iframe_index($content) {
             ?>
         </section>
 
-        <!-- 4. 게시물 섹션 (최대 4개) -->
+        <?php
+        // 공지사항 조회: 말씀(word) 공지 먼저, 그 다음 성산 샘터(gallery) 공지
+        $notice_list = array();
+        $notice_boards = array();
+        $nb_result = sql_query("SELECT bo_table, bo_notice FROM {$g5['board_table']} WHERE bo_table IN ('word', 'gallery')");
+        while ($nb = sql_fetch_array($nb_result)) {
+            $notice_boards[$nb['bo_table']] = $nb['bo_notice'];
+        }
+        foreach (array('word', 'gallery') as $notice_bo) {
+            if (empty($notice_boards[$notice_bo])) continue;
+            $notice_ids = array_filter(array_map('intval', explode(',', $notice_boards[$notice_bo])));
+            if (empty($notice_ids)) continue;
+            $notice_ids_str = implode(',', $notice_ids);
+            $notice_result = sql_query("SELECT wr_id, wr_subject, wr_datetime FROM {$g5['write_prefix']}{$notice_bo} WHERE wr_id IN ({$notice_ids_str}) AND wr_is_comment = 0 ORDER BY FIELD(wr_id, {$notice_ids_str})");
+            while ($notice_row = sql_fetch_array($notice_result)) {
+                $notice_row['href'] = ($notice_bo === 'word')
+                    ? G5_BBS_URL.'/word_view.php?wr_id='.$notice_row['wr_id']
+                    : G5_BBS_URL.'/post.php?bo_table=gallery&amp;wr_id='.$notice_row['wr_id'];
+                $notice_list[] = $notice_row;
+            }
+        }
+        ?>
+
+        <?php if (!empty($notice_list)) { ?>
+        <!-- 공지사항 섹션 -->
+        <section id="announcements" class="px-4 py-4 border-b border-gray-200">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="fa-solid fa-bullhorn text-amber-500"></i>
+                <h2 class="text-base font-semibold text-gray-800">공지사항</h2>
+            </div>
+            <div class="space-y-2">
+                <?php foreach ($notice_list as $notice) {
+                    $notice_date = date('Y.m.d', strtotime($notice['wr_datetime']));
+                ?>
+                <a href="<?php echo $notice['href']; ?>" class="block">
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 hover:bg-amber-100 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500 text-white">
+                                공지
+                            </span>
+                            <h3 class="flex-1 font-medium text-gray-900 text-sm line-clamp-1">
+                                <?php echo get_text($notice['wr_subject']); ?>
+                            </h3>
+                            <span class="text-xs text-gray-500 flex-shrink-0"><?php echo $notice_date; ?></span>
+                        </div>
+                    </div>
+                </a>
+                <?php } ?>
+            </div>
+        </section>
+        <?php } ?>
+
+        <!-- 4. 게시물 섹션 (한 페이지 9개) -->
         <section id="recent-posts" class="px-4 py-4">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
@@ -426,185 +430,49 @@ function convert_youtube_to_iframe_index($content) {
             </div>
             <?php
             } else {
-            // 로그인한 회원에게만 피드 표시 (최대 4개)
-            $feed_sql = "SELECT * FROM {$g5['write_prefix']}gallery
-                         WHERE wr_is_comment = 0
-                         ORDER BY wr_id DESC
-                         LIMIT 8";
-            $feed_result = sql_query($feed_sql);
+            // 로그인한 회원에게만 피드 표시 (한 페이지 9개 + 페이지 번호)
+            include_once(G5_BBS_PATH.'/home_feed_ajax.php');
+            $home_page = isset($_GET['home_page']) ? (int)$_GET['home_page'] : 1;
+            $home_feed_html = home_feed_render($home_page);
 
-            if ($feed_result && sql_num_rows($feed_result) > 0) {
+            if ($home_feed_html !== '') {
             ?>
-            <div class="grid grid-cols-2 gap-3">
-                <?php
-                while ($feed = sql_fetch_array($feed_result)) {
-                    // 작성자 정보
-                    $feed_nick = $feed['wr_name'] ? $feed['wr_name'] : '알 수 없음';
-                    $feed_photo = ''; // 프로필 사진
-                    if ($feed['mb_id']) {
-                        $mb_info = sql_fetch("SELECT mb_nick, mb_name FROM {$g5['member_table']} WHERE mb_id = '{$feed['mb_id']}'");
-                        if ($mb_info) {
-                            $feed_nick = $mb_info['mb_name'] ? $mb_info['mb_name'] : $mb_info['mb_nick'];
-                        }
-                        // 프로필 사진 경로 - 캐시 버스팅 적용
-                        $feed_photo = get_profile_image_url($feed['mb_id']);
-                    }
-
-                    // YouTube URL 추출 및 썸네일 생성
-                    $video_thumbnail = '';
-                    $video_id = '';
-                    $has_uploaded_video = false;
-                    $search_content = $feed['wr_link1'] . ' ' . $feed['wr_content'];
-                    $patterns = array(
-                        '/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i',
-                        '/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:&[^\s]*)?/i',
-                        '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)(?:\?[^\s]*)?/i'
-                    );
-                    foreach ($patterns as $pattern) {
-                        if (preg_match($pattern, $search_content, $matches)) {
-                            $video_id = $matches[1];
-                            $video_thumbnail = "https://img.youtube.com/vi/{$video_id}/maxresdefault.jpg";
-                            break;
-                        }
-                    }
-
-                    // 업로드된 파일 타입 확인 (동영상, 음원, 문서)
-                    $video_extensions = array('mp4', 'webm', 'mov', 'avi', 'mkv', 'wmv');
-                    $audio_extensions = array('mp3', 'm4a', 'wav', 'flac', 'aac', 'wma', 'ogg');
-                    $doc_extensions = array('pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'hwp', 'hwpx', 'txt', 'zip', 'rar', '7z');
-
-                    $has_audio = false;
-                    $has_doc = false;
-
-                    $all_files_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = 'gallery' AND wr_id = '{$feed['wr_id']}' ORDER BY bf_no");
-                    while ($af = sql_fetch_array($all_files_result)) {
-                        $ext = strtolower(pathinfo($af['bf_file'], PATHINFO_EXTENSION));
-                        if (in_array($ext, $video_extensions)) {
-                            $has_uploaded_video = true;
-                        }
-                        if (in_array($ext, $audio_extensions)) {
-                            $has_audio = true;
-                        }
-                        if (in_array($ext, $doc_extensions)) {
-                            $has_doc = true;
-                        }
-                    }
-
-                    // 첨부 이미지
-                    $feed_img = '';
-                    if (preg_match('/<img[^>]+src=["\']?([^"\'>\s]+)["\']?[^>]*>/i', $feed['wr_content'], $img_match)) {
-                        $feed_img = $img_match[1];
-                    }
-                    if (!$feed_img) {
-                        $img_result = sql_query("SELECT bf_file FROM {$g5['board_file_table']} WHERE bo_table = 'gallery' AND wr_id = '{$feed['wr_id']}' AND bf_type BETWEEN 1 AND 3 ORDER BY bf_no LIMIT 1");
-                        $img = sql_fetch_array($img_result);
-                        $feed_img = $img ? G5_DATA_URL.'/file/gallery/'.$img['bf_file'] : '';
-                    }
-
-                    // 최종 썸네일 결정 (YouTube 우선)
-                    $thumbnail = $video_thumbnail ? $video_thumbnail : $feed_img;
-                    $has_video = !empty($video_id) || $has_uploaded_video;
-
-                    // 텍스트 콘텐츠
-                    $text_content = strip_tags($feed['wr_content']);
-                    $text_content = preg_replace('/https?:\/\/[^\s]+/', '', $text_content);
-                    $text_content = trim($text_content);
-
-                    $comment_cnt = $feed['wr_comment'];
-                    $good_cnt = $feed['wr_good'];
-                ?>
-                <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&wr_id=<?php echo $feed['wr_id']; ?>" class="block">
-                    <article class="bg-white rounded-xl shadow-warm overflow-hidden hover:shadow-lg transition-shadow">
-                        <?php if ($thumbnail) { ?>
-                        <div class="relative aspect-square">
-                            <img src="<?php echo $thumbnail; ?>" alt="<?php echo $feed['wr_subject']; ?>" class="w-full h-full object-cover">
-                            <?php if ($has_video) { ?>
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
-                                    <i class="fa-solid fa-play text-white text-lg ml-1"></i>
-                                </div>
-                            </div>
-                            <?php } ?>
-                            <!-- 파일 타입 배지 (우측 상단) -->
-                            <?php if ($has_audio || $has_doc) { ?>
-                            <div class="absolute top-2 right-2 flex gap-1">
-                                <?php if ($has_audio) { ?>
-                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
-                                    <i class="fa-solid fa-music text-white text-xs"></i>
-                                </div>
-                                <?php } ?>
-                                <?php if ($has_doc) { ?>
-                                <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
-                                    <i class="fa-solid fa-file text-white text-xs"></i>
-                                </div>
-                                <?php } ?>
-                            </div>
-                            <?php } ?>
-                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                                <div class="flex items-center gap-2 text-white text-xs">
-                                    <span class="flex items-center gap-1"><i class="fa-solid fa-heart"></i> <?php echo number_format($good_cnt); ?></span>
-                                    <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i> <?php echo number_format($comment_cnt); ?></span>
-                                </div>
-                            </div>
-                        </div>
-                        <?php } else { ?>
-                        <div class="aspect-square bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-3 flex flex-col justify-center relative">
-                            <!-- 파일 타입 배지 (우측 상단) - 이미지 없을 때도 표시 -->
-                            <?php if ($has_video || $has_audio || $has_doc) { ?>
-                            <div class="absolute top-2 right-2 flex gap-1">
-                                <?php if ($has_video) { ?>
-                                <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-md">
-                                    <i class="fa-solid fa-play text-white text-xs"></i>
-                                </div>
-                                <?php } ?>
-                                <?php if ($has_audio) { ?>
-                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
-                                    <i class="fa-solid fa-music text-white text-xs"></i>
-                                </div>
-                                <?php } ?>
-                                <?php if ($has_doc) { ?>
-                                <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
-                                    <i class="fa-solid fa-file text-white text-xs"></i>
-                                </div>
-                                <?php } ?>
-                            </div>
-                            <?php } ?>
-                            <p class="text-gray-800 text-sm leading-relaxed line-clamp-5 text-center"><?php echo cut_str($text_content, 80); ?></p>
-                            <div class="mt-auto pt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
-                                <span class="flex items-center gap-1"><i class="fa-solid fa-heart text-red-400"></i> <?php echo number_format($good_cnt); ?></span>
-                                <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i> <?php echo number_format($comment_cnt); ?></span>
-                            </div>
-                        </div>
-                        <?php } ?>
-                        <div class="p-2">
-                            <div class="flex items-center gap-2">
-                                <?php if ($feed_photo) { ?>
-                                <img src="<?php echo $feed_photo; ?>" alt="<?php echo $feed_nick; ?>" class="w-5 h-5 rounded-full object-cover">
-                                <?php } else { ?>
-                                <div class="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                                    <span class="text-white text-xs font-semibold"><?php echo mb_substr($feed_nick, 0, 1); ?></span>
-                                </div>
-                                <?php } ?>
-                                <span class="text-xs text-gray-700 font-medium truncate flex-1"><?php echo $feed_nick; ?></span>
-                                <span class="text-xs text-gray-400"><?php echo date('m.d', strtotime($feed['wr_datetime'])); ?></span>
-                            </div>
-                        </div>
-                    </article>
-                </a>
-                <?php } ?>
-            </div>
+            <div id="home-feed"><?php echo $home_feed_html; ?></div>
+            <script>
+            (function () {
+                var box = document.getElementById('home-feed');
+                if (!box) return;
+                var loading = false;
+                box.addEventListener('click', function (e) {
+                    var link = e.target.closest('[data-home-page]');
+                    if (!link) return;
+                    e.preventDefault();
+                    if (loading) return;
+                    loading = true;
+                    box.style.opacity = '0.5';
+                    fetch('<?php echo G5_BBS_URL; ?>/home_feed_ajax.php?page=' + encodeURIComponent(link.getAttribute('data-home-page')), { credentials: 'same-origin' })
+                        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+                        .then(function (html) {
+                            box.innerHTML = html;
+                            // 목록 윗부분이 화면 위로 지나가 있으면 목록 시작으로 이동 (고정 헤더 높이 고려)
+                            var top = document.getElementById('recent-posts').getBoundingClientRect().top;
+                            if (top < 70) window.scrollBy({ top: top - 70, behavior: 'smooth' });
+                        })
+                        .catch(function () { location.href = link.href; })
+                        .then(function () { box.style.opacity = ''; loading = false; });
+                });
+            })();
+            </script>
             <?php
             } else {
             ?>
             <div class="p-6 bg-white rounded-xl shadow-md text-center">
                 <i class="fa-regular fa-images text-gray-300 text-4xl mb-3"></i>
                 <p class="text-gray-600 mb-3 text-sm">아직 등록된 게시물이 없습니다</p>
-                <?php if ($is_member) { ?>
                 <a href="<?php echo G5_BBS_URL; ?>/write_post.php"
                    class="inline-block px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">
                     첫 번째 게시물 작성
                 </a>
-                <?php } ?>
             </div>
             <?php
             }
