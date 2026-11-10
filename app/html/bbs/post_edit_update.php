@@ -136,6 +136,12 @@ if (isset($_FILES['bf_file']['name']) && is_array($_FILES['bf_file']['name'])) {
         if (!@move_uploaded_file($tmp_file, $dest)) continue;
         @chmod($dest, G5_FILE_PERMISSION);
 
+        // 사진 자동 축소 (extend/image_resize.extend.php)
+        if (function_exists('holyhill_resize_uploaded_image') && ($r = holyhill_resize_uploaded_image($dest))) {
+            $timg = array($r['w'], $r['h'], $r['type']);
+            $filesize = $r['size'];
+        }
+
         $newfiles[] = array(
             'source' => $source,
             'file' => $stored,
