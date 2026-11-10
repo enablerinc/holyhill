@@ -99,6 +99,7 @@ function home_feed_render($page)
         '/https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]+)/i'
     );
     $thumb_budget = HOME_FEED_THUMB_BUDGET;
+    $photos = array();
 
     ob_start();
     ?>
@@ -108,6 +109,16 @@ function home_feed_render($page)
         $title = get_text(strip_tags($feed['wr_subject']));
         $writer = ($feed['mb_id'] && isset($names[$feed['mb_id']])) ? $names[$feed['mb_id']] : $feed['wr_name'];
         $writer = get_text($writer ? $writer : '알 수 없음');
+
+        // 작성자 프로필 사진 (같은 작성자는 한 번만 확인)
+        $photo = '';
+        if ($feed['mb_id']) {
+            if (!isset($photos[$feed['mb_id']])) {
+                $url = get_profile_image_url($feed['mb_id']);
+                $photos[$feed['mb_id']] = (strpos($url, 'avatar-7.jpg') === false) ? $url : '';
+            }
+            $photo = $photos[$feed['mb_id']];
+        }
 
         // YouTube 썸네일 (hqdefault: 항상 존재하고 maxres 보다 가벼움)
         $video_id = '';
@@ -176,9 +187,18 @@ function home_feed_render($page)
                         </div>
                     </div>
                 </div>
-                <div class="px-1.5 py-1.5">
-                    <p class="text-xs font-medium text-gray-800 truncate"><?php echo $title; ?></p>
-                    <p class="text-[10px] text-gray-500 truncate"><?php echo $writer; ?> · <?php echo date('m.d', strtotime($feed['wr_datetime'])); ?></p>
+                <div class="px-1.5 py-1.5 flex items-center gap-1.5">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-medium text-gray-800 truncate"><?php echo $title; ?></p>
+                        <p class="text-[10px] text-gray-500 truncate"><?php echo $writer; ?> · <?php echo date('m.d', strtotime($feed['wr_datetime'])); ?></p>
+                    </div>
+                    <?php if ($photo) { ?>
+                    <img src="<?php echo $photo; ?>" alt="<?php echo $writer; ?>" loading="lazy" decoding="async" class="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-gray-100">
+                    <?php } else { ?>
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-[11px] font-semibold"><?php echo get_text(mb_substr(html_entity_decode($writer, ENT_QUOTES, 'UTF-8'), 0, 1, 'UTF-8')); ?></span>
+                    </div>
+                    <?php } ?>
                 </div>
             </article>
         </a>
