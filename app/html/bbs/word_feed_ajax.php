@@ -46,7 +46,12 @@ $sql = "SELECT w.*, m.mb_nick as member_nick, m.mb_photo as member_photo,
 $result = sql_query($sql);
 $items = array();
 
-while ($row = sql_fetch_array($result)) {
+// 새 글 판정을 위해 행을 먼저 모음
+$rows = array();
+while ($row = sql_fetch_array($result)) $rows[] = $row;
+$new_ids = function_exists('holyhill_new_post_ids') ? holyhill_new_post_ids($bo_table, $rows) : array();
+
+foreach ($rows as $row) {
     $wr_id = $row['wr_id'];
 
     // 작성자 정보
@@ -131,6 +136,7 @@ while ($row = sql_fetch_array($result)) {
         'images' => $images,
         'text_content' => $text_content ? cut_str($text_content, 150) : '',
         'view_href' => $view_href,
+        'is_new' => isset($new_ids[(int)$wr_id]),
         'good_count' => number_format($good_count),
         'comment_count' => number_format($comment_count)
     );

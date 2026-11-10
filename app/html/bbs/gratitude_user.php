@@ -58,6 +58,9 @@ while ($row = sql_fetch_array($result)) {
     $diary_list[] = $row;
 }
 
+// 새 글 표시: 이 페이지에 펼쳐지는 이 회원의 최근 일기를 모두 읽음 처리
+if (function_exists('holyhill_mark_read_author')) holyhill_mark_read_author($bo_table, $target_mb_id);
+
 // 현재 로그인한 사용자의 프로필 (댓글용) - 캐시 버스팅 적용
 $my_profile_photo = $is_member ? get_profile_image_url($member['mb_id']) : '';
 

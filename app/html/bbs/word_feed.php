@@ -73,6 +73,9 @@ while ($row = sql_fetch_array($result)) {
     $list[] = $row;
 }
 
+// 새 글 표시 대상
+$new_ids = function_exists('holyhill_new_post_ids') ? holyhill_new_post_ids($bo_table, $list) : array();
+
 // 전체 게시글 수 (페이징용)
 $total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} {$search_condition}";
 $total_count_result = sql_fetch($total_count_sql);
@@ -279,7 +282,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             ?>
 
             <!-- 텍스트 기반 리스트 스타일 -->
-            <a href="<?php echo $view_href; ?>" class="block">
+            <a href="<?php echo $view_href; ?>" class="block relative">
+                <?php if (isset($new_ids[(int)$wr_id])) echo holyhill_new_badge(); ?>
                 <article class="bg-white rounded-lg shadow-warm p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex gap-4">
                         <!-- 왼쪽: 텍스트 콘텐츠 -->
@@ -483,7 +487,8 @@ function loadMore() {
                         }
 
                         const itemHTML = `
-                            <a href="${item.view_href}" class="block">
+                            <a href="${item.view_href}" class="block relative">
+                                ${item.is_new ? '<span class="absolute top-1.5 left-1.5 z-10 inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold shadow" aria-label="새 글">N</span>' : ''}
                                 <article class="bg-white rounded-lg shadow-warm p-4 hover:bg-gray-50 transition-colors">
                                     <div class="flex gap-4">
                                         <div class="flex-1 min-w-0">

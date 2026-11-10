@@ -51,6 +51,9 @@ if (!get_session($ss_name)) {
     set_session($ss_name, TRUE);
 }
 
+// 새 글 표시: 읽음 처리
+if (function_exists('holyhill_mark_read')) holyhill_mark_read($bo_table, $wr_id);
+
 $g5['title'] = strip_tags($write['wr_subject']);
 
 // 시간 표시 함수

@@ -79,6 +79,9 @@ while ($row = sql_fetch_array($result)) {
     $list[] = $row;
 }
 
+// 새 글 표시 대상
+$new_ids = function_exists('holyhill_new_post_ids') ? holyhill_new_post_ids($bo_table, $list) : array();
+
 // 전체 게시글 수 (페이징용)
 $total_count_sql = "SELECT COUNT(*) as cnt FROM {$write_table} WHERE wr_is_comment = 0 {$date_cond_simple} {$search_condition}";
 $total_count_result = sql_fetch($total_count_sql);
@@ -338,7 +341,8 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
             ?>
 
             <!-- 타일 카드 -->
-            <a href="<?php echo $view_href; ?>" class="block">
+            <a href="<?php echo $view_href; ?>" class="block relative">
+                <?php if (isset($new_ids[(int)$wr_id])) echo holyhill_new_badge(); ?>
                 <article class="bg-white rounded-xl shadow-warm overflow-hidden hover:shadow-lg transition-shadow">
                     <?php if ($has_image) { ?>
                     <!-- 이미지가 있는 경우: 썸네일 표시 -->

@@ -40,6 +40,10 @@ $menu_colors = array(
 $nav_profile_img = ($is_member && isset($_SESSION['ss_mb_id']))
     ? get_profile_image_url($_SESSION['ss_mb_id'])
     : 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-7.jpg';
+
+// 안 읽은 새 글이 있는 메뉴에 빨간 점 (게시판 => 메뉴)
+$nav_new = function_exists('holyhill_new_counts') ? holyhill_new_counts() : array();
+$nav_dot = '<span class="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" aria-label="새 글 있음"></span>';
 ?>
 
 <nav id="bottom-nav" class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40">
@@ -52,19 +56,19 @@ $nav_profile_img = ($is_member && isset($_SESSION['ss_mb_id']))
 
         <!-- 성산샘터 -->
         <a href="<?php echo G5_BBS_URL; ?>/feed.php" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-droplet <?php echo ($current_page == 'feed') ? $menu_colors['feed']['active'] : $menu_colors['feed']['inactive']; ?>"></i>
+            <span class="relative inline-flex"><i class="fa-solid fa-droplet <?php echo ($current_page == 'feed') ? $menu_colors['feed']['active'] : $menu_colors['feed']['inactive']; ?>"></i><?php if (!empty($nav_new['gallery'])) echo $nav_dot; ?></span>
             <span class="<?php echo ($current_page == 'feed') ? $active_text_class : $inactive_text_class; ?>">성산샘터</span>
         </a>
 
         <!-- 감사일기 -->
         <a href="<?php echo G5_BBS_URL; ?>/gratitude.php" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-book <?php echo ($current_page == 'gratitude') ? $menu_colors['gratitude']['active'] : $menu_colors['gratitude']['inactive']; ?>"></i>
+            <span class="relative inline-flex"><i class="fa-solid fa-book <?php echo ($current_page == 'gratitude') ? $menu_colors['gratitude']['active'] : $menu_colors['gratitude']['inactive']; ?>"></i><?php if (!empty($nav_new['diary'])) echo $nav_dot; ?></span>
             <span class="<?php echo ($current_page == 'gratitude') ? $active_text_class : $inactive_text_class; ?>">감사일기</span>
         </a>
 
         <!-- 말씀 -->
         <a href="<?php echo G5_BBS_URL; ?>/word_feed.php" class="flex flex-col items-center gap-1">
-            <i class="fa-solid fa-book-bible <?php echo ($current_page == 'word') ? $menu_colors['word']['active'] : $menu_colors['word']['inactive']; ?>"></i>
+            <span class="relative inline-flex"><i class="fa-solid fa-book-bible <?php echo ($current_page == 'word') ? $menu_colors['word']['active'] : $menu_colors['word']['inactive']; ?>"></i><?php if (!empty($nav_new['word'])) echo $nav_dot; ?></span>
             <span class="<?php echo ($current_page == 'word') ? $active_text_class : $inactive_text_class; ?>">말씀</span>
         </a>
 

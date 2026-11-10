@@ -112,6 +112,9 @@ while ($row = sql_fetch_array($result)) {
     $list[] = $row;
 }
 
+// 새 글 표시 대상
+$new_ids = function_exists('holyhill_new_post_ids') ? holyhill_new_post_ids($bo_table, $list) : array();
+
 // 시간 표시 함수
 function get_time_ago_gratitude($datetime) {
     $time_diff = time() - strtotime($datetime);
@@ -505,7 +508,7 @@ function get_date_label($date_str) {
                     <!-- 내용 -->
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="font-semibold text-grace-green text-sm"><?php echo $writer_nick; ?></span>
+                            <span class="font-semibold text-grace-green text-sm"><?php if (isset($new_ids[(int)$wr_id])) echo holyhill_new_badge('inline'); ?><?php echo $writer_nick; ?></span>
                             <span class="text-xs text-grace-green/50"><?php echo get_time_ago_gratitude($item['wr_datetime']); ?></span>
                         </div>
                         <p class="text-grace-green/80 text-sm leading-relaxed line-clamp-2"><?php echo $content_preview; ?></p>

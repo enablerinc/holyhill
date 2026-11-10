@@ -100,6 +100,7 @@ function home_feed_render($page)
     );
     $thumb_budget = HOME_FEED_THUMB_BUDGET;
     $photos = array();
+    $new_ids = function_exists('holyhill_new_post_ids') ? holyhill_new_post_ids('gallery', $posts) : array();
 
     ob_start();
     ?>
@@ -155,7 +156,8 @@ function home_feed_render($page)
         $text = trim(preg_replace('/https?:\/\/[^\s]+/', '', strip_tags($feed['wr_content'])));
         $text = preg_replace('/\[(이미지|동영상|음원|파일)\d+\]/u', '', $text);
     ?>
-        <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&amp;wr_id=<?php echo $wr_id; ?>" class="block min-w-0">
+        <a href="<?php echo G5_BBS_URL; ?>/post.php?bo_table=gallery&amp;wr_id=<?php echo $wr_id; ?>" class="block min-w-0 relative">
+            <?php if (isset($new_ids[$wr_id])) echo holyhill_new_badge(); ?>
             <article class="bg-white rounded-lg shadow-warm overflow-hidden">
                 <div class="relative aspect-square <?php echo $thumbnail ? 'bg-gray-100' : 'bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50'; ?>">
                     <?php if ($thumbnail) { ?>

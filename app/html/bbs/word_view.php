@@ -38,6 +38,9 @@ sql_query("UPDATE {$write_table} SET wr_hit = wr_hit + 1 WHERE wr_id = '{$wr_id}
 $ss_name = 'ss_view_'.$bo_table.'_'.$wr_id;
 set_session($ss_name, true);
 
+// 새 글 표시: 읽음 처리
+if (function_exists('holyhill_mark_read')) holyhill_mark_read($bo_table, $wr_id);
+
 $g5['title'] = get_text($write['wr_subject']);
 
 // YouTube URL을 iframe으로 변환

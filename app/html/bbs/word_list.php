@@ -71,6 +71,9 @@ while ($row = sql_fetch_array($list_result)) {
     $list[] = $row;
 }
 
+// 새 글 표시 대상
+$new_ids = function_exists('holyhill_new_post_ids') ? holyhill_new_post_ids($bo_table, $list) : array();
+
 // 글쓰기 권한 체크
 $write_href = '';
 if ($member['mb_level'] >= $board['bo_write_level']) {
@@ -188,9 +191,10 @@ if ($member['mb_level'] >= $board['bo_write_level']) {
                             </div>
                         </div>
                     </div>
+                    <?php $is_new_word = isset($new_ids[(int)$word['wr_id']]); ?>
                     <?php if ($word['wr_subject']) { ?>
-                    <h3 class="text-base font-bold text-gray-900"><?php echo get_text($word['wr_subject']); ?></h3>
-                    <?php } ?>
+                    <h3 class="text-base font-bold text-gray-900"><?php if ($is_new_word) echo holyhill_new_badge('inline'); ?><?php echo get_text($word['wr_subject']); ?></h3>
+                    <?php } else if ($is_new_word) { echo holyhill_new_badge('inline'); } ?>
                 </div>
 
                 <!-- 내용 -->
